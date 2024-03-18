@@ -28,3 +28,12 @@ add_executable(compiler ${SOURCE_FILES})
 add_dependencies(compiler gen_files_form_g4)
 find_package(Threads REQUIRED)
 target_link_libraries(compiler antlr Threads::Threads)
+
+enable_testing()
+
+add_test(
+    NAME syntax_test
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/syntax_test.sh
+)
+
+set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
