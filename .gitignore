@@ -19,3 +19,4 @@ out
 scripts
 
 share_CACT.sh
+testbench/*.sh
