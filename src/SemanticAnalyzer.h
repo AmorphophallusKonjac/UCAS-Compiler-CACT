@@ -1,7 +1,3 @@
-//
-// Created by wangm on 2024/3/22.
-//
-
 #ifndef COMPILER_SEMANTICANALYZER_H
 #define COMPILER_SEMANTICANALYZER_H
 

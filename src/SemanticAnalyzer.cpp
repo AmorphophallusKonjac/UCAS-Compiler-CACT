@@ -1,7 +1,3 @@
-//
-// Created by wangm on 2024/3/22.
-//
-
 #include "SemanticAnalyzer.h"
 
 SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
