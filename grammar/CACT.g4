@@ -26,13 +26,13 @@ basicType
 primaryExpression
     : lValue
     | number 
-    | '(' expression ')'
+    | LeftParen expression RightParen
     ;
 
 unaryExpression
     : primaryExpression
     | unaryOperator unaryExpression
-    | Identifier '(' (functionRParams)? ')'
+    | Identifier LeftParen (functionRParams)? RightParen
     ;
 
 functionRParams
@@ -45,6 +45,8 @@ unaryOperator
     | '!'
     ;
 
+/*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
+//unaryExpression的优先级比较高
 multiplicativeExpression
     : unaryExpression (op=('*' | '/' | '%') unaryExpression)*
     ;
@@ -69,10 +71,13 @@ logicalOrExpression
     : logicalAndExpression (op='||' logicalAndExpression)*
     ;
 
+/*****************************以上*****************************/
+
 expression
     : additiveExpression 
     | BooleanConstant
     ;
+//expression是最基础的表达式
 
 constantExpression
     : number
@@ -83,31 +88,35 @@ condition
     : logicalOrExpression
     ;
 
+
+/*declaration部分 */
 declaration
     : constantDeclaration
     | variableDeclaration
     ;
 
 constantDeclaration
-    : 'const' basicType constantDefinition (',' constantDefinition)* ';'
+    : Const basicType constantDefinition (',' constantDefinition)* ';'
     ;
 
 constantDefinition
-    : Identifier ('[' IntegerConstant ']')* '=' constantInitValue
+    : Identifier (LeftBracket IntegerConstant RightBracket)* Assign constantInitValue
     ;
 
 constantInitValue
     : constantExpression
-    | '{' (constantInitValue (',' constantInitValue)*)? '}'
-    ;
+    | LeftBrace (constantInitValue (',' constantInitValue)*)? RightBrace//这里可能考虑的是对数组进行赋值
+    ;                                                                           
 
 variableDeclaration
     : basicType variableDefinition (',' variableDefinition)* ';'
     ;
 
 variableDefinition
-    : Identifier ('[' IntegerConstant ']')* ('=' constantInitValue)?
+    : Identifier (LeftBracket IntegerConstant RightBracket)* (Assign constantInitValue)?
     ;
+/*declaration部分 */
+/*CACT中声明的时候对于const必须显式的进行赋值 */
 
 statement
     : compoundStatement
@@ -117,8 +126,8 @@ statement
     | jumpStatement
     ;
 
-compoundStatement
-    : '{' blockItemList? '}'
+compoundStatement//复合语句
+    : LeftBrace blockItemList? RightBrace
     ;
 
 blockItemList
@@ -129,23 +138,28 @@ blockItem
     : statement
     | declaration
     ;
+//一个blockItem要么是一个语句，要么是一个声明
 
 expressionStatement
     : expression? ';'
-    | lValue '=' expression ';'
+    | lValue Assign expression ';'
     ;
+//表达式语句
 
 lValue
-    : Identifier ('[' expression ']')* 
+    : Identifier (LeftBracket expression RightBracket)* 
     ;
+//lvalue一般是针对数组
 
 selectionStatement
-    : If '(' expression ')' statement (Else statement)?
+    : If LeftParen expression RightParen statement (Else statement)?
     ;
+//暂且不考虑else if
 
 iterationStatement
-    : While '(' expression ')' statement
+    : While LeftParen expression RightParen statement
     ;
+//暂且不考虑for循环
 
 jumpStatement
     : (
@@ -154,6 +168,7 @@ jumpStatement
         | Return expression?
     ) ';'
     ;
+//jump
 
 translationUnit
     : externalDeclaration+
@@ -165,7 +180,7 @@ externalDeclaration
     ;
 
 functionDefinition
-    : functionType Identifier '(' functionFParams? ')' compoundStatement
+    : functionType Identifier LeftParen functionFParams? RightParen compoundStatement
     ;
 
 functionFParams
@@ -173,7 +188,7 @@ functionFParams
     ;
 
 functionFParam
-    : basicType Identifier ('[' IntegerConstant? ']' ('[' IntegerConstant? ']')*)?
+    : basicType Identifier (LeftBracket IntegerConstant? RightBracket (LeftBracket IntegerConstant? RightBracket)*)?
     ;
 
 number
