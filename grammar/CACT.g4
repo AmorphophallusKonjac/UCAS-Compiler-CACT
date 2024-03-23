@@ -7,6 +7,10 @@ grammar CACT;
 
 /****** parser ******/
 
+compilationUnit
+    : translationUnit? EOF
+    ;
+
 functionType
     : 'void'
     | basicType
@@ -149,10 +153,6 @@ jumpStatement
         | Break
         | Return expression?
     ) ';'
-    ;
-
-compilationUnit
-    : translationUnit? EOF
     ;
 
 translationUnit
