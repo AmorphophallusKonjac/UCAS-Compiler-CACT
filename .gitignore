@@ -18,5 +18,6 @@ grammar/.antlr
 out
 scripts
 
+testbench
+
 share_CACT.sh
-testbench/*.sh
