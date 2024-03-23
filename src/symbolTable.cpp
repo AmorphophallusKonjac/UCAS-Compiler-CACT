@@ -48,7 +48,7 @@ IROperand * SymbolInfo::getOp() {
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global)
-: SymbolInfo(name, line), dataType(dataType), global(global) {}
+: SymbolInfo(name, line), dataType(dataType), global(global) { }
 
 ConstSymbolInfo::ConstSymbolInfo(const std::string & name, int line, DataType dataType, int global)
 : ConstVarArraySymbolInfo(name, line, dataType, global) { }
@@ -58,12 +58,12 @@ VarSymbolInfo::VarSymbolInfo(const std::string & name, int line, DataType dataTy
 : ConstVarArraySymbolInfo(name, line, dataType, global) { }
 
 
-ConstArraySymbolInfo::ConstArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, int arraySize)
-: ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize) { }
+ConstArraySymbolInfo::ConstArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension)
+: ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) { }
 
 
-VarArraySymbolInfo::VarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, int arraySize)
-: ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize) { }
+VarArraySymbolInfo::VarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension)
+: ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) { }
 
 
 
@@ -73,13 +73,13 @@ FuncSymbolInfo::FuncSymbolInfo(const std::string & name, int line, DataType retu
 : SymbolInfo(name, line), returnType(returnType), baseblock(nullptr) { }
 
 SymbolInfo * FuncSymbolInfo::addParamVar(const std::string & name, int line, DataType dataType) {
-    VarSymbolInfo * newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量
+    VarSymbolInfo * newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量  
     paramList.push_back(newParam);//函数形参压栈
     return newParam;
 }
 
-SymbolInfo * FuncSymbolInfo::addParamArray(const std::string & name, int line, DataType dataType) {
-    VarArraySymbolInfo * newParam = new VarArraySymbolInfo(name, line, dataType, 0, 0);//函数形参数组的全局属性和arraysize都是0
+SymbolInfo * FuncSymbolInfo::addParamArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) {
+    VarArraySymbolInfo * newParam = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);//函数形参数组的全局属性和arraysize都是0
     paramList.push_back(newParam);
     return newParam;
 }
@@ -120,24 +120,21 @@ SymbolInfo * BlockInfo::lookUpSymbol(std::string symbolName) {
 //注意这里的lookUpSymbol是不会局限于一个块的，因此后面检查duplicate的时候不能直接调用这个函数
 
 /***********在Block中添加各种符号***********/
-ConstSymbolInfo * BlockInfo::addNewConst(const std::string & name, int line, DataType dataType, GlobalBlock & globalblock) {
+ConstSymbolInfo * BlockInfo::addNewConst(const std::string & name, int line, DataType dataType) {
     //symbol符号表添加
-    if (symbolTable.symbolList.count(name) > 0 || globalblock.lookUpFunc(name) != nullptr) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同
+    if (symbolTable.symbolList.count(name) > 0) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同//不用
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
     ConstSymbolInfo * newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
 
     //对symboltable进行操作
-    symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType);
-    symbolTable.curSymbol = name;
 
     return newSymbol;
 }
 
-VarSymbolInfo * BlockInfo::addNewVar(const std::string & name, int line, DataType dataType, GlobalBlock & globalblock) {
-    if (symbolTable.symbolList.count(name) > 0 || globalblock.lookUpFunc(name) != nullptr) {
+VarSymbolInfo * BlockInfo::addNewVar(const std::string & name, int line, DataType dataType) {
+    if (symbolTable.symbolList.count(name) > 0) {
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
@@ -151,31 +148,31 @@ VarSymbolInfo * BlockInfo::addNewVar(const std::string & name, int line, DataTyp
     return newSymbol;
 }
 
-ConstArraySymbolInfo * BlockInfo::addNewConstArray(const std::string & name, int line, DataType dataType, int arraySize, GlobalBlock & globalblock) {
-    if (symbolTable.symbolList.count(name) > 0 || globalblock.lookUpFunc(name) != nullptr) {
+ConstArraySymbolInfo * BlockInfo::addNewConstArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) {
+    if (symbolTable.symbolList.count(name) > 0) {
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
-    ConstArraySymbolInfo * newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize);
+    ConstArraySymbolInfo * newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*arraySize;
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*(newSymbol->getArraySize());
     symbolTable.curSymbol = name;
 
     return newSymbol;
 }                  
 
-VarArraySymbolInfo * BlockInfo::addNewVarArray(const std::string & name, int line, DataType dataType, int arraySize, GlobalBlock & globalblock) {
-    if (symbolTable.symbolList.count(name) > 0 || globalblock.lookUpFunc(name) != nullptr) {
+VarArraySymbolInfo * BlockInfo::addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) {
+    if (symbolTable.symbolList.count(name) > 0) {
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
-    VarArraySymbolInfo * newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize);
+    VarArraySymbolInfo * newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*arraySize;
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*(newSymbol->getArraySize());
     symbolTable.curSymbol = name;
 
     return newSymbol;
@@ -213,7 +210,7 @@ GlobalBlock::GlobalBlock()
 /***********在GlobalBlock中添加各种符号***********/
 //注意这里的函数与blockInfo不是覆写的关系，因为添加常量或者变量总需要查找全局的函数表以防同名，这里直接查自己即可
 ConstSymbolInfo * GlobalBlock::addNewConst(const std::string & name, int line, DataType dataType) {
-    if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同
+    if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {//这里注意，我还会去全局的函数表里面寻找函数名，全局变量不能和全局的函数名相同
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
@@ -242,31 +239,31 @@ VarSymbolInfo * GlobalBlock::addNewVar(const std::string & name, int line, DataT
     return newSymbol;
 }
 
-ConstArraySymbolInfo * GlobalBlock::addNewConstArray(const std::string & name, int line, DataType dataType, int arraySize) {
+ConstArraySymbolInfo * GlobalBlock::addNewConstArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
-    ConstArraySymbolInfo * newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize);
+    ConstArraySymbolInfo * newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
     
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*arraySize;
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*(newSymbol->getArraySize());
     symbolTable.curSymbol = name;
 
     return newSymbol;
 }                  
 
-VarArraySymbolInfo * GlobalBlock::addNewVarArray(const std::string & name, int line, DataType dataType, int arraySize) {
+VarArraySymbolInfo * GlobalBlock::addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         throw std::runtime_error("duplicate name of symbol");
         return nullptr;
     }
-    VarArraySymbolInfo * newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize);
+    VarArraySymbolInfo * newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
     
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*arraySize;
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType)*(newSymbol->getArraySize());
     symbolTable.curSymbol = name;
 
     return newSymbol;
