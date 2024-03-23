@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <numeric>
 
 #include "CACT.h"
 
@@ -56,8 +57,8 @@ public:
 /***********常量符号表***********/
 class ConstSymbolInfo : public ConstVarArraySymbolInfo {
 public:
-    virtual int getArraySize() { return -1; }//不是数组
-    virtual SymbolType getSymbolType() { return SymbolType::CONST; }
+    int getArraySize() { return -1; }//不是数组
+    SymbolType getSymbolType() { return SymbolType::CONST; }
 
     ConstSymbolInfo(const std::string & name, int line, DataType dataType, int global);
 };
@@ -66,8 +67,8 @@ public:
 /***********变量符号表***********/
 class VarSymbolInfo : public ConstVarArraySymbolInfo {
 public:
-    virtual int getArraySize() { return -1; }
-    virtual SymbolType getSymbolType() { return SymbolType::VAR; }
+    int getArraySize() { return -1; }
+    SymbolType getSymbolType() { return SymbolType::VAR; }
 
     VarSymbolInfo(const std::string & name, int line, DataType dataType, int global);
 };
@@ -76,26 +77,30 @@ public:
 /***********常量数组符号表***********/
 class ConstArraySymbolInfo : public ConstVarArraySymbolInfo {
 private:
-    int arraySize;
+    std::vector <int> arraySize;
+    int dimension;
 
 public:
-    virtual int getArraySize() { return arraySize; }
-    virtual SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
+    int getDimension() { return dimension; }
+    int getArraySize() { return std::accumulate(arraySize.begin(), arraySize.end(), 1, std::multiplies<int>()); }
+    SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
 
-    ConstArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, int arraySize);
+    ConstArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension);
 };
 
 
 /***********变量数组符号表***********/
 class VarArraySymbolInfo : public ConstVarArraySymbolInfo {
 private:
-    int arraySize;
+    std::vector <int>  arraySize;
+    int dimension;
 
 public:
-    virtual int getArraySize() { return arraySize; };
-    virtual SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
+    int getDimension() { return dimension; }
+    int getArraySize() { return std::accumulate(arraySize.begin(), arraySize.end(), 1, std::multiplies<int>()); }
+    SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
-    VarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, int arraySize);
+    VarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension);
 };
 
 /*相对于徐泽凡学长做的改动：
@@ -125,7 +130,7 @@ public:
     int getparamNum() { return paramList.size(); }
 
     SymbolInfo * addParamVar(const std::string & name, int line, DataType dataType);
-    SymbolInfo * addParamArray(const std::string & name, int line, DataType dataType);
+    SymbolInfo * addParamArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension);
 
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);
     FuncSymbolInfo(const std::string & name, int line, DataType returnType);
@@ -170,10 +175,10 @@ public:
     BlockInfo * getParentBlock() { return parentBlock; }
     SymbolInfo * lookUpSymbol(std::string symbolName);
     
-    ConstSymbolInfo * addNewConst(const std::string & name, int line, DataType dataType, GlobalBlock & globalblock);
-    VarSymbolInfo * addNewVar(const std::string & name, int line, DataType dataType, GlobalBlock & globalblock);
-    ConstArraySymbolInfo * addNewConstArray(const std::string & name, int line, DataType dataType, int arraySize, GlobalBlock & globalblock);
-    VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, int arraySize, GlobalBlock & globalblock);
+    virtual ConstSymbolInfo * addNewConst(const std::string & name, int line, DataType dataType);
+    virtual VarSymbolInfo * addNewVar(const std::string & name, int line, DataType dataType);
+    virtual ConstArraySymbolInfo * addNewConstArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension);
+    virtual VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension);
 
     BlockInfo * addNewBlock();
     BlockInfo * addNewBlock(FuncSymbolInfo * belongTo);
@@ -191,14 +196,12 @@ private:
 
 public:
     FuncSymbolInfo * lookUpFunc(std::string symbolName);
-
-    ConstSymbolInfo * addNewConst(const std::string & name, int line, DataType dataType);
-    VarSymbolInfo * addNewVar(const std::string & name, int line, DataType dataType);
-    ConstArraySymbolInfo * addNewConstArray(const std::string & name, int line, DataType dataType, int arraySize);
-    VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, int arraySize);
     FuncSymbolInfo * addNewFunc(const std::string & name, int line, DataType returnType);
-    //以上函数因为不用传globalblock，自己就是，因此不算是override
-    //这里其实相当于自己的函数和父类的同名函数都可以用(参数数量不相同)
+
+    ConstSymbolInfo * addNewConst(const std::string & name, int line, DataType dataType) override;
+    VarSymbolInfo * addNewVar(const std::string & name, int line, DataType dataType) override;
+    ConstArraySymbolInfo * addNewConstArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) override;
+    VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) override;
 
     GlobalBlock();
 

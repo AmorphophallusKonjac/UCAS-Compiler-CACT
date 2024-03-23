@@ -7,6 +7,10 @@ grammar CACT;
 
 /****** parser ******/
 
+compilationUnit
+    : translationUnit? EOF
+    ;
+
 functionType
     : 'void'
     | basicType
@@ -165,10 +169,6 @@ jumpStatement
     ) ';'
     ;
 //jump
-
-compilationUnit
-    : translationUnit? EOF
-    ;
 
 translationUnit
     : externalDeclaration+
