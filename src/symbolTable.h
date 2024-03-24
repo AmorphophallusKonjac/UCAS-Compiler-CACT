@@ -202,7 +202,7 @@ public:
 
     BlockInfo(BlockInfo * parentBlock);
     BlockInfo(BlockInfo * parentBlock, FuncSymbolInfo * belongTo, const std::vector < SymbolInfo * > & paramList);
-
+    ~BlockInfo() { };
     //如果说是直接隶属于函数的块，则需要记录belongto,同时所有函数的形参都作为这个块的符号表而存在
 };
 
@@ -220,7 +220,7 @@ public:
     VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) override;
 
     GlobalBlock();
-
+    ~GlobalBlock() { };
 };
 
 /*在初始化一个块的时候，本来应该这个块的符号表和子块都是空的·*/
