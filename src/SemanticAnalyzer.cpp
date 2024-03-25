@@ -1,7 +1,7 @@
 #include "SemanticAnalyzer.h"
 
 SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
-                                                           parser(&tokens), globalBlock() {
+                                                            parser(&tokens), globalBlock() {
     root = this->parser.compilationUnit();
     this->currentBlock = &globalBlock;
     if (this->parser.getNumberOfSyntaxErrors() > 0 || this->lexer.getNumberOfSyntaxErrors() > 0) {
@@ -68,11 +68,12 @@ std::any SemanticAnalyzer::visitExpression(CACTParser::ExpressionContext *contex
 std::any SemanticAnalyzer::visitConstantExpression(CACTParser::ConstantExpressionContext *context) {
     if (context->number() == nullptr) {
         if (context->dataType != DataType::BOOL) {
-            ErrorHandler::printErrorContext(context, "Error value type");
-            throw std::runtime_error("Semantic analysis error");
+            ErrorHandler::printErrorContext(context,
+                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
+                                            Utils::ttos(DataType::BOOL));
+            throw std::runtime_error("Semantic analysis failed");
         }
-    }
-    else {
+    } else {
         context->number()->dataType = context->dataType;
         this->visit(context->number());
     }
@@ -88,28 +89,19 @@ std::any SemanticAnalyzer::visitDeclaration(CACTParser::DeclarationContext *cont
 }
 
 std::any SemanticAnalyzer::visitConstantDeclaration(CACTParser::ConstantDeclarationContext *context) {
-    std::string basicType(context->basicType()->getText());
-    if (basicType == "int") {
-        context->dataType = DataType::INT;
-    } else if (basicType == "double") {
-        context->dataType = DataType::DOUBLE;
-    } else if (basicType == "float") {
-        context->dataType = DataType::FLOAT;
-    } else {
-        context->dataType = DataType::BOOL;
-    }
-    for (auto constantDefinition : context->constantDefinition()) {
+    context->dataType = Utils::stot(context->basicType()->getText());
+    for (auto constantDefinition: context->constantDefinition()) {
         constantDefinition->dataType = context->dataType;
-        auto constantInfo = std::any_cast<std::tuple<std::string, std::vector<int>, int, int>>(this->visit(constantDefinition));
+        auto constantInfo = std::any_cast<std::tuple<std::string, std::vector<int>, size_t, size_t>>(
+                this->visit(constantDefinition));
         std::string name;
         int dimension;
-        std::vector <int> arraySize;
+        std::vector<int> arraySize;
         int line;
         std::tie(name, arraySize, dimension, line) = constantInfo;
         if (dimension == 0) {
             this->currentBlock->addNewConst(name, line, context->dataType);
-        }
-        else {
+        } else {
             this->currentBlock->addNewConstArray(name, line, context->dataType, arraySize, dimension);
         }
     }
@@ -118,7 +110,7 @@ std::any SemanticAnalyzer::visitConstantDeclaration(CACTParser::ConstantDeclarat
 
 std::any SemanticAnalyzer::visitConstantDefinition(CACTParser::ConstantDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
-    for (auto size : context->IntegerConstant()) {
+    for (auto size: context->IntegerConstant()) {
         context->arraySize.push_back(stoi(size->getText()));
     }
     size_t dimension = context->arraySize.size();
@@ -172,37 +164,27 @@ std::any SemanticAnalyzer::visitConstantInitValue(CACTParser::ConstantInitValueC
                 }
             }
         }
-    }
-    else {
-            context->constantExpression()->dataType = context->dataType;
-            this->visit(context->constantExpression());
+    } else {
+        context->constantExpression()->dataType = context->dataType;
+        this->visit(context->constantExpression());
     }
     return {};
 }
 
 std::any SemanticAnalyzer::visitVariableDeclaration(CACTParser::VariableDeclarationContext *context) {
-    std::string basicType(context->basicType()->getText());
-    if (basicType == "int") {
-        context->dataType = DataType::INT;
-    } else if (basicType == "double") {
-        context->dataType = DataType::DOUBLE;
-    } else if (basicType == "float") {
-        context->dataType = DataType::FLOAT;
-    } else {
-        context->dataType = DataType::BOOL;
-    }
-    for (auto variableDefinition : context->variableDefinition()) {
+    context->dataType = Utils::stot(context->basicType()->getText());
+    for (auto variableDefinition: context->variableDefinition()) {
         variableDefinition->dataType = context->dataType;
-        auto varInfo = std::any_cast<std::tuple<std::string, std::vector<int>, int, int>>(this->visit(variableDefinition));
+        auto varInfo = std::any_cast<std::tuple<std::string, std::vector<int>, size_t, size_t>>(
+                this->visit(variableDefinition));
         std::string name;
         int dimension;
-        std::vector <int> arraySize;
+        std::vector<int> arraySize;
         int line;
         std::tie(name, arraySize, dimension, line) = varInfo;
         if (dimension == 0) {
             this->currentBlock->addNewVar(name, line, context->dataType);
-        }
-        else {
+        } else {
             this->currentBlock->addNewVarArray(name, line, context->dataType, arraySize, dimension);
         }
     }
@@ -211,14 +193,16 @@ std::any SemanticAnalyzer::visitVariableDeclaration(CACTParser::VariableDeclarat
 
 std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
-    for (auto size : context->IntegerConstant()) {
+    for (auto size: context->IntegerConstant()) {
         context->arraySize.push_back(stoi(size->getText()));
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
-    context->constantInitValue()->dataType = context->dataType;
-    context->constantInitValue()->arraySize = context->arraySize;
-    this->visit(context->constantInitValue());
+    if (context->constantInitValue() != nullptr) {
+        context->constantInitValue()->dataType = context->dataType;
+        context->constantInitValue()->arraySize = context->arraySize;
+        this->visit(context->constantInitValue());
+    }
     return std::make_tuple(name, context->arraySize, dimension, line);
 }
 
@@ -288,8 +272,10 @@ void SemanticAnalyzer::analyze() {
 
 std::any SemanticAnalyzer::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
     if (context->dataType != DataType::INT) {
-        ErrorHandler::printErrorContext(context, "Error value type");
-        throw std::runtime_error("Semantic analysis error");
+        ErrorHandler::printErrorContext(context,
+                                        "Error value type " + Utils::ttos(context->dataType) + ", expect " +
+                                        Utils::ttos(DataType::INT));
+        throw std::runtime_error("Semantic analysis failed");
     }
     return {};
 }
@@ -299,14 +285,17 @@ std::any SemanticAnalyzer::visitFloatingConstant(CACTParser::FloatingConstantCon
     char suffix = context->FloatingConstant()->getText()[length - 1];
     if (suffix == 'f' || suffix == 'F') {
         if (context->dataType != DataType::FLOAT) {
-            ErrorHandler::printErrorContext(context, "Error value type");
-            throw std::runtime_error("Semantic analysis error");
+            ErrorHandler::printErrorContext(context,
+                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
+                                            Utils::ttos(DataType::FLOAT));
+            throw std::runtime_error("Semantic analysis failed");
         }
-    }
-    else {
+    } else {
         if (context->dataType != DataType::DOUBLE) {
-            ErrorHandler::printErrorContext(context, "Error value type");
-            throw std::runtime_error("Semantic analysis error");
+            ErrorHandler::printErrorContext(context,
+                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
+                                            Utils::ttos(DataType::DOUBLE));
+            throw std::runtime_error("Semantic analysis failed");
         }
     }
     return {};

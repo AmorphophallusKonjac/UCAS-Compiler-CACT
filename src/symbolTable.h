@@ -1,10 +1,12 @@
-#pragma once
+#ifndef COMPILER_SYMBOLTABLE_H
+#define COMPILER_SYMBOLTABLE_H
 
 #include <map>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <numeric>
+#include "ErrorHandler.h"
 
 #include "CACT.h"
 
@@ -208,3 +210,5 @@ public:
 };
 
 /*在初始化一个块的时候，本来应该这个块的符号表和子块都是空的·*/
+
+#endif
