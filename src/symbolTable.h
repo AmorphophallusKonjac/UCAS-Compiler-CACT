@@ -35,6 +35,7 @@ public:
     //symboltype:CONST,VAR,CONST_ARRAY,VAR_ARRAY,FUNC
 
     SymbolInfo(const std::string & name, int line);
+    ~SymbolInfo() { };
 };
 
 /***********常量变量数组符号表***********/
@@ -51,6 +52,7 @@ public:
     virtual SymbolType getSymbolType() = 0;
    
     ConstVarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global);
+    ~ConstVarArraySymbolInfo() { };
 };
 
 
@@ -61,6 +63,7 @@ public:
     SymbolType getSymbolType() { return SymbolType::CONST; }
 
     ConstSymbolInfo(const std::string & name, int line, DataType dataType, int global);
+    ~ConstSymbolInfo() { };
 };
 
 
@@ -71,6 +74,7 @@ public:
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
     VarSymbolInfo(const std::string & name, int line, DataType dataType, int global);
+    ~VarSymbolInfo() { };
 };
 
 
@@ -86,6 +90,7 @@ public:
     SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
 
     ConstArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension);
+    ~ConstArraySymbolInfo() { };
 };
 
 
@@ -101,6 +106,7 @@ public:
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
     VarArraySymbolInfo(const std::string & name, int line, DataType dataType, int global, const std::vector <int> arraySize, int dimension);
+    ~VarArraySymbolInfo() { };
 };
 
 /*相对于徐泽凡学长做的改动：
@@ -134,6 +140,7 @@ public:
 
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);
     FuncSymbolInfo(const std::string & name, int line, DataType returnType);
+    ~FuncSymbolInfo() { for(SymbolInfo* symbol : paramList){delete symbol;}; };
 };
 
 
@@ -143,6 +150,9 @@ public:
     std::map < std::string, FuncSymbolInfo * > funcList;
     std::string curFunc = "$";
     int stackFunc_size = 0;
+
+    ~FuncTable() {  for(auto it = funcList.begin(); it != funcList.end(); ++it){delete it->second;}
+                    funcList.clear(); };
 };
 
 class SymbolTable {
@@ -150,12 +160,17 @@ public:
     std::map < std::string, SymbolInfo * > symbolList;
     std::string curSymbol = "$";
     int stackSymbol_size = 0;
+
+    ~SymbolTable() { for(auto it = symbolList.begin(); it != symbolList.end(); ++it){delete it->second;}
+                     symbolList.clear(); };
 };
 
 class BlockTable {
 public:
     std::vector < BlockInfo * > blockList;
     int stackBlock_size = 0;
+
+    ~BlockTable() { for(BlockInfo* block : blockList){delete block;}; };
 };
 
 
@@ -187,6 +202,7 @@ public:
 
     BlockInfo(BlockInfo * parentBlock);
     BlockInfo(BlockInfo * parentBlock, FuncSymbolInfo * belongTo, const std::vector < SymbolInfo * > & paramList);
+    ~BlockInfo() { };
     //如果说是直接隶属于函数的块，则需要记录belongto,同时所有函数的形参都作为这个块的符号表而存在
 };
 
@@ -204,7 +220,7 @@ public:
     VarArraySymbolInfo * addNewVarArray(const std::string & name, int line, DataType dataType, const std::vector <int> arraySize, int dimension) override;
 
     GlobalBlock();
-
+    ~GlobalBlock() { };
 };
 
 /*在初始化一个块的时候，本来应该这个块的符号表和子块都是空的·*/
