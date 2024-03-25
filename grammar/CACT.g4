@@ -3,6 +3,7 @@ grammar CACT;
 @header {
     #include <vector>
     #include <string>
+    #include "CACT.h"
 }
 
 /****** parser ******/
@@ -74,12 +75,13 @@ logicalOrExpression
 /*****************************以上*****************************/
 
 expression
-    : additiveExpression 
+    : additiveExpression
     | BooleanConstant
     ;
 //expression是最基础的表达式
 
 constantExpression
+    locals [DataType dataType]
     : number
     | BooleanConstant
     ;
@@ -96,14 +98,19 @@ declaration
     ;
 
 constantDeclaration
+    locals [DataType dataType]
     : Const basicType constantDefinition (',' constantDefinition)* ';'
     ;
 
 constantDefinition
+    locals [DataType dataType,
+            vector<int> arraySize]
     : Identifier (LeftBracket IntegerConstant RightBracket)* Assign constantInitValue
     ;
 
 constantInitValue
+    locals [DataType dataType,
+            vector<int> arraySize]
     : constantExpression
     | LeftBrace (constantInitValue (',' constantInitValue)*)? RightBrace//这里可能考虑的是对数组进行赋值
     ;                                                                           
@@ -152,12 +159,12 @@ lValue
 //lvalue一般是针对数组
 
 selectionStatement
-    : If LeftParen expression RightParen statement (Else statement)?
+    : If LeftParen condition RightParen statement (Else statement)?
     ;
 //暂且不考虑else if
 
 iterationStatement
-    : While LeftParen expression RightParen statement
+    : While LeftParen condition RightParen statement
     ;
 //暂且不考虑for循环
 
@@ -192,8 +199,9 @@ functionFParam
     ;
 
 number
-    : IntegerConstant
-    | FloatingConstant
+    locals [DataType dataType]
+    : IntegerConstant   # IntegerConstant
+    | FloatingConstant  # FloatingConstant
     ;
 
 /****** lexer  ******/
