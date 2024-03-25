@@ -6,10 +6,15 @@
 #include "CACTParser.h"
 #include "CACTVisitor.h"
 #include "tree/ParseTree.h"
+#include "symbolTable.h"
+
+class SymbolInfo;
 
 class ErrorHandler {
 public:
     static void printErrorContext(antlr4::ParserRuleContext *context, const std::string& msg);
+    static void printErrorSymbol(SymbolInfo *symbol, const std::string& msg);
+    static void printErrorMessage(const std::string& msg);
 };
 
 
