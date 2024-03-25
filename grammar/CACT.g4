@@ -116,10 +116,13 @@ constantInitValue
     ;                                                                           
 
 variableDeclaration
+    locals [DataType dataType]
     : basicType variableDefinition (',' variableDefinition)* ';'
     ;
 
 variableDefinition
+    locals [DataType dataType,
+            std::vector<int> arraySize]
     : Identifier (LeftBracket IntegerConstant RightBracket)* (Assign constantInitValue)?
     ;
 /*declaration部分 */

@@ -7,6 +7,7 @@
 #include "CACTVisitor.h"
 #include "tree/ParseTree.h"
 #include "symbolTable.h"
+#include "ErrorHandler.h"
 
 using namespace antlr4;
 
@@ -94,8 +95,6 @@ public:
     ~SemanticAnalyzer() override;
 
     void analyze();
-
-    static void errorHandler(ParserRuleContext *context, std::string msg);
 
 private:
     ANTLRInputStream input;
