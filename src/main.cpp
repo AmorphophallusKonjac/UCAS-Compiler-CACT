@@ -20,6 +20,7 @@ int main(int argc, const char* argv[]) {
 
     try {
         SemanticAnalyzer analyzer(&stream);
+        analyzer.analyze();
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

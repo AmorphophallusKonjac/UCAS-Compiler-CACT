@@ -95,6 +95,8 @@ public:
 
     void analyze();
 
+    static void errorHandler(ParserRuleContext *context, std::string msg);
+
 private:
     ANTLRInputStream input;
     CACTLexer lexer;

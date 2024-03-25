@@ -104,13 +104,13 @@ constantDeclaration
 
 constantDefinition
     locals [DataType dataType,
-            vector<int> arraySize]
+            std::vector<int> arraySize]
     : Identifier (LeftBracket IntegerConstant RightBracket)* Assign constantInitValue
     ;
 
 constantInitValue
     locals [DataType dataType,
-            vector<int> arraySize]
+            std::vector<int> arraySize]
     : constantExpression
     | LeftBrace (constantInitValue (',' constantInitValue)*)? RightBrace//这里可能考虑的是对数组进行赋值
     ;                                                                           
