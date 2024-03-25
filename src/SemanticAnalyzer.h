@@ -6,6 +6,7 @@
 #include "CACTParser.h"
 #include "CACTVisitor.h"
 #include "tree/ParseTree.h"
+#include "symbolTable.h"
 
 using namespace antlr4;
 
@@ -86,9 +87,13 @@ public:
 
     std::any visitFunctionFParam(CACTParser::FunctionFParamContext *context) override;
 
-    std::any visitNumber(CACTParser::NumberContext *context) override;
+    std::any visitIntegerConstant(CACTParser::IntegerConstantContext *context) override;
+
+    std::any visitFloatingConstant(CACTParser::FloatingConstantContext *context) override;
 
     ~SemanticAnalyzer() override;
+
+    void analyze();
 
 private:
     ANTLRInputStream input;
@@ -96,6 +101,8 @@ private:
     CommonTokenStream tokens;
     CACTParser parser;
     tree::ParseTree *root;
+    GlobalBlock globalBlock;
+    BlockInfo *currentBlock;
 };
 
 
