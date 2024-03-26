@@ -247,11 +247,25 @@ std::any SemanticAnalyzer::visitCompilationUnit(CACTParser::CompilationUnitConte
 }
 
 std::any SemanticAnalyzer::visitTranslationUnit(CACTParser::TranslationUnitContext *context) {
+    for (auto externalDeclaration: context->externalDeclaration()) {
+        this->visit(externalDeclaration);
+        this->currentBlock = externalDeclaration->thisblockinfo;
+        //this->globalBlock.addNewBlock()关于globalblock的操作，在初始化block时就放进去//感觉没有必要维护一个block？
+    }
     return visitChildren(context);
 }
 
 std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarationContext *context) {
-    return visitChildren(context);
+    if(context->declaration()->isEmpty()){
+        this->visit(context->functionDefinition());//先visit子节点
+        context->thisblockinfo = context->functionDefinition()->thisblockinfo;
+        this->currentBlock = context->functionDefinition()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
+    }else{
+        this->visit(context->declaration());//先visit子节点
+        context->thisblockinfo = context->declaration()->thisblockinfo;
+        this->currentBlock = context->declaration()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitionContext *context) {

@@ -183,6 +183,7 @@ jumpStatement
 //jump
 
 translationUnit
+    locals [BlockInfo * thisblockinfo]
     : externalDeclaration+
     ;
 
