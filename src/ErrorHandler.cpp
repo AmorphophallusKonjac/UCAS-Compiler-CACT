@@ -1,4 +1,5 @@
 #include "ErrorHandler.h"
+#include "symbolTable.h"
 
 void ErrorHandler::printErrorContext(antlr4::ParserRuleContext *context, const std::string &msg) {
     size_t line = context->start->getLine();
