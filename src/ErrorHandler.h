@@ -6,7 +6,7 @@
 #include "CACTParser.h"
 #include "CACTVisitor.h"
 #include "tree/ParseTree.h"
-#include "symbolTable.h"
+//#include "symbolTable.h"
 
 class SymbolInfo;
 
