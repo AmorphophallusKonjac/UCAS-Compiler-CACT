@@ -1,4 +1,5 @@
 #include "SemanticAnalyzer.h"
+#include <vector>
 
 SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
                                                             parser(&tokens), globalBlock() {
@@ -269,15 +270,97 @@ std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarat
 }
 
 std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitionContext *context) {
-    return visitChildren(context);
+    std::string returnTypeText = context->functionType()->getText();
+    DataType returnType;
+    if (returnTypeText == "bool") {
+        returnType = DataType::BOOL;
+    } else if (returnTypeText == "int") {
+        returnType = DataType::INT;
+    } else if (returnTypeText == "float") {
+        returnType = DataType::FLOAT;
+    } else if (returnTypeText == "double") {
+        returnType = DataType::DOUBLE;
+    } else if (returnTypeText == "void") {
+        returnType = DataType::VOID;
+    } else {
+        throw std::runtime_error(std::string("unknown function return value type: ") + returnTypeText);
+        return nullptr;
+    }
+
+    context->thisfuncinfo =  globalBlock.addNewFunc(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(),returnType);
+    //全局块中的函数表添加，同时获得这个funcdefinition的funcsymbolinfo，为将来的blockinfo初始化做准备
+    if (!context->functionFParams()->isEmpty()) {
+        if(context->Identifier()->getText() == std::string("main")){
+            ErrorHandler::printErrorContext(context, "main function must be without params");//main函数不能带有参数
+            throw std::runtime_error("Semantic analysis failed");
+        }else{
+            context->functionFParams()->thisfuncinfo = context->thisfuncinfo;
+            this->visit(context->functionFParams());//先去访问参数，在将参数都访问完之后可以获得一个完整的函数定义，再去定义blockinfo
+            //等待下面的参数层完善这个函数
+        }
+    }
+    context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);
+    currentFunc = context->thisfuncinfo;//更新currentFunc
+    this->visit(context->compoundStatement());//进入函数体
+    //currentFunc->setOp(new IRLabel(ctx->Ident()->getText()));
+
+    //irGen->enterFunc(ctx->Ident()->getText());
+    return {nullptr};
 }
 
 std::any SemanticAnalyzer::visitFunctionFParams(CACTParser::FunctionFParamsContext *context) {
-    return visitChildren(context);
+    for (auto fparam: context->functionFParam()) {
+        fparam->thisfuncinfo = context->thisfuncinfo;//继续将函数往下传
+        this->visit(fparam);//具体参数
+    }
+    return {nullptr};
 }
 
 std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext *context) {
-    return visitChildren(context);
+    std::string basicTypeText = context->basicType()->getText();
+    DataType basicType;
+    if (basicTypeText == "bool") {
+        basicType = DataType::BOOL;
+    } else if (basicTypeText == "int") {
+        basicType = DataType::INT;
+    } else if (basicTypeText == "float") {
+        basicType = DataType::FLOAT;
+    } else if (basicTypeText == "double") {
+        basicType = DataType::DOUBLE;
+    } else if (basicTypeText == "void") {
+        basicType = DataType::VOID;
+    } else {
+        throw std::runtime_error(std::string("unknown function return value type: ") + basicTypeText);
+        return nullptr;
+    }
+
+    int dimension;
+    dimension = context->LeftBracket().size();//计算维数
+    if(!dimension){
+        context->thisfuncinfo->addParamVar(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(), basicType);
+    }else{
+        int valid_size;//标记了数字的个数//第一维可能标记为0
+        valid_size = context->IntegerConstant().size();
+        std::vector<int> param_array;
+        
+        if(valid_size == dimension){
+            for(auto integetconstant : context->IntegerConstant()){
+                param_array.push_back(stoi(integetconstant->getText()));
+            }
+        }else if(valid_size == (dimension-1)){
+            param_array.push_back(0);
+            for(auto integetconstant : context->IntegerConstant()){
+                param_array.push_back(stoi(integetconstant->getText()));
+            }
+        }else{
+            ErrorHandler::printErrorContext(context, "array dimension error");//main函数不能带有参数
+            throw std::runtime_error("Semantic analysis failed");
+        }//分析得到paramlist
+
+        context->thisfuncinfo->addParamArray(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(), basicType, param_array, dimension);
+    }
+
+    return {nullptr};
 }
 
 void SemanticAnalyzer::analyze() {

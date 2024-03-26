@@ -125,7 +125,7 @@ SymbolInfo *BlockInfo::lookUpSymbol(std::string symbolName) {
 }//一层层往外递归查找符号
 //注意这里的lookUpSymbol是不会局限于一个块的，因此后面检查duplicate的时候不能直接调用这个函数
 
-/***********在Block中添加各种符号***********/
+/***********在Block中添加各种符号***********/ 
 ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataType dataType) {
     //symbol符号表添加
     if (symbolTable.symbolList.count(name) > 0) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同//不用

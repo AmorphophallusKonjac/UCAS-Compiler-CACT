@@ -103,6 +103,7 @@ private:
     tree::ParseTree *root;
     GlobalBlock globalBlock;
     BlockInfo *currentBlock;
+    FuncSymbolInfo *currentFunc;
 };
 
 

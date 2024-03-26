@@ -194,15 +194,20 @@ externalDeclaration
     ;
 
 functionDefinition
-    locals [BlockInfo * thisblockinfo]
+    locals [BlockInfo * thisblockinfo ,
+            FuncSymbolInfo * thisfuncinfo]
     : functionType Identifier LeftParen functionFParams? RightParen compoundStatement
     ;
 
 functionFParams
+    locals [FuncSymbolInfo * thisfuncinfo,
+            std::vector < SymbolInfo * > paramList]
     : functionFParam (',' functionFParam)*
     ;
 
 functionFParam
+    locals [FuncSymbolInfo * thisfuncinfo,
+            SymbolInfo * Fparam]
     : basicType Identifier (LeftBracket IntegerConstant? RightBracket (LeftBracket IntegerConstant? RightBracket)*)?
     ;
 
