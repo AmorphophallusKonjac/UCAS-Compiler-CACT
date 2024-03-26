@@ -1,12 +1,8 @@
 #ifndef COMPILER_ERRORHANDLER_H
 #define COMPILER_ERRORHANDLER_H
 
-#include "CACTVisitor.h"
-#include "CACTLexer.h"
-#include "CACTParser.h"
-#include "CACTVisitor.h"
+
 #include "tree/ParseTree.h"
-//#include "symbolTable.h"
 
 class SymbolInfo;
 

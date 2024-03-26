@@ -1,7 +1,6 @@
 #ifndef COMPILER_SEMANTICANALYZER_H
 #define COMPILER_SEMANTICANALYZER_H
 
-#include "CACTVisitor.h"
 #include "CACTLexer.h"
 #include "CACTParser.h"
 #include "CACTVisitor.h"

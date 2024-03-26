@@ -3,7 +3,8 @@ grammar CACT;
 @header {
     #include <vector>
     #include <string>
-    #include "CACT.h"
+    #include "../src/CACT.h"
+    #include "../src/symbolTable.h"
 }
 
 /****** parser ******/
@@ -93,6 +94,7 @@ condition
 
 /*declaration部分 */
 declaration
+    locals [BlockInfo * thisblockinfo]
     : constantDeclaration
     | variableDeclaration
     ;
@@ -185,11 +187,13 @@ translationUnit
     ;
 
 externalDeclaration
+    locals [BlockInfo * thisblockinfo]
     : functionDefinition
     | declaration
     ;
 
 functionDefinition
+    locals [BlockInfo * thisblockinfo]
     : functionType Identifier LeftParen functionFParams? RightParen compoundStatement
     ;
 
