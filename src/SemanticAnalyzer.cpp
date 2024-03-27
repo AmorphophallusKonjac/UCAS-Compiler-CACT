@@ -210,12 +210,15 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
 
 std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context) {
     if(!context->compoundStatement()->isEmpty()){
+        context->compoundStatement()->thisblockinfo = currentBlock->addNewBlock();//compoudStatement又将会作为一个新块
         this->visit(context->compoundStatement());
     }else if(!context->expressionStatement()->isEmpty()){
         this->visit(context->expressionStatement());
     }else if(!context->selectionStatement()->isEmpty()){
+        context->selectionStatement()->thisblockinfo = currentBlock->addNewBlock();//selectionStatement又将会作为一个新块
         this->visit(context->selectionStatement());
     }else if(!context->iterationStatement()->isEmpty()){
+        context->iterationStatement()->thisblockinfo = currentBlock->addNewBlock();//iterationStatement又将会作为一个新块
         this->visit(context->iterationStatement());
     }else if(!context->jumpStatement()->isEmpty()){
         this->visit(context->jumpStatement());
@@ -261,11 +264,29 @@ std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
 }
 
 std::any SemanticAnalyzer::visitSelectionStatement(CACTParser::SelectionStatementContext *context) {
-    return visitChildren(context);
+    currentBlock = context->thisblockinfo;//更新currentblock
+
+    this->visit(context->condition());
+    context->cond = context->condition()->cond;//每一个condition最终都得给出自己的true或false
+    //这里考虑在下一级的condition那里判断最终是否能返回true或false的bool类型？
+
+    for(auto stmt : context->statement()){
+        this->visit(stmt);
+    }//单纯的对自己的子树statement进行访问
+
+    return { };
 }
 
 std::any SemanticAnalyzer::visitIterationStatement(CACTParser::IterationStatementContext *context) {
-    return visitChildren(context);
+    currentBlock = context->thisblockinfo;
+
+    this->visit(context->condition());
+    context->cond = context->condition()->cond;//每一个condition最终都得给出自己的true或false
+    //这里考虑在下一级的condition那里判断最终是否能返回true或false的bool类型？
+
+    this->visit(context->statement());
+    //单纯的对自己的子树statement进行访问
+    return { };
 }
 
 std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *context) {
