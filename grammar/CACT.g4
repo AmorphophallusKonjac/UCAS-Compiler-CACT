@@ -104,7 +104,7 @@ condition
 
 /*declaration部分 */
 declaration
-    locals [BlockInfo * thisblockinfo]
+    //locals [BlockInfo * thisblockinfo]
     : constantDeclaration
     | variableDeclaration
     ;
@@ -149,6 +149,7 @@ statement
     ;
 
 compoundStatement//复合语句
+    locals [BlockInfo * thisblockinfo]
     : LeftBrace blockItemList? RightBrace
     ;
 
@@ -157,8 +158,8 @@ blockItemList
     ;
 
 blockItem
-    : statement
-    | declaration
+    : statement//往下添加子块
+    | declaration//往下添加符号表
     ;
 //一个blockItem要么是一个语句，要么是一个声明
 
@@ -193,12 +194,11 @@ jumpStatement
 //jump
 
 translationUnit
-    locals [BlockInfo * thisblockinfo]
     : externalDeclaration+
     ;
 
 externalDeclaration
-    locals [BlockInfo * thisblockinfo]
+    //locals [BlockInfo * thisblockinfo]
     : functionDefinition
     | declaration
     ;

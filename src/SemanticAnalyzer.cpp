@@ -1,4 +1,5 @@
 #include "SemanticAnalyzer.h"
+#include "CACT.h"
 #include <vector>
 
 SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
@@ -241,19 +242,47 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
 }
 
 std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context) {
-    return visitChildren(context);
+    if(!context->compoundStatement()->isEmpty()){
+        this->visit(context->compoundStatement());
+    }else if(!context->expressionStatement()->isEmpty()){
+        this->visit(context->expressionStatement());
+    }else if(!context->selectionStatement()->isEmpty()){
+        this->visit(context->selectionStatement());
+    }else if(!context->iterationStatement()->isEmpty()){
+        this->visit(context->iterationStatement());
+    }else if(!context->jumpStatement()->isEmpty()){
+        this->visit(context->jumpStatement());
+    }else{
+        ErrorHandler::printErrorContext(context, "statement error");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+
+    return { };
 }
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
-    return visitChildren(context);
+    this->visit(context->blockItemList());
+    return { };
 }
 
 std::any SemanticAnalyzer::visitBlockItemList(CACTParser::BlockItemListContext *context) {
-    return visitChildren(context);
+    for (auto blockitem : context->blockItem()){
+        this->visit(blockitem);
+    }
+    return { };
 }
 
 std::any SemanticAnalyzer::visitBlockItem(CACTParser::BlockItemContext *context) {
-    return visitChildren(context);
+    if(!context->declaration()->isEmpty()){
+        this->visit(context->declaration());
+    }else if(!context->statement()->isEmpty()){
+        this->visit(context->statement());
+    }else{
+        ErrorHandler::printErrorContext(context, "blockitem error");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+
+    return { };
 }
 
 std::any SemanticAnalyzer::visitExpressionStatement(CACTParser::ExpressionStatementContext *context) {
@@ -277,27 +306,26 @@ std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *
 }
 
 std::any SemanticAnalyzer::visitCompilationUnit(CACTParser::CompilationUnitContext *context) {
-    return visitChildren(context);
+    this->visit(context->translationUnit());//直接访问翻译单元即可
+    return { };
 }
 
 std::any SemanticAnalyzer::visitTranslationUnit(CACTParser::TranslationUnitContext *context) {
     for (auto externalDeclaration: context->externalDeclaration()) {
         this->visit(externalDeclaration);
-        this->currentBlock = externalDeclaration->thisblockinfo;
         //this->globalBlock.addNewBlock()关于globalblock的操作，在初始化block时就放进去//感觉没有必要维护一个block？
     }
     return visitChildren(context);
 }
 
 std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarationContext *context) {
-    if (context->declaration()->isEmpty()) {
-        this->visit(context->functionDefinition());//先visit子节点
-        context->thisblockinfo = context->functionDefinition()->thisblockinfo;
-        this->currentBlock = context->functionDefinition()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
-    } else {
-        this->visit(context->declaration());//先visit子节点
-        context->thisblockinfo = context->declaration()->thisblockinfo;
-        this->currentBlock = context->declaration()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
+    if(!context->declaration()->isEmpty()){
+        this->visit(context->declaration());//visit子节点
+    }else if(!context->functionDefinition()->isEmpty()){
+        this->visit(context->functionDefinition());//visit子节点
+    }else{
+        ErrorHandler::printErrorContext(context, "externaldeclaration error");
+        throw std::runtime_error("Semantic analysis failed");
     }
     return {};
 }
@@ -305,20 +333,7 @@ std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarat
 std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitionContext *context) {
     std::string returnTypeText = context->functionType()->getText();
     DataType returnType;
-    if (returnTypeText == "bool") {
-        returnType = DataType::BOOL;
-    } else if (returnTypeText == "int") {
-        returnType = DataType::INT;
-    } else if (returnTypeText == "float") {
-        returnType = DataType::FLOAT;
-    } else if (returnTypeText == "double") {
-        returnType = DataType::DOUBLE;
-    } else if (returnTypeText == "void") {
-        returnType = DataType::VOID;
-    } else {
-        throw std::runtime_error(std::string("unknown function return value type: ") + returnTypeText);
-        return nullptr;
-    }
+    returnType = Utils::stot(returnTypeText);
 
     context->thisfuncinfo = globalBlock.addNewFunc(context->Identifier()->getText(),
                                                    context->Identifier()->getSymbol()->getLine(), returnType);
@@ -333,8 +348,11 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
             //等待下面的参数层完善这个函数
         }
     }
-    context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);
+    context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);//更新blockinfo
+
+    currentBlock = context->thisblockinfo;//更新currentBlock
     currentFunc = context->thisfuncinfo;//更新currentFunc
+    context->compoundStatement()->thisblockinfo = context->thisblockinfo;//这个compoundStatement作为新的block
     this->visit(context->compoundStatement());//进入函数体
     //currentFunc->setOp(new IRLabel(ctx->Ident()->getText()));
 
@@ -353,20 +371,7 @@ std::any SemanticAnalyzer::visitFunctionFParams(CACTParser::FunctionFParamsConte
 std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext *context) {
     std::string basicTypeText = context->basicType()->getText();
     DataType basicType;
-    if (basicTypeText == "bool") {
-        basicType = DataType::BOOL;
-    } else if (basicTypeText == "int") {
-        basicType = DataType::INT;
-    } else if (basicTypeText == "float") {
-        basicType = DataType::FLOAT;
-    } else if (basicTypeText == "double") {
-        basicType = DataType::DOUBLE;
-    } else if (basicTypeText == "void") {
-        basicType = DataType::VOID;
-    } else {
-        throw std::runtime_error(std::string("unknown function return value type: ") + basicTypeText);
-        return nullptr;
-    }
+    basicType = Utils::stot(basicTypeText);
 
     int dimension;
     dimension = context->LeftBracket().size();//计算维数
