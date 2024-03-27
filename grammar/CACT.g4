@@ -26,12 +26,14 @@ basicType
     ;
 
 primaryExpression
+    locals [DataType dataType]
     : lValue
     | number 
     | LeftParen expression RightParen
     ;
 
 unaryExpression
+    locals [DataType dataType]
     : primaryExpression
     | unaryOperator unaryExpression
     | Identifier LeftParen (functionRParams)? RightParen
@@ -50,32 +52,39 @@ unaryOperator
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
 //unaryExpression的优先级比较高
 multiplicativeExpression
+    locals [DataType dataType]
     : unaryExpression (op=('*' | '/' | '%') unaryExpression)*
     ;
 
 additiveExpression
+    locals [DataType dataType]
     : multiplicativeExpression (op=('+' | '-') multiplicativeExpression)*
     ;
 
 relationalExpression
+    locals [DataType dataType]
     : additiveExpression (op=('<' | '>' | '<=' | '>=') additiveExpression)?
     ;
 
 equalityExpression
+    locals [DataType dataType]
     : relationalExpression (op=('==' | '!=') relationalExpression)?
     ;
 
 logicalAndExpression
+    locals [DataType dataType]
     : equalityExpression (op='&&' equalityExpression)*
     ;
 
 logicalOrExpression
+    locals [DataType dataType]
     : logicalAndExpression (op='||' logicalAndExpression)*
     ;
 
 /*****************************以上*****************************/
 
 expression
+    locals [DataType dataType]
     : additiveExpression
     | BooleanConstant
     ;
@@ -88,6 +97,7 @@ constantExpression
     ;
 
 condition
+    locals [DataType dataType]
     : logicalOrExpression
     ;
 

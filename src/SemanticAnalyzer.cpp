@@ -27,7 +27,14 @@ std::any SemanticAnalyzer::visitPrimaryExpression(CACTParser::PrimaryExpressionC
 }
 
 std::any SemanticAnalyzer::visitUnaryExpression(CACTParser::UnaryExpressionContext *context) {
-    return visitChildren(context);
+    if (context->primaryExpression() != nullptr) {
+
+    } else if (context->unaryOperator() != nullptr) {
+
+    } else { // function
+
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitFunctionRParams(CACTParser::FunctionRParamsContext *context) {
@@ -35,15 +42,35 @@ std::any SemanticAnalyzer::visitFunctionRParams(CACTParser::FunctionRParamsConte
 }
 
 std::any SemanticAnalyzer::visitUnaryOperator(CACTParser::UnaryOperatorContext *context) {
-    return visitChildren(context);
+    return {};
 }
 
 std::any SemanticAnalyzer::visitMultiplicativeExpression(CACTParser::MultiplicativeExpressionContext *context) {
-    return visitChildren(context);
+    for (auto multiplicativeExpression: context->unaryExpression()) {
+        this->visit(multiplicativeExpression);
+    }
+    context->dataType = context->unaryExpression( 0)->dataType;
+    for (auto multiplicativeExpression: context->unaryExpression()) {
+        if (context->dataType != multiplicativeExpression->dataType) {
+            ErrorHandler::printErrorContext(multiplicativeExpression, "Error data type, expect " + Utils::ttos(context->dataType));
+            throw std::runtime_error("Semantic analysis failed");
+        }
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitAdditiveExpression(CACTParser::AdditiveExpressionContext *context) {
-    return visitChildren(context);
+    for (auto multiplicativeExpression: context->multiplicativeExpression()) {
+        this->visit(multiplicativeExpression);
+    }
+    context->dataType = context->multiplicativeExpression(0)->dataType;
+    for (auto multiplicativeExpression: context->multiplicativeExpression()) {
+        if (context->dataType != multiplicativeExpression->dataType) {
+            ErrorHandler::printErrorContext(multiplicativeExpression, "Error data type, expect " + Utils::ttos(context->dataType));
+            throw std::runtime_error("Semantic analysis failed");
+        }
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpressionContext *context) {
@@ -63,7 +90,13 @@ std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpress
 }
 
 std::any SemanticAnalyzer::visitExpression(CACTParser::ExpressionContext *context) {
-    return visitChildren(context);
+    if (context->additiveExpression() == nullptr) {
+        context->dataType = DataType::BOOL;
+    } else {
+        this->visit(context->additiveExpression());
+        context->dataType = context->additiveExpression()->dataType;
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitConstantExpression(CACTParser::ConstantExpressionContext *context) {
@@ -257,11 +290,11 @@ std::any SemanticAnalyzer::visitTranslationUnit(CACTParser::TranslationUnitConte
 }
 
 std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarationContext *context) {
-    if(context->declaration()->isEmpty()){
+    if (context->declaration()->isEmpty()) {
         this->visit(context->functionDefinition());//先visit子节点
         context->thisblockinfo = context->functionDefinition()->thisblockinfo;
         this->currentBlock = context->functionDefinition()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
-    }else{
+    } else {
         this->visit(context->declaration());//先visit子节点
         context->thisblockinfo = context->declaration()->thisblockinfo;
         this->currentBlock = context->declaration()->thisblockinfo;//更新currentblock以及自己的blockinfo属性
@@ -287,13 +320,14 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
         return nullptr;
     }
 
-    context->thisfuncinfo =  globalBlock.addNewFunc(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(),returnType);
+    context->thisfuncinfo = globalBlock.addNewFunc(context->Identifier()->getText(),
+                                                   context->Identifier()->getSymbol()->getLine(), returnType);
     //全局块中的函数表添加，同时获得这个funcdefinition的funcsymbolinfo，为将来的blockinfo初始化做准备
     if (!context->functionFParams()->isEmpty()) {
-        if(context->Identifier()->getText() == std::string("main")){
+        if (context->Identifier()->getText() == std::string("main")) {
             ErrorHandler::printErrorContext(context, "main function must be without params");//main函数不能带有参数
             throw std::runtime_error("Semantic analysis failed");
-        }else{
+        } else {
             context->functionFParams()->thisfuncinfo = context->thisfuncinfo;
             this->visit(context->functionFParams());//先去访问参数，在将参数都访问完之后可以获得一个完整的函数定义，再去定义blockinfo
             //等待下面的参数层完善这个函数
@@ -336,28 +370,31 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
 
     int dimension;
     dimension = context->LeftBracket().size();//计算维数
-    if(!dimension){
-        context->thisfuncinfo->addParamVar(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(), basicType);
-    }else{
+    if (!dimension) {
+        context->thisfuncinfo->addParamVar(context->Identifier()->getText(),
+                                           context->Identifier()->getSymbol()->getLine(), basicType);
+    } else {
         int valid_size;//标记了数字的个数//第一维可能标记为0
         valid_size = context->IntegerConstant().size();
         std::vector<int> param_array;
-        
-        if(valid_size == dimension){
-            for(auto integetconstant : context->IntegerConstant()){
+
+        if (valid_size == dimension) {
+            for (auto integetconstant: context->IntegerConstant()) {
                 param_array.push_back(stoi(integetconstant->getText()));
             }
-        }else if(valid_size == (dimension-1)){
+        } else if (valid_size == (dimension - 1)) {
             param_array.push_back(0);
-            for(auto integetconstant : context->IntegerConstant()){
+            for (auto integetconstant: context->IntegerConstant()) {
                 param_array.push_back(stoi(integetconstant->getText()));
             }
-        }else{
+        } else {
             ErrorHandler::printErrorContext(context, "array dimension error");//main函数不能带有参数
             throw std::runtime_error("Semantic analysis failed");
         }//分析得到paramlist
 
-        context->thisfuncinfo->addParamArray(context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(), basicType, param_array, dimension);
+        context->thisfuncinfo->addParamArray(context->Identifier()->getText(),
+                                             context->Identifier()->getSymbol()->getLine(), basicType, param_array,
+                                             dimension);
     }
 
     return {nullptr};
