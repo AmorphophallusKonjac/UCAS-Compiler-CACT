@@ -59,8 +59,18 @@ std::any SemanticAnalyzer::visitLogicalAndExpression(CACTParser::LogicalAndExpre
     return visitChildren(context);
 }
 
-std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpressionContext *context) {
-    return visitChildren(context);
+std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpressionContext *context) {//这里对于logicalor函数的修改还有待斟酌
+    std::vector<bool> condAnd;
+    for(auto logicalandexpression: context->logicalAndExpression()) {
+        condAnd.push_back(logicalandexpression->cond);
+    }
+    context->cond = std::accumulate(condAnd.begin(), condAnd.end(), false, std::logical_or<bool>());//将所有结果或起来得到cond的bool值
+
+    if(context->cond != false && context->cond != true){
+        ErrorHandler::printErrorContext(context, "Error logicalorcondition bool value");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+    return { };
 }
 
 std::any SemanticAnalyzer::visitExpression(CACTParser::ExpressionContext *context) {

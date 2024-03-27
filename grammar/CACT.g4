@@ -66,10 +66,12 @@ equalityExpression
     ;
 
 logicalAndExpression
+    locals [bool cond]
     : equalityExpression (op='&&' equalityExpression)*
     ;
 
 logicalOrExpression
+    locals [bool cond]
     : logicalAndExpression (op='||' logicalAndExpression)*
     ;
 
