@@ -241,7 +241,9 @@ std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context)
 }
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
+    currentBlock = context->thisblockinfo;//更新currentBlock
     this->visit(context->blockItemList());
+    currentBlock = context->thisblockinfo->getParentBlock();//currentBlock回溯
     return { };
 }
 
@@ -347,9 +349,9 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     }
     context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);//更新blockinfo
 
-    currentBlock = context->thisblockinfo;//更新currentBlock
     currentFunc = context->thisfuncinfo;//更新currentFunc
     context->compoundStatement()->thisblockinfo = context->thisblockinfo;//这个compoundStatement作为新的block
+
     this->visit(context->compoundStatement());//进入函数体
     //currentFunc->setOp(new IRLabel(ctx->Ident()->getText()));
 
