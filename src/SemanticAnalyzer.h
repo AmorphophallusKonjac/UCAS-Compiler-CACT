@@ -95,6 +95,8 @@ public:
 
     void analyze();
 
+    typedef std::tuple<DataType, int, std::vector<int>> ExpInfo; // DataType, dimension, arraySize
+
 private:
     ANTLRInputStream input;
     CACTLexer lexer;

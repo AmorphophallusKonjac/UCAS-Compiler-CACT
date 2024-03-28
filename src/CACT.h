@@ -8,6 +8,7 @@ enum SymbolType {
     CONST_ARRAY,
     VAR_ARRAY,
     FUNC,
+    NUM
 };
 
 enum DataType {

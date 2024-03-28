@@ -24,7 +24,9 @@ add_custom_target(
 
 add_definitions(-w -g)
 add_library(antlr STATIC ${ANTLR_LIB_FILES})
-add_executable(compiler ${SOURCE_FILES})
+add_executable(compiler ${SOURCE_FILES}
+        src/ReturnValue.cpp
+        src/ReturnValue.h)
 add_dependencies(compiler gen_files_form_g4)
 find_package(Threads REQUIRED)
 target_link_libraries(compiler antlr Threads::Threads)

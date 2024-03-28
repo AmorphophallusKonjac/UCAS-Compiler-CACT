@@ -106,8 +106,8 @@ BlockInfo::BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std
         //对symboltable进行操作
         symbolTable.symbolList[one_param->getName()] = one_param;
         symbolTable.stackSymbol_size += SizeOfDataType(one_param->getDataType()) *
-                                        ((one_param->getArraySize() == -1) ? 1
-                                                                           : one_param->getArraySize());//看看是否是数组，是数组那么栈要多加一些
+                                        ((one_param->getArrayLength() == -1) ? 1
+                                                                             : one_param->getArrayLength());//看看是否是数组，是数组那么栈要多加一些
         symbolTable.curSymbol = one_param->getName();
     }
 }
@@ -171,7 +171,7 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArraySize());
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArrayLength());
     symbolTable.curSymbol = name;
 
     return newSymbol;
@@ -190,7 +190,7 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArraySize());
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArrayLength());
     symbolTable.curSymbol = name;
 
     return newSymbol;
@@ -274,7 +274,7 @@ GlobalBlock::addNewConstArray(const std::string &name, int line, DataType dataTy
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArraySize());
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArrayLength());
     symbolTable.curSymbol = name;
 
     return newSymbol;
@@ -293,7 +293,7 @@ GlobalBlock::addNewVarArray(const std::string &name, int line, DataType dataType
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
-    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArraySize());
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType) * (newSymbol->getArrayLength());
     symbolTable.curSymbol = name;
 
     return newSymbol;

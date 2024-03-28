@@ -26,20 +26,19 @@ basicType
     ;
 
 primaryExpression
-    locals [DataType dataType]
     : lValue
     | number 
     | LeftParen expression RightParen
     ;
 
 unaryExpression
-    locals [DataType dataType]
     : primaryExpression
     | unaryOperator unaryExpression
     | Identifier LeftParen (functionRParams)? RightParen
     ;
 
 functionRParams
+    locals [FuncSymbolInfo *func]
     : expression (',' expression)*
     ;
 
@@ -52,12 +51,10 @@ unaryOperator
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
 //unaryExpression的优先级比较高
 multiplicativeExpression
-    locals [DataType dataType]
     : unaryExpression (op=('*' | '/' | '%') unaryExpression)*
     ;
 
 additiveExpression
-    locals [DataType dataType]
     : multiplicativeExpression (op=('+' | '-') multiplicativeExpression)*
     ;
 
@@ -84,7 +81,6 @@ logicalOrExpression
 /*****************************以上*****************************/
 
 expression
-    locals [DataType dataType]
     : additiveExpression
     | BooleanConstant
     ;
@@ -170,7 +166,7 @@ expressionStatement
 //表达式语句
 
 lValue
-    : Identifier (LeftBracket expression RightBracket)* 
+    : Identifier (LeftBracket expression RightBracket)*
     ;
 //lvalue一般是针对数组
 
@@ -222,7 +218,6 @@ functionFParam
     ;
 
 number
-    locals [DataType dataType]
     : IntegerConstant   # IntegerConstant
     | FloatingConstant  # FloatingConstant
     ;

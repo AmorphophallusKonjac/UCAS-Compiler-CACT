@@ -1,11 +1,13 @@
 #include "SemanticAnalyzer.h"
 #include "CACT.h"
 #include <vector>
+#include "ReturnValue.h"
 
 SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
                                                             parser(&tokens), globalBlock() {
     root = this->parser.compilationUnit();
     this->currentBlock = &globalBlock;
+    this->currentFunc = nullptr;
     if (this->parser.getNumberOfSyntaxErrors() > 0 || this->lexer.getNumberOfSyntaxErrors() > 0) {
         std::cerr << "lexer error: " << lexer.getNumberOfSyntaxErrors() << std::endl;
         std::cerr << "parser error: " << parser.getNumberOfSyntaxErrors() << std::endl;
@@ -24,22 +26,89 @@ std::any SemanticAnalyzer::visitBasicType(CACTParser::BasicTypeContext *context)
 }
 
 std::any SemanticAnalyzer::visitPrimaryExpression(CACTParser::PrimaryExpressionContext *context) {
-    return visitChildren(context);
+    if (context->lValue() != nullptr) {
+        return this->visit(context->lValue());
+    } else if (context->number() != nullptr) {
+        return this->visit(context->number());
+    } else {
+        return this->visit(context->expression());
+    }
 }
 
 std::any SemanticAnalyzer::visitUnaryExpression(CACTParser::UnaryExpressionContext *context) {
-    if (context->primaryExpression() != nullptr) {
-
-    } else if (context->unaryOperator() != nullptr) {
-
+    DataType dataType;
+    int dimension = 0;
+    std::vector<int> arraySize;
+    if (context->primaryExpression() != nullptr) { // primaryExpression
+        return visitChildren(context);
+    } else if (context->unaryOperator() != nullptr) { // unaryOperator unaryExpression
+        auto unaryExpression = std::any_cast<ReturnValue>(this->visit(context->unaryExpression()));
+        dataType = unaryExpression.getDataType();
+        if (unaryExpression.getDimension() != 0) {
+            ErrorHandler::printErrorContext(context->unaryExpression(),
+                                            "is array");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        if (context->unaryOperator()->getText() == "!") {
+            if (dataType != DataType::BOOL) {
+                ErrorHandler::printErrorContext(context->unaryExpression(),
+                                                "Error data type, expect " + Utils::ttos(DataType::BOOL));
+                throw std::runtime_error("Semantic analysis failed");
+            }
+        } else {
+            if (dataType != DataType::DOUBLE &&
+                dataType != DataType::FLOAT &&
+                dataType != DataType::INT) {
+                ErrorHandler::printErrorContext(context->unaryExpression(),
+                                                "Error data type, expect " + Utils::ttos(DataType::DOUBLE) +
+                                                "/" + Utils::ttos(DataType::FLOAT) +
+                                                "/" + Utils::ttos(DataType::INT));
+                throw std::runtime_error("Semantic analysis failed");
+            }
+        }
+        return unaryExpression;
     } else { // function
-
+        context->functionRParams()->func = globalBlock.lookUpFunc(context->Identifier()->getText());
+        this->visit(context->functionRParams());
+        return ReturnValue(context->functionRParams()->func->getDataType(),
+                           0, std::vector<int>(),
+                           context->functionRParams()->func->getSymbolType());
     }
-    return {};
 }
 
 std::any SemanticAnalyzer::visitFunctionRParams(CACTParser::FunctionRParamsContext *context) {
-    return visitChildren(context);
+    auto paramList = context->func->getparamList();
+
+    if (context->func->getparamNum() < context->expression().size()) {
+        ErrorHandler::printErrorContext(context, "Too many arguments");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+    if (context->func->getparamNum() > context->expression().size()) {
+        ErrorHandler::printErrorContext(context, "Too few arguments");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+
+    for (int i = 0; i < paramList.size(); ++i) {
+        auto retVal = std::any_cast<ReturnValue>(this->visit(context->expression()[i]));
+        if (retVal.getDataType() != paramList[i]->getDataType()) {
+            ErrorHandler::printErrorContext(context->expression(i), "Error data type");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        auto arraySize = paramList[i]->getArraySize();
+        if (retVal.getDimension() != arraySize.size()) {
+            ErrorHandler::printErrorContext(context->expression(i), "Error array dimension");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        for (int j = 0; j < retVal.getDimension(); ++j) {
+            if (arraySize[j] == 0)
+                continue;
+            if (arraySize[j] != retVal.getArraySize()[j]) {
+                ErrorHandler::printErrorContext(context->expression(i), "Error array dimension");
+                throw std::runtime_error("Semantic analysis failed");
+            }
+        }
+    }
+    return {};
 }
 
 std::any SemanticAnalyzer::visitUnaryOperator(CACTParser::UnaryOperatorContext *context) {
@@ -47,31 +116,37 @@ std::any SemanticAnalyzer::visitUnaryOperator(CACTParser::UnaryOperatorContext *
 }
 
 std::any SemanticAnalyzer::visitMultiplicativeExpression(CACTParser::MultiplicativeExpressionContext *context) {
-    for (auto multiplicativeExpression: context->unaryExpression()) {
-        this->visit(multiplicativeExpression);
+    std::vector<ReturnValue> expList;
+    for (auto unaryExpression: context->unaryExpression()) {
+        expList.push_back(std::any_cast<ReturnValue>(this->visit(unaryExpression)));
     }
-    context->dataType = context->unaryExpression( 0)->dataType;
-    for (auto multiplicativeExpression: context->unaryExpression()) {
-        if (context->dataType != multiplicativeExpression->dataType) {
-            ErrorHandler::printErrorContext(multiplicativeExpression, "Error data type, expect " + Utils::ttos(context->dataType));
+    for (int i = 1; i < expList.size(); ++i) {
+        if (expList[i - 1].getDataType() != expList[i].getDataType()
+            || expList[i - 1].getDimension() != 0
+            || expList[i].getDimension() != 0) {
+            ErrorHandler::printErrorContext(context->unaryExpression(i),
+                                            "Error data type");
             throw std::runtime_error("Semantic analysis failed");
         }
     }
-    return {};
+    return expList[0];
 }
 
 std::any SemanticAnalyzer::visitAdditiveExpression(CACTParser::AdditiveExpressionContext *context) {
+    std::vector<ReturnValue> expList;
     for (auto multiplicativeExpression: context->multiplicativeExpression()) {
-        this->visit(multiplicativeExpression);
+        expList.push_back(std::any_cast<ReturnValue>(this->visit(multiplicativeExpression)));
     }
-    context->dataType = context->multiplicativeExpression(0)->dataType;
-    for (auto multiplicativeExpression: context->multiplicativeExpression()) {
-        if (context->dataType != multiplicativeExpression->dataType) {
-            ErrorHandler::printErrorContext(multiplicativeExpression, "Error data type, expect " + Utils::ttos(context->dataType));
+    for (int i = 1; i < expList.size(); ++i) {
+        if (expList[i - 1].getDataType() != expList[i].getDataType()
+            || expList[i - 1].getDimension() != 0
+            || expList[i].getDimension() != 0) {
+            ErrorHandler::printErrorContext(context->multiplicativeExpression(i),
+                                            "Error data type");
             throw std::runtime_error("Semantic analysis failed");
         }
     }
-    return {};
+    return expList[0];
 }
 
 std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpressionContext *context) {
@@ -92,25 +167,28 @@ std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpress
 
 std::any SemanticAnalyzer::visitExpression(CACTParser::ExpressionContext *context) {
     if (context->additiveExpression() == nullptr) {
-        context->dataType = DataType::BOOL;
+        return ReturnValue(DataType::BOOL, 0, std::vector<int>(), SymbolType::NUM);
     } else {
-        this->visit(context->additiveExpression());
-        context->dataType = context->additiveExpression()->dataType;
+        return this->visit(context->additiveExpression());
     }
-    return {};
 }
 
 std::any SemanticAnalyzer::visitConstantExpression(CACTParser::ConstantExpressionContext *context) {
     if (context->number() == nullptr) {
         if (context->dataType != DataType::BOOL) {
             ErrorHandler::printErrorContext(context,
-                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
-                                            Utils::ttos(DataType::BOOL));
+                                            "Error value type, expect " +
+                                            Utils::ttos(context->dataType));
             throw std::runtime_error("Semantic analysis failed");
         }
     } else {
-        context->number()->dataType = context->dataType;
-        this->visit(context->number());
+        auto numberType = std::any_cast<ReturnValue>(this->visit(context->number())).getDataType();
+        if (context->dataType != numberType) {
+            ErrorHandler::printErrorContext(context,
+                                            "Error value type, expect " +
+                                            Utils::ttos(context->dataType));
+            throw std::runtime_error("Semantic analysis failed");
+        }
     }
     return {};
 }
@@ -242,55 +320,105 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
 }
 
 std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context) {
-    if(!context->compoundStatement()->isEmpty()){
+    if (!context->compoundStatement()->isEmpty()) {
         this->visit(context->compoundStatement());
-    }else if(!context->expressionStatement()->isEmpty()){
+    } else if (!context->expressionStatement()->isEmpty()) {
         this->visit(context->expressionStatement());
-    }else if(!context->selectionStatement()->isEmpty()){
+    } else if (!context->selectionStatement()->isEmpty()) {
         this->visit(context->selectionStatement());
-    }else if(!context->iterationStatement()->isEmpty()){
+    } else if (!context->iterationStatement()->isEmpty()) {
         this->visit(context->iterationStatement());
-    }else if(!context->jumpStatement()->isEmpty()){
+    } else if (!context->jumpStatement()->isEmpty()) {
         this->visit(context->jumpStatement());
-    }else{
+    } else {
         ErrorHandler::printErrorContext(context, "statement error");
         throw std::runtime_error("Semantic analysis failed");
     }
 
-    return { };
+    return {};
 }
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
     this->visit(context->blockItemList());
-    return { };
+    return {};
 }
 
 std::any SemanticAnalyzer::visitBlockItemList(CACTParser::BlockItemListContext *context) {
-    for (auto blockitem : context->blockItem()){
+    for (auto blockitem: context->blockItem()) {
         this->visit(blockitem);
     }
-    return { };
+    return {};
 }
 
 std::any SemanticAnalyzer::visitBlockItem(CACTParser::BlockItemContext *context) {
-    if(!context->declaration()->isEmpty()){
+    if (!context->declaration()->isEmpty()) {
         this->visit(context->declaration());
-    }else if(!context->statement()->isEmpty()){
+    } else if (!context->statement()->isEmpty()) {
         this->visit(context->statement());
-    }else{
+    } else {
         ErrorHandler::printErrorContext(context, "blockitem error");
         throw std::runtime_error("Semantic analysis failed");
     }
 
-    return { };
+    return {};
 }
 
 std::any SemanticAnalyzer::visitExpressionStatement(CACTParser::ExpressionStatementContext *context) {
-    return visitChildren(context);
+    if (context->lValue() != nullptr) {
+        auto lValue = std::any_cast<ReturnValue>(this->visit(context->lValue()));
+        auto expression = std::any_cast<ReturnValue>(this->visit(context->expression()));
+        if (lValue.getDataType() != expression.getDataType()) {
+            ErrorHandler::printErrorContext(context, "data type error");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        if (lValue.getDimension() != 0) {
+            ErrorHandler::printErrorContext(context->lValue(), "is array");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        if (expression.getDimension() != 0) {
+            ErrorHandler::printErrorContext(context->expression(), "is array");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        if (expression.getSymbolType() == SymbolType::NUM ||
+            expression.getSymbolType() == SymbolType::CONST_ARRAY ||
+            expression.getSymbolType() == SymbolType::CONST) {
+            ErrorHandler::printErrorContext(context->lValue(), "is array");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        return {};
+    } else {
+        return {};
+    }
 }
 
 std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
-    return visitChildren(context);
+    SymbolInfo *symbol = this->currentBlock->lookUpSymbol(context->Identifier()->getText());
+    if (symbol == nullptr) {
+        ErrorHandler::printErrorContext(context, "use of undeclared identifier");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+    if (context->expression().empty()) { // var || const
+        if (symbol->getSymbolType() != SymbolType::VAR && symbol->getSymbolType() != SymbolType::CONST) {
+            ErrorHandler::printErrorContext(context, "is not variable or constant");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        return ReturnValue(symbol->getDataType(), 0, std::vector<int>(), symbol->getSymbolType());
+    } else { // array element
+        if (symbol->getSymbolType() != SymbolType::VAR_ARRAY && symbol->getSymbolType() != SymbolType::CONST_ARRAY) {
+            ErrorHandler::printErrorContext(context, "is not array");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        if (context->expression().size() > symbol->getArraySize().size()) {
+            ErrorHandler::printErrorContext(context, "too many index");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+        std::vector<int> arraySize;
+        int dimension = symbol->getArraySize().size() - context->expression().size();
+        for (int i = context->expression().size(); i < symbol->getArraySize().size(); ++i) {
+            arraySize.push_back(symbol->getArraySize()[i]);
+        }
+        return ReturnValue(symbol->getDataType(), dimension, arraySize, symbol->getSymbolType());
+    }
 }
 
 std::any SemanticAnalyzer::visitSelectionStatement(CACTParser::SelectionStatementContext *context) {
@@ -307,7 +435,7 @@ std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *
 
 std::any SemanticAnalyzer::visitCompilationUnit(CACTParser::CompilationUnitContext *context) {
     this->visit(context->translationUnit());//直接访问翻译单元即可
-    return { };
+    return {};
 }
 
 std::any SemanticAnalyzer::visitTranslationUnit(CACTParser::TranslationUnitContext *context) {
@@ -319,11 +447,11 @@ std::any SemanticAnalyzer::visitTranslationUnit(CACTParser::TranslationUnitConte
 }
 
 std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarationContext *context) {
-    if(!context->declaration()->isEmpty()){
+    if (!context->declaration()->isEmpty()) {
         this->visit(context->declaration());//visit子节点
-    }else if(!context->functionDefinition()->isEmpty()){
+    } else if (!context->functionDefinition()->isEmpty()) {
         this->visit(context->functionDefinition());//visit子节点
-    }else{
+    } else {
         ErrorHandler::printErrorContext(context, "externaldeclaration error");
         throw std::runtime_error("Semantic analysis failed");
     }
@@ -393,7 +521,7 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
                 param_array.push_back(stoi(integetconstant->getText()));
             }
         } else {
-            ErrorHandler::printErrorContext(context, "array dimension error");//main函数不能带有参数
+            ErrorHandler::printErrorContext(context, "array dimension error");
             throw std::runtime_error("Semantic analysis failed");
         }//分析得到paramlist
 
@@ -410,32 +538,15 @@ void SemanticAnalyzer::analyze() {
 }
 
 std::any SemanticAnalyzer::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
-    if (context->dataType != DataType::INT) {
-        ErrorHandler::printErrorContext(context,
-                                        "Error value type " + Utils::ttos(context->dataType) + ", expect " +
-                                        Utils::ttos(DataType::INT));
-        throw std::runtime_error("Semantic analysis failed");
-    }
-    return {};
+    return ReturnValue(DataType::INT, 0, std::vector<int>(), SymbolType::NUM);
 }
 
 std::any SemanticAnalyzer::visitFloatingConstant(CACTParser::FloatingConstantContext *context) {
     unsigned length = context->FloatingConstant()->getText().size();
     char suffix = context->FloatingConstant()->getText()[length - 1];
     if (suffix == 'f' || suffix == 'F') {
-        if (context->dataType != DataType::FLOAT) {
-            ErrorHandler::printErrorContext(context,
-                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
-                                            Utils::ttos(DataType::FLOAT));
-            throw std::runtime_error("Semantic analysis failed");
-        }
+        return ReturnValue(DataType::FLOAT, 0, std::vector<int>(), SymbolType::NUM);
     } else {
-        if (context->dataType != DataType::DOUBLE) {
-            ErrorHandler::printErrorContext(context,
-                                            "Error value type " + Utils::ttos(context->dataType) + ", expect " +
-                                            Utils::ttos(DataType::DOUBLE));
-            throw std::runtime_error("Semantic analysis failed");
-        }
+        return ReturnValue(DataType::DOUBLE, 0, std::vector<int>(), SymbolType::NUM);
     }
-    return {};
 }
