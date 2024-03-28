@@ -161,8 +161,18 @@ std::any SemanticAnalyzer::visitLogicalAndExpression(CACTParser::LogicalAndExpre
     return visitChildren(context);
 }
 
-std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpressionContext *context) {
-    return visitChildren(context);
+std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpressionContext *context) {//这里对于logicalor函数的修改还有待斟酌
+    std::vector<bool> condAnd;
+    for(auto logicalandexpression: context->logicalAndExpression()) {
+        condAnd.push_back(logicalandexpression->cond);
+    }
+    context->cond = std::accumulate(condAnd.begin(), condAnd.end(), false, std::logical_or<bool>());//将所有结果或起来得到cond的bool值
+
+    if(context->cond != false && context->cond != true){
+        ErrorHandler::printErrorContext(context, "Error logicalorcondition bool value");
+        throw std::runtime_error("Semantic analysis failed");
+    }
+    return { };
 }
 
 std::any SemanticAnalyzer::visitExpression(CACTParser::ExpressionContext *context) {
@@ -339,12 +349,14 @@ std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context)
 }
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
+    currentBlock = context->thisblockinfo;//更新currentBlock
     this->visit(context->blockItemList());
+    currentBlock = context->thisblockinfo->getParentBlock();//currentBlock回溯
     return {};
 }
 
 std::any SemanticAnalyzer::visitBlockItemList(CACTParser::BlockItemListContext *context) {
-    for (auto blockitem: context->blockItem()) {
+    for (auto blockitem : context->blockItem()) {
         this->visit(blockitem);
     }
     return {};
@@ -422,11 +434,29 @@ std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
 }
 
 std::any SemanticAnalyzer::visitSelectionStatement(CACTParser::SelectionStatementContext *context) {
-    return visitChildren(context);
+    currentBlock = context->thisblockinfo;//更新currentblock
+
+    this->visit(context->condition());
+    context->cond = context->condition()->cond;//每一个condition最终都得给出自己的true或false
+    //这里考虑在下一级的condition那里判断最终是否能返回true或false的bool类型？
+
+    for(auto stmt : context->statement()){
+        this->visit(stmt);
+    }//单纯的对自己的子树statement进行访问
+
+    return { };
 }
 
 std::any SemanticAnalyzer::visitIterationStatement(CACTParser::IterationStatementContext *context) {
-    return visitChildren(context);
+    currentBlock = context->thisblockinfo;
+
+    this->visit(context->condition());
+    context->cond = context->condition()->cond;//每一个condition最终都得给出自己的true或false
+    //这里考虑在下一级的condition那里判断最终是否能返回true或false的bool类型？
+
+    this->visit(context->statement());
+    //单纯的对自己的子树statement进行访问
+    return { };
 }
 
 std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *context) {
@@ -478,9 +508,9 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     }
     context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);//更新blockinfo
 
-    currentBlock = context->thisblockinfo;//更新currentBlock
     currentFunc = context->thisfuncinfo;//更新currentFunc
     context->compoundStatement()->thisblockinfo = context->thisblockinfo;//这个compoundStatement作为新的block
+
     this->visit(context->compoundStatement());//进入函数体
     //currentFunc->setOp(new IRLabel(ctx->Ident()->getText()));
 

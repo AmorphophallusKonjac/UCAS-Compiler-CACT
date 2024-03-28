@@ -38,7 +38,6 @@ unaryExpression
     ;
 
 functionRParams
-    locals [FuncSymbolInfo *func]
     : expression (',' expression)*
     ;
 
@@ -59,22 +58,20 @@ additiveExpression
     ;
 
 relationalExpression
-    locals [DataType dataType]
     : additiveExpression (op=('<' | '>' | '<=' | '>=') additiveExpression)?
     ;
 
 equalityExpression
-    locals [DataType dataType]
     : relationalExpression (op=('==' | '!=') relationalExpression)?
     ;
 
 logicalAndExpression
-    locals [DataType dataType]
+    locals [bool cond]
     : equalityExpression (op='&&' equalityExpression)*
     ;
 
 logicalOrExpression
-    locals [DataType dataType]
+    locals [bool cond]
     : logicalAndExpression (op='||' logicalAndExpression)*
     ;
 
@@ -93,7 +90,7 @@ constantExpression
     ;
 
 condition
-    locals [DataType dataType]
+    locals [bool cond]
     : logicalOrExpression
     ;
 
@@ -171,11 +168,15 @@ lValue
 //lvalue一般是针对数组
 
 selectionStatement
+    locals [BlockInfo * thisblockinfo,
+            bool cond]
     : If LeftParen condition RightParen statement (Else statement)?
     ;
 //暂且不考虑else if
 
 iterationStatement
+    locals [BlockInfo * thisblockinfo,
+            bool cond]
     : While LeftParen condition RightParen statement
     ;
 //暂且不考虑for循环
