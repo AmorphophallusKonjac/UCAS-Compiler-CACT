@@ -36,7 +36,7 @@ public:
 
     virtual int getArrayLength() = 0;
 
-    virtual const std::vector<int> &getArraySize() = 0;
+    virtual std::vector<int> getArraySize() = 0;
 
     virtual SymbolType getSymbolType() = 0;
     //datatype:VOID,BOOL,INT,FLOAT,DOUBLE
@@ -61,7 +61,7 @@ public:
 
     virtual int getArrayLength() = 0;
 
-    virtual const std::vector<int> &getArraySize() = 0;
+    virtual std::vector<int> getArraySize() = 0;
 
     virtual SymbolType getSymbolType() = 0;
 
@@ -76,7 +76,7 @@ class ConstSymbolInfo : public ConstVarArraySymbolInfo {
 public:
     int getArrayLength() { return -1; }//不是数组
 
-    const std::vector<int> &getArraySize() override { return {}; }
+    std::vector<int> getArraySize() override { return std::vector<int>(); }
 
     SymbolType getSymbolType() { return SymbolType::CONST; }
 
@@ -91,7 +91,7 @@ class VarSymbolInfo : public ConstVarArraySymbolInfo {
 public:
     int getArrayLength() { return -1; }
 
-    const std::vector<int> &getArraySize() override { return {}; }
+    std::vector<int> getArraySize() override { return std::vector<int>(); }
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
@@ -108,7 +108,7 @@ private:
     int dimension;
 
 public:
-    const std::vector<int> &getArraySize() override { return arraySize; }
+    std::vector<int> getArraySize() override { return arraySize; }
 
     int getDimension() { return dimension; }
 
@@ -134,7 +134,7 @@ public:
 
     int getArrayLength() { return std::accumulate(arraySize.begin(), arraySize.end(), 1, std::multiplies<int>()); }
 
-    const std::vector<int> &getArraySize() override { return arraySize; }
+    std::vector<int> getArraySize() override { return arraySize; }
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
@@ -167,7 +167,7 @@ public:
 
     virtual int getArrayLength() { return paramList.size(); }//函数参数列表的数组大小
 
-    const std::vector<int> &getArraySize() override { return {}; }
+    std::vector<int> getArraySize() override { return std::vector<int>(); }
 
     virtual SymbolType getSymbolType() { return SymbolType::FUNC; }
 

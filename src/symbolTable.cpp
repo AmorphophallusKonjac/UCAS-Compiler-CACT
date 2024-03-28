@@ -319,7 +319,7 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
     if (funcTable.funcList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                        funcTable.funcList[name]->getline()));
         throw std::runtime_error("Semantic analysis failed");
     }
     FuncSymbolInfo *newFunc = new FuncSymbolInfo(name, line, returnType);
