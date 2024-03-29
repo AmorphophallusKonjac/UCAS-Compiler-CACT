@@ -554,10 +554,10 @@ std::any SemanticAnalyzer::visitExpressionStatement(CACTParser::ExpressionStatem
             ErrorHandler::printErrorContext(context->expression(), "is array");
             throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
-        if (expression.getSymbolType() == SymbolType::NUM ||
-            expression.getSymbolType() == SymbolType::CONST_ARRAY ||
-            expression.getSymbolType() == SymbolType::CONST) {
-            ErrorHandler::printErrorContext(context->lValue(), "is array");
+        if (lValue.getSymbolType() == SymbolType::NUM ||
+            lValue.getSymbolType() == SymbolType::CONST_ARRAY ||
+            lValue.getSymbolType() == SymbolType::CONST) {
+            ErrorHandler::printErrorContext(context->lValue(), "is constant");
             throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return {};
