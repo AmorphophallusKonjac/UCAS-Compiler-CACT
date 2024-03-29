@@ -249,7 +249,7 @@ ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, Dat
 }
 
 VarSymbolInfo *GlobalBlock::addNewVar(const std::string &name, int line, DataType dataType) {
-    if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
+    if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
