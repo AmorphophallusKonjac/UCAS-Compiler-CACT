@@ -100,7 +100,8 @@ BlockInfo::BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std
         if (symbolTable.symbolList.count(one_param->getName()) > 0) {
             ErrorHandler::printErrorSymbol(one_param, "redefinition. Previous definition is on line " + std::to_string(
                     symbolTable.symbolList[one_param->getName()]->getline()));
-            throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
 
         //对symboltable进行操作
@@ -125,7 +126,7 @@ SymbolInfo *BlockInfo::lookUpSymbol(std::string symbolName) {
 }//一层层往外递归查找符号
 //注意这里的lookUpSymbol是不会局限于一个块的，因此后面检查duplicate的时候不能直接调用这个函数
 
-/***********在Block中添加各种符号***********/ 
+/***********在Block中添加各种符号***********/
 ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataType dataType) {
     //symbol符号表添加
     if (symbolTable.symbolList.count(name) > 0) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同//不用
@@ -137,6 +138,9 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
 
     //对symboltable进行操作
+    symbolTable.symbolList[name] = newSymbol;
+    symbolTable.stackSymbol_size += SizeOfDataType(dataType);
+    symbolTable.curSymbol = name;
 
     return newSymbol;
 }
@@ -308,7 +312,8 @@ FuncSymbolInfo *GlobalBlock::lookUpFunc(std::string symbolName) {
             return funcTable.funcList[symbolName];
         } else {
             ErrorHandler::printErrorMessage("'" + symbolName + "' is not function");
-            throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     return nullptr;
