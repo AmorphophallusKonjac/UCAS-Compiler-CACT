@@ -100,7 +100,7 @@ BlockInfo::BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std
         if (symbolTable.symbolList.count(one_param->getName()) > 0) {
             ErrorHandler::printErrorSymbol(one_param, "redefinition. Previous definition is on line " + std::to_string(
                     symbolTable.symbolList[one_param->getName()]->getline()));
-            throw std::runtime_error("Semantic analysis failed");
+            throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
 
         //对symboltable进行操作
@@ -132,7 +132,7 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
 
@@ -146,7 +146,7 @@ VarSymbolInfo *BlockInfo::addNewVar(const std::string &name, int line, DataType 
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
 
@@ -165,7 +165,7 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
@@ -184,7 +184,7 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
@@ -232,7 +232,7 @@ ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, Dat
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
 
@@ -249,7 +249,7 @@ VarSymbolInfo *GlobalBlock::addNewVar(const std::string &name, int line, DataTyp
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
 
@@ -268,7 +268,7 @@ GlobalBlock::addNewConstArray(const std::string &name, int line, DataType dataTy
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
@@ -287,7 +287,7 @@ GlobalBlock::addNewVarArray(const std::string &name, int line, DataType dataType
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         symbolTable.symbolList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
 
@@ -308,7 +308,7 @@ FuncSymbolInfo *GlobalBlock::lookUpFunc(std::string symbolName) {
             return funcTable.funcList[symbolName];
         } else {
             ErrorHandler::printErrorMessage("'" + symbolName + "' is not function");
-            throw std::runtime_error("Semantic analysis failed");
+            throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     return nullptr;
@@ -320,7 +320,7 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
         ErrorHandler::printErrorMessage(
                 "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
                         funcTable.funcList[name]->getline()));
-        throw std::runtime_error("Semantic analysis failed");
+        throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     FuncSymbolInfo *newFunc = new FuncSymbolInfo(name, line, returnType);
 
