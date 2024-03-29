@@ -507,7 +507,7 @@ std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context)
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
     if(context->thisfuncinfo == nullptr){
-        context->thisblockinfo = globalBlock.addNewBlock();//更新blockinfo
+        context->thisblockinfo = currentBlock->addNewBlock();//更新blockinfo
     }else{
         context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);//根据传进的funcinfo更新blockinfo
     }
