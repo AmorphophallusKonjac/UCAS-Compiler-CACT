@@ -1,0 +1,18 @@
+//OUTPUT:2 3 4
+
+int main()
+{
+    if (false || false){
+        print_int(1);
+    }
+    if (false || true){
+        print_int(2);
+    }
+    if (true || false){
+        print_int(3);
+    }
+    if (true || true){
+        print_int(4);
+    }
+    return 0;
+}
