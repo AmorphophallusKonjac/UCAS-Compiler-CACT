@@ -227,7 +227,7 @@ public:
 class BlockInfo {
 protected:
     BlockInfo *parentBlock;
-    FuncSymbolInfo *belongTo;//块属于某一个函数
+    FuncSymbolInfo *belongTo = nullptr;//块属于某一个函数
 
     SymbolTable symbolTable;
     BlockTable blockTable;

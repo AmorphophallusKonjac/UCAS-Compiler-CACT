@@ -140,7 +140,8 @@ statement
     ;
 
 compoundStatement//复合语句
-    locals [BlockInfo * thisblockinfo]
+    locals [BlockInfo * thisblockinfo,
+            FuncSymbolInfo * thisfuncinfo = nullptr]
     : LeftBrace blockItemList? RightBrace
     ;
 
