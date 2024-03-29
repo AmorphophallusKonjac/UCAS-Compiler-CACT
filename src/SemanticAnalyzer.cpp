@@ -583,6 +583,13 @@ std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
             ErrorHandler::printErrorContext(context, "is not array");
             throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
+        for (auto expression : context->expression()) {
+            auto retVal = std::any_cast<ReturnValue>(this->visit(expression));
+            if (retVal.getDataType() != DataType::INT || retVal.getDimension() != 0) {
+                ErrorHandler::printErrorContext(expression, "is invalid array index");
+                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            }
+        }
         if (context->expression().size() > symbol->getArraySize().size()) {
             ErrorHandler::printErrorContext(context, "too many index");
             throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
