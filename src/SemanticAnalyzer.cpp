@@ -55,13 +55,15 @@ std::any SemanticAnalyzer::visitUnaryExpression(CACTParser::UnaryExpressionConte
         if (unaryExpression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->unaryExpression(),
                                             "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (context->unaryOperator()->getText() == "!") {
             if (dataType != DataType::BOOL) {
                 ErrorHandler::printErrorContext(context->unaryExpression(),
                                                 "Error data type, expect " + Utils::ttos(DataType::BOOL));
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         } else {
             if (dataType != DataType::DOUBLE &&
@@ -71,7 +73,8 @@ std::any SemanticAnalyzer::visitUnaryExpression(CACTParser::UnaryExpressionConte
                                                 "Error data type, expect " + Utils::ttos(DataType::DOUBLE) +
                                                 "/" + Utils::ttos(DataType::FLOAT) +
                                                 "/" + Utils::ttos(DataType::INT));
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         return unaryExpression;
@@ -79,11 +82,18 @@ std::any SemanticAnalyzer::visitUnaryExpression(CACTParser::UnaryExpressionConte
         auto func = globalBlock.lookUpFunc(context->Identifier()->getText());
         if (func == nullptr) {
             ErrorHandler::printErrorContext(context, "use of undeclared function");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (context->functionRParams() != nullptr) {
             context->functionRParams()->func = func;
             this->visit(context->functionRParams());
+        } else {
+            if (func->getparamNum() != 0) {
+                ErrorHandler::printErrorContext(context, "Too few arguments");
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            }
         }
         return ReturnValue(func->getDataType(),
                            0, std::vector<int>(),
@@ -96,30 +106,35 @@ std::any SemanticAnalyzer::visitFunctionRParams(CACTParser::FunctionRParamsConte
 
     if (context->func->getparamNum() < context->expression().size()) {
         ErrorHandler::printErrorContext(context, "Too many arguments");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     if (context->func->getparamNum() > context->expression().size()) {
         ErrorHandler::printErrorContext(context, "Too few arguments");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
 
     for (int i = 0; i < paramList.size(); ++i) {
         auto retVal = std::any_cast<ReturnValue>(this->visit(context->expression()[i]));
         if (retVal.getDataType() != paramList[i]->getDataType()) {
             ErrorHandler::printErrorContext(context->expression(i), "Error data type");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         auto arraySize = paramList[i]->getArraySize();
         if (retVal.getDimension() != arraySize.size()) {
             ErrorHandler::printErrorContext(context->expression(i), "Error array dimension");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         for (int j = 0; j < retVal.getDimension(); ++j) {
             if (arraySize[j] == 0)
                 continue;
             if (arraySize[j] != retVal.getArraySize()[j]) {
                 ErrorHandler::printErrorContext(context->expression(i), "Error array dimension");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
     }
@@ -142,12 +157,14 @@ std::any SemanticAnalyzer::visitMultiplicativeExpression(CACTParser::Multiplicat
                 expList[i].getDataType() != DataType::FLOAT) {
                 ErrorHandler::printErrorContext(context->unaryExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
             if (expList[i].getDimension() != 0) {
                 ErrorHandler::printErrorContext(context->unaryExpression(i),
                                                 "is array");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         for (int i = 1; i < expList.size(); ++i) {
@@ -156,7 +173,8 @@ std::any SemanticAnalyzer::visitMultiplicativeExpression(CACTParser::Multiplicat
                                                 "is " + Utils::ttos(expList[i - 1].getDataType()));
                 ErrorHandler::printErrorContext(context->unaryExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()));
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
     }
@@ -176,12 +194,14 @@ std::any SemanticAnalyzer::visitAdditiveExpression(CACTParser::AdditiveExpressio
                 expList[i].getDataType() != DataType::FLOAT) {
                 ErrorHandler::printErrorContext(context->multiplicativeExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
             if (expList[i].getDimension() != 0) {
                 ErrorHandler::printErrorContext(context->multiplicativeExpression(i),
                                                 "is array");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         for (int i = 1; i < expList.size(); ++i) {
@@ -190,7 +210,8 @@ std::any SemanticAnalyzer::visitAdditiveExpression(CACTParser::AdditiveExpressio
                                                 "is " + Utils::ttos(expList[i - 1].getDataType()));
                 ErrorHandler::printErrorContext(context->multiplicativeExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()));
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
     }
@@ -203,7 +224,8 @@ std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpre
         if (additiveExpression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->additiveExpression(0),
                                             "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return additiveExpression;
     } else {
@@ -217,12 +239,14 @@ std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpre
                 expList[i].getDataType() != DataType::FLOAT) {
                 ErrorHandler::printErrorContext(context->additiveExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
             if (expList[i].getDimension() != 0) {
                 ErrorHandler::printErrorContext(context->additiveExpression(i),
                                                 "is array");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         if (expList[0].getDataType() != expList[1].getDataType()) {
@@ -230,7 +254,8 @@ std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpre
                                             "is " + Utils::ttos(expList[0].getDataType()));
             ErrorHandler::printErrorContext(context->additiveExpression(1),
                                             "is " + Utils::ttos(expList[1].getDataType()));
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return ReturnValue(DataType::BOOL, 0, std::vector<int>(), SymbolType::NUM);
     }
@@ -242,7 +267,8 @@ std::any SemanticAnalyzer::visitEqualityExpression(CACTParser::EqualityExpressio
         if (relationalExpression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->relationalExpression(0),
                                             "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return relationalExpression;
     } else {
@@ -257,12 +283,14 @@ std::any SemanticAnalyzer::visitEqualityExpression(CACTParser::EqualityExpressio
                 expList[i].getDataType() != DataType::BOOL) {
                 ErrorHandler::printErrorContext(context->relationalExpression(i),
                                                 "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
             if (expList[i].getDimension() != 0) {
                 ErrorHandler::printErrorContext(context->relationalExpression(i),
                                                 "is array");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         if (expList[0].getDataType() != expList[1].getDataType()) {
@@ -270,7 +298,8 @@ std::any SemanticAnalyzer::visitEqualityExpression(CACTParser::EqualityExpressio
                                             "is " + Utils::ttos(expList[0].getDataType()));
             ErrorHandler::printErrorContext(context->relationalExpression(1),
                                             "is " + Utils::ttos(expList[1].getDataType()));
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return ReturnValue(DataType::BOOL, 0, std::vector<int>(), SymbolType::NUM);
     }
@@ -285,12 +314,14 @@ std::any SemanticAnalyzer::visitLogicalAndExpression(CACTParser::LogicalAndExpre
         if (expList[i].getDataType() != DataType::BOOL) {
             ErrorHandler::printErrorContext(context->equalityExpression(i),
                                             "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (expList[i].getDimension() != 0) {
             ErrorHandler::printErrorContext(context->equalityExpression(i),
                                             "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     return expList[0];
@@ -305,12 +336,14 @@ std::any SemanticAnalyzer::visitLogicalOrExpression(CACTParser::LogicalOrExpress
         if (expList[i].getDataType() != DataType::BOOL) {
             ErrorHandler::printErrorContext(context->logicalAndExpression(i),
                                             "is " + Utils::ttos(expList[i].getDataType()) + ", error data type");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (expList[i].getDimension() != 0) {
             ErrorHandler::printErrorContext(context->logicalAndExpression(i),
                                             "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     return expList[0];
@@ -330,7 +363,8 @@ std::any SemanticAnalyzer::visitConstantExpression(CACTParser::ConstantExpressio
             ErrorHandler::printErrorContext(context,
                                             "Error value type, expect " +
                                             Utils::ttos(context->dataType));
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     } else {
         auto numberType = std::any_cast<ReturnValue>(this->visit(context->number())).getDataType();
@@ -338,7 +372,8 @@ std::any SemanticAnalyzer::visitConstantExpression(CACTParser::ConstantExpressio
             ErrorHandler::printErrorContext(context,
                                             "Error value type, expect " +
                                             Utils::ttos(context->dataType));
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     return {};
@@ -348,11 +383,13 @@ std::any SemanticAnalyzer::visitCondition(CACTParser::ConditionContext *context)
     auto retVal = std::any_cast<ReturnValue>(this->visit(context->logicalOrExpression()));
     if (retVal.getDataType() != DataType::BOOL) {
         ErrorHandler::printErrorContext(context, "condition is not bool");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     if (retVal.getDimension() != 0) {
         ErrorHandler::printErrorContext(context, "is array");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     return {};
 }
@@ -405,20 +442,23 @@ std::any SemanticAnalyzer::visitConstantInitValue(CACTParser::ConstantInitValueC
     if (!context->arraySize.empty()) { // is array
         if (context->constantExpression() != nullptr) {
             ErrorHandler::printErrorContext(context, "Error init value");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
     }
     if (context->constantExpression() == nullptr) {
         if (arraySize == 0) {
             ErrorHandler::printErrorContext(context, "Error init value");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         for (auto constantInitValue: context->constantInitValue()) {
             constantInitValue->dataType = context->dataType;
             if (constantInitValue->constantExpression() == nullptr) { // type is array
                 if (currentSize % subArraySize > 0) {
                     ErrorHandler::printErrorContext(context, "Error init value");
-                    throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                    throw std::runtime_error(
+                            "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
                 }
                 constantInitValue->dataType = context->dataType;
                 for (auto i = context->arraySize.begin() + 1; i < context->arraySize.end(); ++i) {
@@ -433,7 +473,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(CACTParser::ConstantInitValueC
             }
             if (currentSize > arraySize) {
                 ErrorHandler::printErrorContext(context, "Error init value");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
     } else {
@@ -491,16 +532,17 @@ std::any SemanticAnalyzer::visitStatement(CACTParser::StatementContext *context)
         this->visit(context->jumpStatement());
     } else {
         ErrorHandler::printErrorContext(context, "statement error");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
 
     return {};
 }
 
 std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementContext *context) {
-    if(context->thisfuncinfo == nullptr){
+    if (context->thisfuncinfo == nullptr) {
         context->thisblockinfo = currentBlock->addNewBlock();//更新blockinfo
-    }else{
+    } else {
         context->thisblockinfo = globalBlock.addNewBlock(context->thisfuncinfo);//根据传进的funcinfo更新blockinfo
     }
 
@@ -524,7 +566,8 @@ std::any SemanticAnalyzer::visitBlockItem(CACTParser::BlockItemContext *context)
         this->visit(context->statement());
     } else {
         ErrorHandler::printErrorContext(context, "blockitem error");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
 
     return {};
@@ -536,21 +579,25 @@ std::any SemanticAnalyzer::visitExpressionStatement(CACTParser::ExpressionStatem
         auto expression = std::any_cast<ReturnValue>(this->visit(context->expression()));
         if (lValue.getDataType() != expression.getDataType()) {
             ErrorHandler::printErrorContext(context, "data type error");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (lValue.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->lValue(), "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (expression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->expression(), "is array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         if (lValue.getSymbolType() == SymbolType::NUM ||
             lValue.getSymbolType() == SymbolType::CONST_ARRAY ||
             lValue.getSymbolType() == SymbolType::CONST) {
             ErrorHandler::printErrorContext(context->lValue(), "is constant");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return {};
     } else {
@@ -562,29 +609,34 @@ std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
     SymbolInfo *symbol = this->currentBlock->lookUpSymbol(context->Identifier()->getText());
     if (symbol == nullptr) {
         ErrorHandler::printErrorContext(context, "use of undeclared identifier");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     if (context->expression().empty()) { // var || const
         if (symbol->getSymbolType() != SymbolType::VAR && symbol->getSymbolType() != SymbolType::CONST) {
             ErrorHandler::printErrorContext(context, "is not variable or constant");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         return ReturnValue(symbol->getDataType(), 0, std::vector<int>(), symbol->getSymbolType());
     } else { // array element
         if (symbol->getSymbolType() != SymbolType::VAR_ARRAY && symbol->getSymbolType() != SymbolType::CONST_ARRAY) {
             ErrorHandler::printErrorContext(context, "is not array");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
-        for (auto expression : context->expression()) {
+        for (auto expression: context->expression()) {
             auto retVal = std::any_cast<ReturnValue>(this->visit(expression));
             if (retVal.getDataType() != DataType::INT || retVal.getDimension() != 0) {
                 ErrorHandler::printErrorContext(expression, "is invalid array index");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
         if (context->expression().size() > symbol->getArraySize().size()) {
             ErrorHandler::printErrorContext(context, "too many index");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
         std::vector<int> arraySize;
         int dimension = symbol->getArraySize().size() - context->expression().size();
@@ -609,16 +661,19 @@ std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *
             auto retVal = std::any_cast<ReturnValue>(this->visit(context->expression()));
             if (retVal.getDimension() != 0) {
                 ErrorHandler::printErrorContext(context, "is array");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
             if (retVal.getDataType() != this->currentFunc->getDataType()) {
                 ErrorHandler::printErrorContext(context, "Error return type");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         } else {
             if (this->currentFunc->getDataType() != DataType::VOID) {
                 ErrorHandler::printErrorContext(context, "miss return value");
-                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                throw std::runtime_error(
+                        "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             }
         }
     } else {
@@ -646,7 +701,8 @@ std::any SemanticAnalyzer::visitExternalDeclaration(CACTParser::ExternalDeclarat
         this->visit(context->functionDefinition());//visit子节点
     } else {
         ErrorHandler::printErrorContext(context, "externaldeclaration error");
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     return {};
 }
@@ -662,7 +718,8 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     if (context->functionFParams() != nullptr) {
         if (context->Identifier()->getText() == std::string("main")) {
             ErrorHandler::printErrorContext(context, "main function must be without params");//main函数不能带有参数
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         } else {
             context->functionFParams()->thisfuncinfo = context->thisfuncinfo;
             this->visit(context->functionFParams());//先去访问参数，在将参数都访问完之后可以获得一个完整的函数定义，再去定义blockinfo
@@ -714,7 +771,8 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
             }
         } else {
             ErrorHandler::printErrorContext(context, "array dimension error");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            throw std::runtime_error(
+                    "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }//分析得到paramlist
 
         context->thisfuncinfo->addParamArray(context->Identifier()->getText(),
