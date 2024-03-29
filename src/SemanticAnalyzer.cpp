@@ -410,6 +410,12 @@ std::any SemanticAnalyzer::visitConstantInitValue(CACTParser::ConstantInitValueC
         arraySize = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1, std::multiplies<>());
         subArraySize = arraySize / context->arraySize.front();
     }
+    if (!context->arraySize.empty()) { // is array
+        if (context->constantExpression() != nullptr) {
+            ErrorHandler::printErrorContext(context, "Error init value");
+            throw std::runtime_error("Semantic analysis failed");
+        }
+    }
     if (context->constantExpression() == nullptr) {
         if (arraySize == 0) {
             ErrorHandler::printErrorContext(context, "Error init value");
