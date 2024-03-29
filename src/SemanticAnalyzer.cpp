@@ -200,10 +200,6 @@ std::any SemanticAnalyzer::visitAdditiveExpression(CACTParser::AdditiveExpressio
 std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpressionContext *context) {
     if (context->additiveExpression().size() == 1) {
         auto additiveExpression = std::any_cast<ReturnValue>(this->visit(context->additiveExpression(0)));
-        if (additiveExpression.getDataType() != DataType::BOOL) {
-            ErrorHandler::printErrorContext(context->additiveExpression(0), "error data type");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-        }
         if (additiveExpression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->additiveExpression(0),
                                             "is array");
@@ -243,10 +239,6 @@ std::any SemanticAnalyzer::visitRelationalExpression(CACTParser::RelationalExpre
 std::any SemanticAnalyzer::visitEqualityExpression(CACTParser::EqualityExpressionContext *context) {
     if (context->relationalExpression().size() == 1) {
         auto relationalExpression = std::any_cast<ReturnValue>(this->visit(context->relationalExpression(0)));
-        if (relationalExpression.getDataType() != DataType::BOOL) {
-            ErrorHandler::printErrorContext(context->relationalExpression(0), "error data type");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-        }
         if (relationalExpression.getDimension() != 0) {
             ErrorHandler::printErrorContext(context->relationalExpression(0),
                                             "is array");
