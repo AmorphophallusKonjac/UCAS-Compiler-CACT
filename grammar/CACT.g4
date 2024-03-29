@@ -146,6 +146,7 @@ compoundStatement//复合语句
     ;
 
 blockItemList
+    //locals [BlockItemContext * lastblockitem]
     : blockItem+
     ;
 
@@ -167,11 +168,14 @@ lValue
 //lvalue一般是针对数组
 
 selectionStatement
+    locals [BlockInfo * thisblockinfo,
+            bool ifelseType = false]
     : If LeftParen condition RightParen statement (Else statement)?
     ;
 //暂且不考虑else if
 
 iterationStatement
+    locals [BlockInfo * thisblockinfo]
     : While LeftParen condition RightParen statement
     ;
 //暂且不考虑for循环

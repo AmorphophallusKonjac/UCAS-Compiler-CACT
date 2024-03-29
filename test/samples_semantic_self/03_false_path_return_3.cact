@@ -1,0 +1,15 @@
+int foo( int a, int b ){
+    if( a > b ){
+        if(a == b){
+            return 1;
+        }
+    } else {
+        a = 2;
+        return 1;
+    }
+}
+
+int main(){
+    foo(1,2);
+    return 0;
+}
