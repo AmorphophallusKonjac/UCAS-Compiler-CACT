@@ -785,6 +785,11 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
 
 void SemanticAnalyzer::analyze() {
     this->visit(this->root);
+    if (globalBlock.lookUpFunc("main") == nullptr) {
+        ErrorHandler::printErrorMessage("Can not find main");
+        throw std::runtime_error(
+                "Semantic analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+    }
 }
 
 std::any SemanticAnalyzer::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
