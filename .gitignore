@@ -22,3 +22,7 @@ testbench
 
 share_CACT.sh
 demo.c
+
+test/runllvm.sh
+test/*/ll
+test/*/s
