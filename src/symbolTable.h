@@ -2,6 +2,7 @@
 #define COMPILER_SYMBOLTABLE_H
 
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <string>
@@ -48,8 +49,93 @@ public:
     ~SymbolInfo(){};
 };
 
+class initValue{
+private:
+    std::vector<int>    intArray;
+    std::vector<bool>   boolArray;
+    std::vector<double> doubleArray;
+    std::vector<float>  floatArray;
+
+public:
+
+    void setInitValue(int    value){ intArray.push_back(value);   };
+    void setInitValue(bool   value){ boolArray.push_back(value);   };
+    void setInitValue(double value){ doubleArray.push_back(value); };
+    void setInitValue(float  value){ floatArray.push_back(value);  };
+    void setZero(DataType datatype){
+        switch (datatype) {
+            case INT:
+                intArray.push_back(0);
+                return;
+            case BOOL:
+                boolArray.push_back(0);
+                return;
+            case DOUBLE:
+                doubleArray.push_back(0);
+                return;
+            case FLOAT:
+                floatArray.push_back(0);
+                return;
+            default:
+                return;//如果匹配不成功的话就返回一个空指针
+        }
+    }
+    int  getCurrentArraySize(DataType datatype){
+        switch (datatype) {
+            case INT:
+                return intArray.size();
+            case BOOL:
+                return boolArray.size();
+            case DOUBLE:
+                return doubleArray.size();
+            case FLOAT:
+                return floatArray.size();
+            default:
+                return -1;//如果匹配不成功的话就返回一个空指针
+        }
+    }
+
+    std::any getInitValue(DataType datatype, std::vector<int> indexArray){ 
+        
+        int index = 0;
+        std::vector<int>::iterator element = indexArray.begin();
+        while (element != indexArray.end()) {
+            index += std::accumulate(element, indexArray.end(), 1, std::multiplies<int>());
+            element++;
+        }
+
+        switch (datatype) {
+            case INT:
+                return intArray[index];
+            case BOOL:
+                return boolArray[index];
+            case DOUBLE:
+                return doubleArray[index];
+            case FLOAT:
+                return floatArray[index];
+            default:
+                return nullptr;//如果匹配不成功的话就返回一个空指针
+        }
+    };
+
+    std::any getInitValue(DataType datatype){
+        switch (datatype) {
+            case INT:
+                return intArray[0];
+            case BOOL:
+                return boolArray[0];
+            case DOUBLE:
+                return doubleArray[0];
+            case FLOAT:
+                return floatArray[0];
+            default:
+                return nullptr;//如果匹配不成功的话就返回一个空指针
+        }
+    };
+};
+
 /***********常量变量数组符号表***********/
-class ConstVarArraySymbolInfo : public SymbolInfo {
+class ConstVarArraySymbolInfo : public SymbolInfo, public initValue {
 private:
     DataType dataType;
     int global = 0;//代表是否是全局变量
@@ -60,9 +146,7 @@ public:
     int getGlobal() { return global; }
 
     virtual int getArrayLength() = 0;
-
     virtual std::vector<int> getArraySize() = 0;
-
     virtual SymbolType getSymbolType() = 0;
 
     ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global);
@@ -187,7 +271,7 @@ public:
     ~FuncSymbolInfo() {
         for (SymbolInfo *symbol: paramList) { delete symbol; };
     };
-};
+}; 
 
 
 /***********各种table***********/

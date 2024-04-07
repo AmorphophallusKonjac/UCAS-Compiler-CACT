@@ -49,7 +49,7 @@ IROperand *SymbolInfo::getOp() {
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)
-    : SymbolInfo(name, line), dataType(dataType), global(global) {}
+    : SymbolInfo(name, line), initValue(), dataType(dataType), global(global) {}
 
 ConstSymbolInfo::ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global)
     : ConstVarArraySymbolInfo(name, line, dataType, global) {}

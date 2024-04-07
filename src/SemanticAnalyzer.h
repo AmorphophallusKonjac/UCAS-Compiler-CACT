@@ -101,6 +101,7 @@ private:
     GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
     FuncSymbolInfo *currentFunc;
+    ConstVarArraySymbolInfo *currentSymbol;
     IRModule *ir;
 };
 

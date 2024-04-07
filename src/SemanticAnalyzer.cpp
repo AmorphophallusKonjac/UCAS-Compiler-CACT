@@ -478,9 +478,9 @@ std::any SemanticAnalyzer::visitConstantDeclaration(
         int line;
         std::tie(name, arraySize, dimension, line) = constantInfo;
         if (dimension == 0) {
-            this->currentBlock->addNewConst(name, line, context->dataType);
+            currentSymbol = this->currentBlock->addNewConst(name, line, context->dataType);
         } else {
-            this->currentBlock->addNewConstArray(name, line, context->dataType,
+            currentSymbol = this->currentBlock->addNewConstArray(name, line, context->dataType,
                                                  arraySize, dimension);
         }
     }
@@ -542,7 +542,11 @@ std::any SemanticAnalyzer::visitConstantInitValue(
                     constantInitValue->arraySize.push_back(*i);
                 }
                 this->visit(constantInitValue);
+
                 currentSize += subArraySize;
+                for(int i= currentSymbol->getCurrentArraySize(context->dataType);i < currentSize;i++)
+                    currentSymbol->setZero(context->dataType);
+                //将所有的空缺部位全部填上0
             } else {// is value
                 ++currentSize;
                 constantInitValue->dataType = context->dataType;
@@ -558,6 +562,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     } else {
         context->constantExpression()->dataType = context->dataType;
         this->visit(context->constantExpression());
+        currentSymbol->setInitValue(context->constantExpression()->number());//这里直接将数字给进去，会进行分析然后从判断加入到哪个std::vector中
     }
     return {};
 }
@@ -576,9 +581,9 @@ std::any SemanticAnalyzer::visitVariableDeclaration(
         int line;
         std::tie(name, arraySize, dimension, line) = varInfo;
         if (dimension == 0) {
-            this->currentBlock->addNewVar(name, line, context->dataType);
+            currentSymbol = this->currentBlock->addNewVar(name, line, context->dataType);
         } else {
-            this->currentBlock->addNewVarArray(name, line, context->dataType,
+            currentSymbol = this->currentBlock->addNewVarArray(name, line, context->dataType,
                                                arraySize, dimension);
         }
     }
@@ -808,8 +813,7 @@ std::any SemanticAnalyzer::visitSelectionStatement(
         }
 
         returnFlag = returnFlag && currentBlock->getReturnSign();
-        currentBlock->setReturnSign(
-                false);// 把这个块的returnsign给清空，为下一次循环做准备
+        currentBlock->setReturnSign(false);// 把这个块的returnsign给清空，为下一次循环做准备
     }
 
     currentBlock->setReturnSign(returnFlag);
