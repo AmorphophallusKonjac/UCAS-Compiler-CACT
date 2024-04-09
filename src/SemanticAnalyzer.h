@@ -4,16 +4,16 @@
 #include "CACTLexer.h"
 #include "CACTParser.h"
 #include "CACTVisitor.h"
-#include "tree/ParseTree.h"
+#include "IR/IRModule.h"
 #include "symbolTable.h"
-#include "ErrorHandler.h"
+#include "tree/ParseTree.h"
+#include "utils/ErrorHandler.h"
 
 using namespace antlr4;
 
-class SemanticAnalyzer : public CACTVisitor{
+class SemanticAnalyzer : public CACTVisitor {
 public:
-
-    explicit SemanticAnalyzer(std::ifstream *stream);
+    explicit SemanticAnalyzer(std::ifstream *stream, GlobalBlock *globalBlock, IRModule *ir);
 
     std::any visitFunctionType(CACTParser::FunctionTypeContext *context) override;
 
@@ -95,7 +95,7 @@ public:
 
     void analyze();
 
-    typedef std::tuple<DataType, int, std::vector<int>> ExpInfo; // DataType, dimension, arraySize
+    typedef std::tuple<DataType, int, std::vector<int>> ExpInfo;// DataType, dimension, arraySize
 
 private:
     ANTLRInputStream input;
@@ -103,10 +103,11 @@ private:
     CommonTokenStream tokens;
     CACTParser parser;
     tree::ParseTree *root;
-    GlobalBlock globalBlock;
+    GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
     FuncSymbolInfo *currentFunc;
+    IRModule *ir;
 };
 
 
-#endif //COMPILER_SEMANTICANALYZER_H
+#endif//COMPILER_SEMANTICANALYZER_H

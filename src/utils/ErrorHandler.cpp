@@ -1,8 +1,9 @@
 #include "ErrorHandler.h"
-#include "symbolTable.h"
+
 #include "CACTLexer.h"
 #include "CACTParser.h"
 #include "CACTVisitor.h"
+#include "symbolTable.h"
 
 void ErrorHandler::printErrorContext(antlr4::ParserRuleContext *context, const std::string &msg) {
     size_t line = context->start->getLine();

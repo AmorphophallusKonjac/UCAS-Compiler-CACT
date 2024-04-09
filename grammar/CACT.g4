@@ -3,8 +3,8 @@ grammar CACT;
 @header {
     #include <vector>
     #include <string>
-    #include "../src/CACT.h"
-    #include "../src/symbolTable.h"
+    #include "utils/CACT.h"
+    #include "symbolTable.h"
 }
 
 /****** parser ******/

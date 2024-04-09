@@ -1,4 +1,5 @@
 #include "symbolTable.h"
+
 #include <iostream>
 
 std::string ToString(DataType x) {
@@ -32,7 +33,7 @@ int SizeOfDataType(DataType x) {
 
 /***********符号表***********/
 SymbolInfo::SymbolInfo(const std::string &name, int line)
-        : name(name), operand(nullptr), line(line) {}
+    : name(name), operand(nullptr), line(line) {}
 
 void SymbolInfo::setOp(IROperand *op) {
     operand = op;
@@ -48,33 +49,33 @@ IROperand *SymbolInfo::getOp() {
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)
-        : SymbolInfo(name, line), dataType(dataType), global(global) {}
+    : SymbolInfo(name, line), dataType(dataType), global(global) {}
 
 ConstSymbolInfo::ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global)
-        : ConstVarArraySymbolInfo(name, line, dataType, global) {}
+    : ConstVarArraySymbolInfo(name, line, dataType, global) {}
 
 
 VarSymbolInfo::VarSymbolInfo(const std::string &name, int line, DataType dataType, int global)
-        : ConstVarArraySymbolInfo(name, line, dataType, global) {}
+    : ConstVarArraySymbolInfo(name, line, dataType, global) {}
 
 
 ConstArraySymbolInfo::ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                                            const std::vector<int> arraySize, int dimension)
-        : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
+    : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
 
 
 VarArraySymbolInfo::VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                                        const std::vector<int> arraySize, int dimension)
-        : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
+    : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
 
 
 /***********FuncSymbolInfo***********/
 FuncSymbolInfo::FuncSymbolInfo(const std::string &name, int line, DataType returnType)
-        : SymbolInfo(name, line), returnType(returnType), baseblock(nullptr) {}
+    : SymbolInfo(name, line), returnType(returnType), baseblock(nullptr) {}
 
 SymbolInfo *FuncSymbolInfo::addParamVar(const std::string &name, int line, DataType dataType) {
     VarSymbolInfo *newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量
-    paramList.push_back(newParam);//函数形参压栈
+    paramList.push_back(newParam);                                       //函数形参压栈
     return newParam;
 }
 
@@ -88,18 +89,21 @@ FuncSymbolInfo::addParamArray(const std::string &name, int line, DataType dataTy
 }
 
 
-
 /***********BlockInfo***********/
 
 /***********BlockInfo(init函数)***********/
-BlockInfo::BlockInfo(BlockInfo *parentBlock) : parentBlock(parentBlock), belongTo(nullptr) {}
+BlockInfo::BlockInfo(BlockInfo *parentBlock) : parentBlock(parentBlock) {
+    if (parentBlock) {
+        belongTo = parentBlock->belongTo;
+    }
+}
 
 BlockInfo::BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std::vector<SymbolInfo *> &paramList)
-        : parentBlock(parentBlock), belongTo(belongTo) {
+    : parentBlock(parentBlock), belongTo(belongTo) {
     for (SymbolInfo *one_param: paramList) {
         if (symbolTable.symbolList.count(one_param->getName()) > 0) {
             ErrorHandler::printErrorSymbol(one_param, "redefinition. Previous definition is on line " + std::to_string(
-                    symbolTable.symbolList[one_param->getName()]->getline()));
+                                                                                                                symbolTable.symbolList[one_param->getName()]->getline()));
             throw std::runtime_error(
                     "Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
@@ -131,8 +135,7 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
     //symbol符号表添加
     if (symbolTable.symbolList.count(name) > 0) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同//不用
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
@@ -148,8 +151,7 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
 VarSymbolInfo *BlockInfo::addNewVar(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
@@ -167,8 +169,7 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
                             int dimension) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -186,8 +187,7 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
                           int dimension) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -227,15 +227,14 @@ BlockInfo *BlockInfo::addNewBlock() {
 /***********GlobalBlock***********/
 
 GlobalBlock::GlobalBlock()
-        : BlockInfo(nullptr) {};
+    : BlockInfo(nullptr){};
 
 /***********在GlobalBlock中添加各种符号***********/
 //注意这里的函数与blockInfo不是覆写的关系，因为添加常量或者变量总需要查找全局的函数表以防同名，这里直接查自己即可
 ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {//这里注意，我还会去全局的函数表里面寻找函数名，全局变量不能和全局的函数名相同
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
@@ -251,8 +250,7 @@ ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, Dat
 VarSymbolInfo *GlobalBlock::addNewVar(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
@@ -270,8 +268,7 @@ GlobalBlock::addNewConstArray(const std::string &name, int line, DataType dataTy
                               int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -289,8 +286,7 @@ GlobalBlock::addNewVarArray(const std::string &name, int line, DataType dataType
                             int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -323,8 +319,7 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
     //首先在global中加入函数
     if (funcTable.funcList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(
-                        funcTable.funcList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(funcTable.funcList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     FuncSymbolInfo *newFunc = new FuncSymbolInfo(name, line, returnType);
@@ -338,4 +333,18 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
     addNewBlock(newFunc);
 
     return newFunc;
+}
+void GlobalBlock::initIOFunction() {
+    // 建立I/O函数的符号表
+    this->addNewFunc("print_int", 0, DataType::VOID)
+            ->addParamVar("x", 0, DataType::INT);
+    this->addNewFunc("print_float", 0, DataType::VOID)
+            ->addParamVar("x", 0, DataType::FLOAT);
+    this->addNewFunc("print_double", 0, DataType::VOID)
+            ->addParamVar("x", 0, DataType::DOUBLE);
+    this->addNewFunc("print_bool", 0, DataType::VOID)
+            ->addParamVar("x", 0, DataType::BOOL);
+    this->addNewFunc("get_int", 0, DataType::INT);
+    this->addNewFunc("get_float", 0, DataType::FLOAT);
+    this->addNewFunc("get_double", 0, DataType::DOUBLE);
 }

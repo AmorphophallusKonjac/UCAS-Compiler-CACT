@@ -1,14 +1,14 @@
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
 
-#include <map>
-#include <vector>
-#include <string>
 #include <iostream>
+#include <map>
 #include <numeric>
-#include "ErrorHandler.h"
+#include <string>
+#include <vector>
 
-#include "CACT.h"
+#include "utils/CACT.h"
+#include "utils/ErrorHandler.h"
 
 std::string ToString(DataType x);
 
@@ -45,7 +45,7 @@ public:
 
     SymbolInfo(const std::string &name, int line);
 
-    ~SymbolInfo() {};
+    ~SymbolInfo(){};
 };
 
 /***********常量变量数组符号表***********/
@@ -67,7 +67,7 @@ public:
 
     ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
-    ~ConstVarArraySymbolInfo() {};
+    ~ConstVarArraySymbolInfo(){};
 };
 
 
@@ -82,7 +82,7 @@ public:
 
     ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
-    ~ConstSymbolInfo() {};
+    ~ConstSymbolInfo(){};
 };
 
 
@@ -97,7 +97,7 @@ public:
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
-    ~VarSymbolInfo() {};
+    ~VarSymbolInfo(){};
 };
 
 
@@ -119,7 +119,7 @@ public:
     ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                          const std::vector<int> arraySize, int dimension);
 
-    ~ConstArraySymbolInfo() {};
+    ~ConstArraySymbolInfo(){};
 };
 
 
@@ -141,7 +141,7 @@ public:
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
 
-    ~VarArraySymbolInfo() {};
+    ~VarArraySymbolInfo(){};
 };
 
 /*相对于徐泽凡学长做的改动：
@@ -184,7 +184,9 @@ public:
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);
     FuncSymbolInfo(const std::string &name, int line, DataType returnType);
 
-    ~FuncSymbolInfo() { for (SymbolInfo *symbol: paramList) { delete symbol; }; };
+    ~FuncSymbolInfo() {
+        for (SymbolInfo *symbol: paramList) { delete symbol; };
+    };
 };
 
 
@@ -218,7 +220,9 @@ public:
     std::vector<BlockInfo *> blockList;
     int stackBlock_size = 0;
 
-    ~BlockTable() { for (BlockInfo *block: blockList) { delete block; }; };
+    ~BlockTable() {
+        for (BlockInfo *block: blockList) { delete block; };
+    };
 };
 
 
@@ -264,7 +268,7 @@ public:
 
     BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std::vector<SymbolInfo *> &paramList);
 
-    ~BlockInfo() {};
+    ~BlockInfo(){};
     //如果说是直接隶属于函数的块，则需要记录belongto,同时所有函数的形参都作为这个块的符号表而存在
 };
 
@@ -289,9 +293,11 @@ public:
     addNewVarArray(const std::string &name, int line, DataType dataType, const std::vector<int> arraySize,
                    int dimension) override;
 
+    void initIOFunction();
+
     GlobalBlock();
 
-    ~GlobalBlock() {};
+    ~GlobalBlock() = default;
 };
 
 /*在初始化一个块的时候，本来应该这个块的符号表和子块都是空的·*/

@@ -2,12 +2,12 @@
 #define COMPILER_RETURNVALUE_H
 
 #include <vector>
+
 #include "CACT.h"
 
 class ReturnValue {
 
 private:
-
     DataType dataType;
 
     int dimension{};
@@ -17,7 +17,6 @@ private:
     SymbolType symbolType;
 
 public:
-
     ReturnValue(DataType dataType, int dimension, std::vector<int> arraySize, SymbolType symbolType);
 
     DataType getDataType() const;
@@ -30,4 +29,4 @@ public:
 };
 
 
-#endif //COMPILER_RETURNVALUE_H
+#endif//COMPILER_RETURNVALUE_H
