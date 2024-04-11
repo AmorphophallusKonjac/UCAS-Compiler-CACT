@@ -17,13 +17,12 @@ public:
                      IRConstant *Initializer = nullptr, const std::string &Name = "",
                      IRModule *Parent = nullptr);
 
+    /******全局变量的初始化******/
     inline bool hasInitializer() const { return !Operands.empty(); }
-
     inline IRConstant *getInitializer() const {
         assert(hasInitializer() && "GV doesn't have initializer!");
         return (IRConstant *) Operands[0].get();
     }
-
     inline void setInitializer(IRConstant *CPV) {
         if (CPV == nullptr) {
             if (hasInitializer()) Operands.pop_back();
@@ -33,10 +32,13 @@ public:
         }
     }
 
+    /******判断是不是一个常量，但是我们都会把这个常量直接当作立即数使用，故无用******/
     bool isConstant() const { return isConstantGlobal; }
 
+    /******全局变量的print******/
     void print(std::ostream &OS) const override;
 
+    /******判断是全局变量还是函数******/
     static inline bool classof(const IRGlobalVariable *) { return true; }
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::GlobalVariableVal;

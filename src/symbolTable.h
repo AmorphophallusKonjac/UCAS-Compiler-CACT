@@ -140,7 +140,7 @@ private:
     DataType dataType;
     int global = 0;//代表是否是全局变量
 
-public:
+public: 
     DataType getDataType() { return dataType; }
 
     int getGlobal() { return global; }

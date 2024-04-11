@@ -4,6 +4,7 @@
 #include <map>
 
 #include "IRDerivedTypes.h"
+#include <iostream>
 
 static std::map<const IRType *, std::string> ConcreteTypeDescriptions;
 
@@ -46,7 +47,7 @@ unsigned IRType::getPrimitiveSize() const {
         case DoubleTyID:
             return 8;
         case TypeTyID:
-            return 8;// TODO solve TypeTy size
+            return 8; // TODO solve TypeTy size
         default:
             return 0;
     }
@@ -95,7 +96,37 @@ IRType *IRType::DoubleTy = &TheDoubleTy;
 IRType *IRType::TypeTy = &TheTypeTy;
 IRType *IRType::LabelTy = &TheLabelTy;
 
-void IRType::print(std::ostream &O) const {
+void IRType::print(std::ostream &OS) const {
+    if(this->isPrimitiveType()){//证明这个类本身就是int或者double等而不是指针类型，因此getType直接获得的就是Type的静态对象
+        OS << this->getPrimitiveType(this->getPrimitiveID())->getName() << std::endl;//用ID返回TYPE
+        //每一个type都是再通过判断是不是primitive之后，又重新指向一个已经被静态定义好的static type对象\
+        //感觉这里因为是一个this->getType()静态对象，因此可以直接
+        //this->getType()->getName()?
+        OS << this->getName() << std::endl;
+    }else if(this->isDerivedType()){
+        switch (this->getPrimitiveID()) {//这里是可以通过primitiveID来判断他是属于哪个具体类的
+            case IRType::FunctionTyID:
+                OS << dynamic_cast<IRFunctionType*>(this->getType())->getReturnType()->getName() << std::endl;
+                break;
+            case IRType::ArrayTyID:
+                IRArrayType* arraytype;
+                arraytype = dynamic_cast<IRArrayType*>(this->getType());
+                OS << "[ " << arraytype->getNumElements() << " x " <<arraytype->getElementType()->getName() << "]" << std::endl;
+                break;
+                /*@global_array = [2 x [2 x double]] = @global_array = [4 x double]
+                %1 = alloca [2 x [2 x double]] = */
+            case IRType::PointerTyID:
+                OS << dynamic_cast<IRPointerType*>(this->getType())->getElementType()->getName() << std::endl;
+                OS << "*" << std::endl;//指针加一个*
+                break;
+        }
+
+    }else{
+        throw std::runtime_error("PrimitiveID error!");
+    }
+    OS << " " << std::endl;
+    //感觉其实不需要his->getType()->getPrimitiveType(this->getType()->getPrimitiveID())对ID进行解析？？？
+    //因为每次这样做之后返回的直接就是一个静态的type对象，并不需要对他的ID进行解析
     // TODO add print
 }
 

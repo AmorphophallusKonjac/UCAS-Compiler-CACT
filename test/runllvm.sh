@@ -6,7 +6,7 @@ regex_folder="\./samples_semantic.*"
 regex_file="\./[0-9][0-9]_true.*\.cact"
 
 CXX="clang++"
-CLANGFLAGS="-x c++ -S -O1" 
+CLANGFLAGS="-x c++ -S" 
 
 find "$root_folder" -maxdepth 1 -type d -regex "$regex_folder"| while read -r folder; do
     echo "$folder"  # 在这里可以执行你想要的操作

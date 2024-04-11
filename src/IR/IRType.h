@@ -34,7 +34,7 @@ protected:
     ~IRType() override = default;
 
 public:
-    void print(std::ostream &O) const override;
+    void print(std::ostream &OS) const override;
 
     inline PrimitiveID getPrimitiveID() const { return ID; }
 
