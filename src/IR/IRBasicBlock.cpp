@@ -33,8 +33,8 @@ void IRBasicBlock::print(std::ostream &OS) const {
 
     /******通过这个uses边去遍历它的user,查明是哪些块使用了它******/
     OS << "                                                ; preds =" <<std::endl;
-    for(auto iruse: this->getUses()){
-        OS << " " << dynamic_cast<IRTerminatorInst*>(iruse->user)->getParent() << "," << std::endl;//获得使用这个块的终止语句属于哪个块
+    for(auto iruseptr: this->getUses()){
+        OS << " " << dynamic_cast<IRTerminatorInst*>(iruseptr->getUser())->getParent() << "," << std::endl;//获得使用这个块的终止语句的父块
     }
 
     for(auto inst: this->InstList){
