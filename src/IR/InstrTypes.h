@@ -55,7 +55,7 @@ public:
     }
 
     virtual IRInstruction *clone() const {
-        return create(getOpcode(), Operands[0].val, Operands[1].val);
+        return create(getOpcode(), Operands[0], Operands[1]);
     }
     bool swapOperands();
 

@@ -8,23 +8,23 @@ class IRCallInst : public IRInstruction {
 
 public:
     IRCallInst(IRValue *F, const std::vector<IRValue *> &Par,
-               const std::string &Name = "", IRInstruction *InsertBefore = 0);
+               const std::string &Name = "", IRInstruction *InsertBefore = nullptr);
 
     // Alternate CallInst ctors w/ no actuals & one actual, respectively.
     IRCallInst(IRValue *F, const std::string &Name = "",
-               IRInstruction *InsertBefore = 0);
+               IRInstruction *InsertBefore = nullptr);
     IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name = "",
-               IRInstruction *InsertBefore = 0);
+               IRInstruction *InsertBefore = nullptr);
 
     virtual IRInstruction *clone() const { return new IRCallInst(*this); }
     bool mayWriteToMemory() const { return true; }
 
     IRFunction *getCalledFunction() {
-        return dynamic_cast<IRFunction *>(Operands[0].val);
+        return dynamic_cast<IRFunction *>(Operands[0].get());
     }
 
     // getCalledValue - Get a pointer to a method that is invoked by this inst.
-    inline IRValue *getCalledValue() { return Operands[0].val; }
+    inline IRValue *getCalledValue() { return Operands[0]; }
 
     // Methods for support type inquiry through isa, cast, and dyn_cast:
     static inline bool classof(const IRCallInst *) { return true; }
@@ -36,8 +36,8 @@ public:
 class ShiftInst : public IRInstruction {
     ShiftInst(const ShiftInst &SI) : IRInstruction(SI.getType(), SI.getOpcode()) {
         Operands.reserve(2);
-        Operands.emplace_back(SI.Operands[0].val, this);
-        Operands.emplace_back(SI.Operands[1].val, this);
+        Operands.emplace_back(SI.Operands[0], this);
+        Operands.emplace_back(SI.Operands[1], this);
     }
 
 public:

@@ -10,7 +10,7 @@ class IRPHINode : public IRInstruction {
 
 public:
     IRPHINode(IRType *Ty, const std::string &Name = "",
-              IRInstruction *InsertBefore = 0)
+              IRInstruction *InsertBefore = nullptr)
         : IRInstruction(Ty, IRInstruction::PHI, Name, InsertBefore) {
     }
 
@@ -18,11 +18,11 @@ public:
 
     IRValue *getIncomingValue(unsigned i) const {
         assert(i * 2 < Operands.size() && "Invalid value number!");
-        return Operands[i * 2].val;
+        return Operands[i * 2];
     }
     void setIncomingValue(unsigned i, IRValue *V) {
         assert(i * 2 < Operands.size() && "Invalid value number!");
-        Operands[i * 2].val = V;
+        Operands[i * 2] = V;
     }
     static inline unsigned getOperandNumForIncomingValue(unsigned i) {
         return i * 2;
@@ -31,11 +31,11 @@ public:
     /// getIncomingBlock - Return incoming basic block #x
     IRBasicBlock *getIncomingBlock(unsigned i) const {
         assert(i * 2 + 1 < Operands.size() && "Invalid value number!");
-        return (IRBasicBlock *) Operands[i * 2 + 1].val;
+        return (IRBasicBlock *) Operands[i * 2 + 1].get();
     }
     void setIncomingBlock(unsigned i, IRBasicBlock *BB) {
         assert(i * 2 + 1 < Operands.size() && "Invalid value number!");
-        Operands[i * 2 + 1].val = (IRValue *) BB;
+        Operands[i * 2 + 1] = (IRValue *) BB;
     }
     static unsigned getOperandNumForIncomingBlock(unsigned i) {
         return i * 2 + 1;

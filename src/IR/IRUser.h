@@ -17,12 +17,12 @@ public:
 
     inline IRValue *getOperand(unsigned i) const {
         assert(i < Operands.size() && "getOperand() out of range!");
-        return Operands[i].val;
+        return Operands[i];
     }
 
     inline void setOperand(unsigned i, IRValue *Val) {
         assert(i < Operands.size() && "setOperand() out of range!");
-        Operands[i].val = Val;
+        Operands[i] = Val;
     }
 
     inline unsigned getNumOperands() const { return Operands.size(); }

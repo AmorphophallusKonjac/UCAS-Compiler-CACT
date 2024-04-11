@@ -21,7 +21,7 @@ public:
 
     inline IRConstant *getInitializer() const {
         assert(hasInitializer() && "GV doesn't have initializer!");
-        return (IRConstant *) Operands[0].val;
+        return (IRConstant *) Operands[0].get();
     }
 
     inline void setInitializer(IRConstant *CPV) {
@@ -29,7 +29,7 @@ public:
             if (hasInitializer()) Operands.pop_back();
         } else {
             if (!hasInitializer()) Operands.emplace_back(nullptr, this);
-            Operands[0].val = (IRValue *) CPV;
+            Operands[0] = (IRValue *) CPV;
         }
     }
 

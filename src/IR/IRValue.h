@@ -1,6 +1,7 @@
 #ifndef COMPILER_IRVALUE_H
 #define COMPILER_IRVALUE_H
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ public:
     };
 
 private:
-    std::vector<IRUse> Uses;
+    std::vector<IRUse *> Uses;
     std::string name;
     IRType *ty;
     ValueTy vTy;
@@ -49,6 +50,25 @@ public:
     inline ValueTy getValueType() const { return vTy; }
 
     //    void replaceAllUsesWith(IRValue *V);
+
+    /**
+     * add Use in Uses. It should only be used by the Use class
+     * @param U
+     */
+    void addUse(IRUse &U) { Uses.push_back(&U); }
+
+    /**
+     * delete all Use* in Uses which equals &U. It should only be used by ths Use class
+     * @param U
+     */
+    void killUse(IRUse &U) {
+        Uses.erase(std::remove_if(Uses.begin(), Uses.end(), [U](IRUse *x) { return x == &U; }),
+                   Uses.end());
+    }
+
+    std::vector<IRUse *> getUses() const {
+        return Uses;
+    }
 };
 
 #endif//COMPILER_IRVALUE_H

@@ -8,7 +8,7 @@ class IRReturnInst : public IRTerminatorInst {
         if (!RI.Operands.empty()) {
             assert(RI.Operands.size() == 1 && "Return insn can only have 1 operand!");
             Operands.reserve(1);
-            Operands.emplace_back(RI.Operands[0].val, this);
+            Operands.emplace_back(RI.Operands[0], this);
         }
     }
 
@@ -24,7 +24,7 @@ public:
     IRInstruction *clone() const override { return new IRReturnInst(*this); }
 
     inline IRValue *getReturnValue() const {
-        return !Operands.empty() ? Operands[0].val : nullptr;
+        return !Operands.empty() ? Operands[0].get() : nullptr;
     }
 
     const IRBasicBlock *getSuccessor(unsigned idx) const override {
@@ -57,7 +57,7 @@ public:
     inline bool isConditional() const { return Operands.size() == 3; }
 
     inline IRValue *getCondition() const {
-        return isUnconditional() ? nullptr : (IRValue *) Operands[2].val;
+        return isUnconditional() ? nullptr : (IRValue *) Operands[2].get();
     }
 
     void setCondition(IRValue *V) {
@@ -70,12 +70,12 @@ public:
     //
     void setUnconditionalDest(IRBasicBlock *Dest) {
         if (isConditional()) Operands.erase(Operands.begin() + 1, Operands.end());
-        Operands[0].val = (IRValue *) Dest;
+        Operands[0] = (IRValue *) Dest;
     }
 
     const IRBasicBlock *getSuccessor(unsigned i) const override {
         assert(i < getNumSuccessors() && "Successor # out of range for Branch!");
-        return (i == 0) ? dynamic_cast<IRBasicBlock *>(Operands[0].val) : dynamic_cast<IRBasicBlock *>(Operands[1].val);
+        return (i == 0) ? dynamic_cast<IRBasicBlock *>(Operands[0].get()) : dynamic_cast<IRBasicBlock *>(Operands[1].get());
     }
     inline IRBasicBlock *getSuccessor(unsigned idx) {
         return (IRBasicBlock *) ((const IRBranchInst *) this)->getSuccessor(idx);
@@ -83,7 +83,7 @@ public:
 
     void setSuccessor(unsigned idx, IRBasicBlock *NewSucc) override {
         assert(idx < getNumSuccessors() && "Successor # out of range for Branch!");
-        Operands[idx].val = (IRValue *) NewSucc;
+        Operands[idx] = (IRValue *) NewSucc;
     }
 
     unsigned getNumSuccessors() const override { return 1 + isConditional(); }

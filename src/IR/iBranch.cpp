@@ -19,10 +19,10 @@ IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRInstruction *InsertBefore)
 
 IRBranchInst::IRBranchInst(const IRBranchInst &BI) : IRTerminatorInst(IRInstruction::Br) {
     Operands.reserve(BI.Operands.size());
-    Operands.emplace_back(BI.Operands[0].val, this);
+    Operands.emplace_back(BI.Operands[0], this);
     if (BI.Operands.size() != 1) {
         assert(BI.Operands.size() == 3 && "BR can have 1 or 3 operands!");
-        Operands.emplace_back(BI.Operands[1].val, this);
-        Operands.emplace_back(BI.Operands[2].val, this);
+        Operands.emplace_back(BI.Operands[1], this);
+        Operands.emplace_back(BI.Operands[2], this);
     }
 }

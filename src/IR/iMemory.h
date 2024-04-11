@@ -12,7 +12,7 @@ protected:
 
 public:
     bool isArrayAllocation() const;
-    inline IRValue *getArraySize() { return Operands[0].val; }
+    inline IRValue *getArraySize() { return Operands[0]; }
     inline const IRPointerType *getType() const {
         return (const IRPointerType *) IRInstruction::getType();
     }
@@ -47,7 +47,7 @@ class IRLoadInst : public IRInstruction {
     IRLoadInst(const IRLoadInst &LI) : IRInstruction(LI.getType(), Load) {
         Volatile = LI.isVolatile();
         Operands.reserve(1);
-        Operands.emplace_back(LI.Operands[0].val, this);
+        Operands.emplace_back(LI.Operands[0], this);
     }
     bool Volatile;// True if this is a volatile load
 public:
@@ -77,8 +77,8 @@ class IRStoreInst : public IRInstruction {
     IRStoreInst(const IRStoreInst &SI) : IRInstruction(SI.getType(), Store) {
         Volatile = SI.isVolatile();
         Operands.reserve(2);
-        Operands.emplace_back(SI.Operands[0].val, this);
-        Operands.emplace_back(SI.Operands[1].val, this);
+        Operands.emplace_back(SI.Operands[0], this);
+        Operands.emplace_back(SI.Operands[1], this);
     }
     bool Volatile;// True if this is a volatile store
 public:

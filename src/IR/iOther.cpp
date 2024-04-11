@@ -34,6 +34,6 @@ IRCallInst::IRCallInst(const IRCallInst &CI)
     : IRInstruction(CI.getType(), IRInstruction::Call) {
     Operands.reserve(CI.Operands.size());
     for (const auto & Operand : CI.Operands)
-        Operands.emplace_back(Operand.val, this);
+        Operands.emplace_back(Operand, this);
 }
 
