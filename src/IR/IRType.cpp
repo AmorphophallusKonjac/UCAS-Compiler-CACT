@@ -102,7 +102,6 @@ void IRType::print(std::ostream &OS) const {
         //每一个type都是再通过判断是不是primitive之后，又重新指向一个已经被静态定义好的static type对象\
         //感觉这里因为是一个this->getType()静态对象，因此可以直接
         //this->getType()->getName()?
-        OS << this->getName() << std::endl;
     }else if(this->isDerivedType()){
         switch (this->getPrimitiveID()) {//这里是可以通过primitiveID来判断他是属于哪个具体类的
             case IRType::FunctionTyID:

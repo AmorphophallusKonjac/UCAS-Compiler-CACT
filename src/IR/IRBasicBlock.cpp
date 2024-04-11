@@ -4,6 +4,9 @@
 #include "IRType.h"
 #include "iPHINdoe.h"
 #include "iTerminators.h"
+#include "IRUse.h"
+#include "IRUser.h"
+#include <iostream>
 void IRBasicBlock::addInstruction(IRInstruction *inst) {
     InstList.push_back(inst);
 }
@@ -25,5 +28,17 @@ IRTerminatorInst *IRBasicBlock::getTerminator() {
     return dynamic_cast<IRTerminatorInst *>(InstList.back());
 }
 void IRBasicBlock::print(std::ostream &OS) const {
+    //打印每条指令
+    OS << this->getName() << ":\n" <<std::endl;//这里是否需要做preds，记录可以有哪些块跳转到它？
+
+    /******通过这个uses边去遍历它的user,查明是哪些块使用了它******/
+    OS << "                                                ; preds =" <<std::endl;
+    for(auto iruse: this->getUses()){
+        OS << " " << dynamic_cast<IRTerminatorInst*>(iruse->user)->getParent() << "," << std::endl;//获得使用这个块的终止语句属于哪个块
+    }
+
+    for(auto inst: this->InstList){
+        inst->print(OS);
+    }
     // TODO
 }

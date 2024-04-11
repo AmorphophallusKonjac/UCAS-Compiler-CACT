@@ -16,19 +16,24 @@ void IRGlobalVariable::print(std::ostream &OS) const {
     OS << "@" << this->getName() << std::endl;
     OS << " = global " << std::endl;
     this->getInitializer()->print(OS);//获得初始化use的value值，并进行打印
+    this->getType()->getElementType()->getPrimitiveID();
 
-    /******打印全局变量******/
-    for(auto var:this->varList){
-        OS << "\n" << std::endl;
-        var->print(OS);
+    //这里的gettype获得的必然是一个pointtype，我在这里通过这个函数去获得它的elementtype，
+    //然后看他实际上是一个什么样的类型，在栈中需要分配多大的空间，来打印align
+    switch (this->getType()->getElementType()->getPrimitiveID()) {
+        case IRType::BoolTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::IntTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::FloatTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::DoubleTyID:    
+            OS << " align 8 " << std::endl;
+            break;
     }
-
-    /******打印函数******/
-    for(auto func:this->funcList){
-        OS << "\n" << std::endl;
-        func->print(OS);
-    }
-        OS << "Var" << std::endl;
 }
 
 IRGlobalVariable::IRGlobalVariable(IRType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)

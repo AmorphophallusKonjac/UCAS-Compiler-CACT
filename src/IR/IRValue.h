@@ -40,13 +40,15 @@ public:
     IRValue(IRType *Ty, ValueTy vty, std::string name = "");
     virtual ~IRValue() = default;
 
-    virtual void print(std::ostream &O) const = 0;
+    virtual void print(std::ostream &OS) const = 0;
 
+    /******了解IRvalue的type指针******/
     inline IRType *getType() const { return ty; }
 
     inline bool hasName() const { return name != ""; }
     inline const std::string &getName() const { return name; }
 
+    /******知道这个IRvalue是哪一个子类******/
     inline ValueTy getValueType() const { return vTy; }
 
     //    void replaceAllUsesWith(IRValue *V);
