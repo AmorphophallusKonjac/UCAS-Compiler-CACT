@@ -51,52 +51,20 @@ public:
 
 class initValue{
 private:
-    std::vector<int>    intArray;
-    std::vector<bool>   boolArray;
-    std::vector<double> doubleArray;
-    std::vector<float>  floatArray;
+    std::vector<std::any> initValueArray;
 
 public:
 
-    void setInitValue(int    value){ intArray.push_back(value);   };
-    void setInitValue(bool   value){ boolArray.push_back(value);   };
-    void setInitValue(double value){ doubleArray.push_back(value); };
-    void setInitValue(float  value){ floatArray.push_back(value);  };
-    void setZero(DataType datatype){
-        switch (datatype) {
-            case INT:
-                intArray.push_back(0);
-                return;
-            case BOOL:
-                boolArray.push_back(0);
-                return;
-            case DOUBLE:
-                doubleArray.push_back(0);
-                return;
-            case FLOAT:
-                floatArray.push_back(0);
-                return;
-            default:
-                return;//如果匹配不成功的话就返回一个空指针
-        }
+    void setInitValue(std::any value){ initValueArray.push_back(value);   };
+    void setZero(){
+        initValueArray.push_back(0);
+        return;
     }
-    int  getCurrentArraySize(DataType datatype){
-        switch (datatype) {
-            case INT:
-                return intArray.size();
-            case BOOL:
-                return boolArray.size();
-            case DOUBLE:
-                return doubleArray.size();
-            case FLOAT:
-                return floatArray.size();
-            default:
-                return -1;//如果匹配不成功的话就返回一个空指针
-        }
+    int getCurrentArraySize(){
+        return initValueArray.size();
     }
 
-    std::any getInitValue(DataType datatype, std::vector<int> indexArray){ 
-        
+    std::any getInitValue(std::vector<int> indexArray){//获得数组中某个元素的初始值，则需要数组元素的下标
         int index = 0;
         std::vector<int>::iterator element = indexArray.begin();
         while (element != indexArray.end()) {
@@ -104,33 +72,11 @@ public:
             element++;
         }
 
-        switch (datatype) {
-            case INT:
-                return intArray[index];
-            case BOOL:
-                return boolArray[index];
-            case DOUBLE:
-                return doubleArray[index];
-            case FLOAT:
-                return floatArray[index];
-            default:
-                return nullptr;//如果匹配不成功的话就返回一个空指针
-        }
+        return initValueArray[index];
     };
 
-    std::any getInitValue(DataType datatype){
-        switch (datatype) {
-            case INT:
-                return intArray[0];
-            case BOOL:
-                return boolArray[0];
-            case DOUBLE:
-                return doubleArray[0];
-            case FLOAT:
-                return floatArray[0];
-            default:
-                return nullptr;//如果匹配不成功的话就返回一个空指针
-        }
+    std::any getInitValue(){//获得某个常量的初始值
+        return initValueArray[0];
     };
 };
 

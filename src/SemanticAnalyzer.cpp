@@ -544,8 +544,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(
                 this->visit(constantInitValue);
 
                 currentSize += subArraySize;
-                for(int i= currentSymbol->getCurrentArraySize(context->dataType);i < currentSize;i++)
-                    currentSymbol->setZero(context->dataType);
+                for(int i= currentSymbol->getCurrentArraySize();i < currentSize;i++)
+                    currentSymbol->setZero();
                 //将所有的空缺部位全部填上0
             } else {// is value
                 ++currentSize;
