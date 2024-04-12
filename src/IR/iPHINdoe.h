@@ -16,6 +16,7 @@ public:
 
     unsigned getNumIncomingValues() const { return Operands.size() / 2; }
 
+    /******偶数index是对应的赋值******/
     IRValue *getIncomingValue(unsigned i) const {
         assert(i * 2 < Operands.size() && "Invalid value number!");
         return Operands[i * 2];
@@ -28,6 +29,7 @@ public:
         return i * 2;
     }
 
+    /******奇数index是对应的basicblock******/
     /// getIncomingBlock - Return incoming basic block #x
     IRBasicBlock *getIncomingBlock(unsigned i) const {
         assert(i * 2 + 1 < Operands.size() && "Invalid value number!");
@@ -41,6 +43,7 @@ public:
         return i * 2 + 1;
     }
 
+    /******赋值与basicblock同时给进******/
     /// addIncoming - Add an incoming value to the end of the PHI list
     void addIncoming(IRValue *D, IRBasicBlock *BB) {
         assert(getType() == D->getType() &&
@@ -49,6 +52,7 @@ public:
         Operands.emplace_back((IRValue *) BB, this);
     }
 
+    /******根据给定的基本块返回index和对应的value******/
     /// getBasicBlockIndex - Return the first index of the specified basic
     /// block in the value list for this PHI.  Returns -1 if no instance.
     ///
@@ -57,10 +61,10 @@ public:
             if (getIncomingBlock(i) == BB) return i;
         return -1;
     }
-
     IRValue *getIncomingValueForBlock(const IRBasicBlock *BB) const {
         return getIncomingValue(getBasicBlockIndex(BB));
     }
+
 
     /// Methods for support type inquiry through isa, cast, and dyn_cast:
     static inline bool classof(const IRPHINode *) { return true; }

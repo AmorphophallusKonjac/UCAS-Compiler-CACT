@@ -16,9 +16,11 @@ IRArgument::IRArgument(IRType *Ty, const std::string &Name, IRFunction *F)
         F->addArgument(this);
     }
 }
-
+void IRArgument::printPrefixName(std::ostream &OS) const{
+    OS << "%" << this->getName() << " " << std::endl;
+}
 void IRArgument::print(std::ostream &OS) const {
-    OS << this->getName() << " " << std::endl;
+    this->printPrefixName(OS);
     this->getType()->print(OS);//调用这个value中的type的print方法
     // TODO
 }

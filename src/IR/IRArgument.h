@@ -1,5 +1,6 @@
 #ifndef COMPILER_IRARGUMENT_H
 #define COMPILER_IRARGUMENT_H
+#pragma once
 
 #include "IRFunction.h"
 #include "IRValue.h"
@@ -19,6 +20,7 @@ public:
     inline IRFunction *getParent() { return Parent; }
 
     /******IRArgument的print方法******/
+    void printPrefixName(std::ostream &OS) const override;
     void print(std::ostream &OS) const override;
 
     /******classof方法，判断从父类下来的子类是不是对应的IRArgument类******/

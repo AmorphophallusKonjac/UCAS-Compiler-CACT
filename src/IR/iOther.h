@@ -19,10 +19,11 @@ public:
     virtual IRInstruction *clone() const { return new IRCallInst(*this); }
     bool mayWriteToMemory() const { return true; }
 
+    /******直接获得call的函数******/
     IRFunction *getCalledFunction() {
         return dynamic_cast<IRFunction *>(Operands[0].get());
     }
-
+    /******返回use边******/
     // getCalledValue - Get a pointer to a method that is invoked by this inst.
     inline IRValue *getCalledValue() { return Operands[0]; }
 

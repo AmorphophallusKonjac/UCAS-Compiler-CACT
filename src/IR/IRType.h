@@ -38,12 +38,12 @@ public:
 
     inline PrimitiveID getPrimitiveID() const { return ID; }
 
+    /******判断是不是整型或者浮点类型******/
     virtual bool isInteger() const { return 0; }
-
     bool isIntegral() const { return isInteger() || ID == BoolTyID; }
-
     bool isFloatingPoint() const { return ID == FloatTyID || ID == DoubleTyID; }
 
+    /******判断是不是函数derived指针等其他类型******/
     inline bool isPrimitiveType() const { return ID < FirstDerivedTyID; }
     inline bool isDerivedType() const { return ID >= FirstDerivedTyID; }
 

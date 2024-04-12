@@ -15,16 +15,17 @@ protected:
 public:
     IRUser(IRType *Ty, ValueTy vty, const std::string &name = "");
 
+    /******根据index获得偏移******/
     inline IRValue *getOperand(unsigned i) const {
         assert(i < Operands.size() && "getOperand() out of range!");
         return Operands[i];
     }
-
     inline void setOperand(unsigned i, IRValue *Val) {
         assert(i < Operands.size() && "setOperand() out of range!");
         Operands[i] = Val;
     }
 
+     /******获得操作数个数******/
     inline unsigned getNumOperands() const { return Operands.size(); }
 
     static inline bool classof(const IRUser *) { return true; }

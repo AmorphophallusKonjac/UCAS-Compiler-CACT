@@ -1,7 +1,7 @@
 #ifndef COMPILER_IRINSTRUCTION_H
 #define COMPILER_IRINSTRUCTION_H
 
-
+#pragma once
 #include "IRUser.h"
 #include "IRBasicBlock.h"
 
@@ -63,6 +63,9 @@ public:
     bool isCommutative() const { return isCommutative(getOpcode()); }
     static bool isCommutative(unsigned op);
 
+    void BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) const;
+    void SetCCIRInstPrint(std::ostream &OS) const;
+    void printPrefixName(std::ostream &OS) const override;
     void print(std::ostream &OS) const override;
 
     static inline bool classof(const IRInstruction *I) { return true; }

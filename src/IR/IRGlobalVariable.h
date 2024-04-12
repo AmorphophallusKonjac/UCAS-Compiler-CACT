@@ -1,5 +1,7 @@
 #ifndef COMPILER_IRGLOBALVARIABLE_H
 #define COMPILER_IRGLOBALVARIABLE_H
+#pragma once
+
 #include <cassert>
 
 #include "IRGlobalValue.h"
@@ -36,6 +38,7 @@ public:
     bool isConstant() const { return isConstantGlobal; }
 
     /******全局变量的print******/
+    void printPrefixName(std::ostream &OS) const;
     void print(std::ostream &OS) const override;
 
     /******判断是全局变量还是函数******/

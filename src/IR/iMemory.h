@@ -54,17 +54,15 @@ public:
     IRLoadInst(IRValue *Ptr, const std::string &Name, IRInstruction *InsertBefore);
     explicit IRLoadInst(IRValue *Ptr, const std::string &Name = "", bool isVolatile = false,
                IRInstruction *InsertBefore = 0);
-
-    bool isVolatile() const { return Volatile; }
-
-    void setVolatile(bool V) { Volatile = V; }
-
     IRInstruction *clone() const override { return new IRLoadInst(*this); }
 
+    /******是否每次要从内存中取值&&存值******/
+    bool isVolatile() const { return Volatile; }
+    void setVolatile(bool V) { Volatile = V; }
     bool mayWriteToMemory() const override { return isVolatile(); }
 
+    /******load&&store中与存储地址相关的operand******/
     IRValue *getPointerOperand() { return getOperand(0); }
-
     static unsigned getPointerOperandIndex() { return 0U; }
 
     static inline bool classof(const IRLoadInst *) { return true; }
@@ -85,15 +83,14 @@ public:
     IRStoreInst(IRValue *Val, IRValue *Ptr, IRInstruction *InsertBefore);
     IRStoreInst(IRValue *Val, IRValue *Ptr, bool isVolatile = false,
                 IRInstruction *InsertBefore = 0);
-
-    bool isVolatile() const { return Volatile; }
-
-    void setVolatile(bool V) { Volatile = V; }
-
     virtual IRInstruction *clone() const { return new IRStoreInst(*this); }
 
+    /******是否每次要从内存中取值&&存值******/
+    bool isVolatile() const { return Volatile; }
+    void setVolatile(bool V) { Volatile = V; }
     virtual bool mayWriteToMemory() const { return true; }
 
+    /******load&&store中与存储地址相关的operand******/
     IRValue *getPointerOperand() { return getOperand(1); }
     static unsigned getPointerOperandIndex() { return 1U; }
 

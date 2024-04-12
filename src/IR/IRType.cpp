@@ -142,3 +142,20 @@ IRArrayType::IRArrayType(IRType *ElType, unsigned int NumEl)
 IRPointerType::IRPointerType(IRType *ElType)
     : IRSequentialType(IRType::PointerTyID, ElType) {
 }
+
+void IRPointerType::IRpointerPrintAlign(std::ostream &OS) {
+    switch (this->getElementType()->getPrimitiveID()) {
+        case IRType::BoolTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::IntTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::FloatTyID:
+            OS << " align 4 " << std::endl;
+            break;
+        case IRType::DoubleTyID:    
+            OS << " align 8 " << std::endl;
+            break;
+    }
+}

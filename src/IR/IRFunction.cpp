@@ -7,6 +7,9 @@
 void IRFunction::setParent(IRModule *parent) {
     Parent = parent;
 }
+void IRFunction::printPrefixName(std::ostream &OS) const{
+    OS << "@" <<this->getName() << std::endl;
+}
 void IRFunction::print(std::ostream &OS) const {
     // TODO
 
@@ -16,7 +19,7 @@ void IRFunction::print(std::ostream &OS) const {
     /******打印function本身******/
     OS << "define " << std::endl;
     this->getFunctionType()->print(OS);
-    OS << this->getName() << std::endl;
+    this->printPrefixName(OS);
 
     /******打印arg******/
     OS << "(" << std::endl;

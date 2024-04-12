@@ -1,5 +1,6 @@
 #ifndef COMPILER_IRFUNCTION_H
 #define COMPILER_IRFUNCTION_H
+#pragma once
 
 #include "IRArgument.h"
 #include "IRDerivedTypes.h"
@@ -36,6 +37,7 @@ public:
     IRBasicBlock *getEntryBlock() { return BasicBlocks.front(); }
 
     /******IRFunction的print方法******/
+    void printPrefixName(std::ostream &OS) const override;
     void print(std::ostream &OS) const override;
 
     /******classof方法，判断从父类下来的子类是不是对应的IRFunction类******/

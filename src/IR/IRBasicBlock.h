@@ -1,6 +1,6 @@
 #ifndef COMPILER_IRBASICBLOCK_H
 #define COMPILER_IRBASICBLOCK_H
-
+#pragma once
 
 #include "IRFunction.h"
 #include "IRInstruction.h"
@@ -28,6 +28,7 @@ public:
     std::vector<IRInstruction *> &getInstList() { return InstList; }
 
     /******IRBasicBlock的打印方法******/
+    void printPrefixName(std::ostream &OS) const override;
     virtual void print(std::ostream &OS) const;
 
     /******向InstList中添加instruction******/
