@@ -6,12 +6,8 @@
 #include "utils/CACT.h"
 #include "utils/ReturnValue.h"
 
-SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream, GlobalBlock *globalBlock, IRModule *ir)
-    : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens), globalBlock(globalBlock) {
-    root = this->parser.compilationUnit();
-    this->currentBlock = globalBlock;
-    this->currentFunc = nullptr;
-    this->ir = ir;
+SemanticAnalyzer::SemanticAnalyzer(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root)
+    : globalBlock(globalBlock), ir(ir), root(root), currentBlock(globalBlock), currentFunc(nullptr) {
 }
 
 SemanticAnalyzer::~SemanticAnalyzer() = default;
@@ -996,19 +992,7 @@ std::any SemanticAnalyzer::visitFunctionFParam(
 }
 
 void SemanticAnalyzer::analyze() {
-    if (this->parser.getNumberOfSyntaxErrors() > 0 ||
-        this->lexer.getNumberOfSyntaxErrors() > 0) {
-        std::cerr << "lexer error: " << lexer.getNumberOfSyntaxErrors()
-                  << std::endl;
-        std::cerr << "parser error: " << parser.getNumberOfSyntaxErrors()
-                  << std::endl;
-        throw std::runtime_error("Syntax analysis failed at " +
-                                 std::string(__FILE__) + ":" +
-                                 std::to_string(__LINE__));
-    }
-
     this->visit(this->root);
-
     if (globalBlock->lookUpFunc("main") == nullptr) {
         ErrorHandler::printErrorMessage("Can not find main");
         throw std::runtime_error("Semantic analysis failed at " +

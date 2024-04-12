@@ -12,3 +12,14 @@ void IRModule::addFunction(IRFunction *func) {
 void IRModule::print() {
     // TODO
 }
+IRFunction *IRModule::getFunction(const std::string& name) {
+    for (auto func : funcList) {
+        if (name == func->getName()) {
+            return func;
+        }
+    }
+        return nullptr;
+}
+IRFunction *IRModule::getMainFunction() {
+    return getFunction("main");
+}

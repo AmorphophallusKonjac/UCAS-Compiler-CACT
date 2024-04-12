@@ -1,5 +1,5 @@
-#ifndef COMPILER_SEMANTICANALYZER_H
-#define COMPILER_SEMANTICANALYZER_H
+#ifndef COMPILER_IRGENERATOR_H
+#define COMPILER_IRGENERATOR_H
 
 #include "CACTLexer.h"
 #include "CACTParser.h"
@@ -7,13 +7,14 @@
 #include "IR/IRModule.h"
 #include "symbolTable.h"
 #include "tree/ParseTree.h"
-#include "utils/ErrorHandler.h"
 
 using namespace antlr4;
 
-class SemanticAnalyzer : public CACTVisitor {
+class IRGenerator : public CACTVisitor {
 public:
-    explicit SemanticAnalyzer(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root);
+    IRGenerator(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root);
+
+    std::any visitCompilationUnit(CACTParser::CompilationUnitContext *context) override;
 
     std::any visitFunctionType(CACTParser::FunctionTypeContext *context) override;
 
@@ -75,8 +76,6 @@ public:
 
     std::any visitJumpStatement(CACTParser::JumpStatementContext *context) override;
 
-    std::any visitCompilationUnit(CACTParser::CompilationUnitContext *context) override;
-
     std::any visitTranslationUnit(CACTParser::TranslationUnitContext *context) override;
 
     std::any visitExternalDeclaration(CACTParser::ExternalDeclarationContext *context) override;
@@ -91,10 +90,9 @@ public:
 
     std::any visitFloatingConstant(CACTParser::FloatingConstantContext *context) override;
 
-    ~SemanticAnalyzer() override;
+    ~IRGenerator() override = default;
 
-    void analyze();
-
+    void generate();
 private:
     tree::ParseTree *root;
     GlobalBlock *globalBlock;
@@ -104,4 +102,4 @@ private:
 };
 
 
-#endif//COMPILER_SEMANTICANALYZER_H
+#endif//COMPILER_IRGENERATOR_H

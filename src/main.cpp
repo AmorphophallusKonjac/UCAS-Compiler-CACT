@@ -2,7 +2,7 @@
 #include <ostream>
 
 #include "IR/IRModule.h"
-#include "SemanticAnalyzer.h"
+#include "FrontEnd.h"
 
 using namespace antlr4;
 
@@ -20,13 +20,11 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
-    GlobalBlock table;
-    table.initIOFunction();
     IRModule ir(file);
-    SemanticAnalyzer analyzer(&stream, &table, &ir);
+    FrontEnd frontEnd(&stream, &ir);
 
     try {
-        analyzer.analyze();
+        frontEnd.analyze();
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

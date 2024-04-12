@@ -22,6 +22,10 @@ public:
 
     void addFunction(IRFunction *func);
 
+    IRFunction *getFunction(const std::string &name);
+
+    IRFunction *getMainFunction();
+
     void print();
 };
 
