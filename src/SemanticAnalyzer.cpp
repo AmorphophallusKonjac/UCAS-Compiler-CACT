@@ -497,73 +497,89 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     std::string name = context->Identifier()->getText();
     context->constantInitValue()->dataType = context->dataType;
     context->constantInitValue()->arraySize = context->arraySize;
+    context->constantInitValue()->dimention = context->arraySize.size();//这里必须得传进维数，确定递归层数
     this->visit(context->constantInitValue());
     return std::make_tuple(name, context->arraySize, dimension, line);
 }
 
 std::any SemanticAnalyzer::visitConstantInitValue(
         CACTParser::ConstantInitValueContext *context) {
-    int currentSize = 0;
-    int arraySize = 0;
-    int subArraySize = 0;
-    if (!context->arraySize.empty()) {
-        arraySize =
-                std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
-                                std::multiplies<>());
-        subArraySize = arraySize / context->arraySize.front();
-    }
-    if (!context->arraySize.empty()) {// is array
-        if (context->constantExpression() != nullptr) {
-            ErrorHandler::printErrorContext(context, "Error init value");
-            throw std::runtime_error("Semantic analysis failed at " +
-                                     std::string(__FILE__) + ":" +
-                                     std::to_string(__LINE__));
-        }
-    }
-    if (context->constantExpression() == nullptr) {
-        if (arraySize == 0) {
-            ErrorHandler::printErrorContext(context, "Error init value");
-            throw std::runtime_error("Semantic analysis failed at " +
-                                     std::string(__FILE__) + ":" +
-                                     std::to_string(__LINE__));
-        }
-        for (auto constantInitValue: context->constantInitValue()) {
-            constantInitValue->dataType = context->dataType;
-            if (constantInitValue->constantExpression() == nullptr) {// type is array
-                if (currentSize % subArraySize > 0) {
-                    ErrorHandler::printErrorContext(context, "Error init value");
-                    throw std::runtime_error("Semantic analysis failed at " +
-                                             std::string(__FILE__) + ":" +
-                                             std::to_string(__LINE__));
-                }
-                constantInitValue->dataType = context->dataType;
-                for (auto i = context->arraySize.begin() + 1;
-                     i < context->arraySize.end(); ++i) {
-                    constantInitValue->arraySize.push_back(*i);
-                }
-                this->visit(constantInitValue);
 
-                currentSize += subArraySize;
-                for(int i= currentSymbol->getCurrentArraySize();i < currentSize;i++)
-                    currentSymbol->setZero();
-                //将所有的空缺部位全部填上0
-            } else {// is value
-                ++currentSize;
-                constantInitValue->dataType = context->dataType;
-                this->visit(constantInitValue);
-            }
-            if (currentSize > arraySize) {
-                ErrorHandler::printErrorContext(context, "Error init value");
-                throw std::runtime_error("Semantic analysis failed at " +
-                                         std::string(__FILE__) + ":" +
-                                         std::to_string(__LINE__));
-            }
-        }
-    } else {
+    bool zero_dim;
+    bool single_dim;//确定这个数组的写法，是一维的写法还是多维的写法，由此确定是否需要向下递归
+    
+    //这里有一点，对于嵌套括号的写法，一定要越过single_dim这一层
+    zero_dim   =    (context->constantExpression() != nullptr) && context->arraySize.empty();
+    single_dim =    (context->constantInitValue().front()->constantExpression() != nullptr) && //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组
+                    (context->dimention == context->arraySize.size());//确定是第一层进入
+
+    /******single_dim直接终止递归，否则往下递归******/
+    if(zero_dim){
         context->constantExpression()->dataType = context->dataType;
         this->visit(context->constantExpression());
-        currentSymbol->setInitValue(context->constantExpression()->number());//这里直接将数字给进去，会进行分析然后从判断加入到哪个std::vector中
+        currentSymbol->setInitValue(context->constantExpression()->number());
     }
+    else if(single_dim){
+        //遍历每一个一维元素，直接压栈即可
+        for (auto constantInitValue: context->constantInitValue()){
+            currentSymbol->setInitValue(constantInitValue->constantExpression()->number());
+        }
+    }else{
+        int currentSize = 0;
+        int arraySize = 0;
+        int subArraySize = 0;
+
+        /******进行array的参数一致性检查******/
+        // type MUST BE array
+
+        /******constantExpression不为空已经到底，arraySize还没empty，真实的数组(相比arraySize)少了维度******/
+        if (context->constantExpression() != nullptr) {
+            ErrorHandler::printErrorContext(context, "less brace for InitValue");
+            throw std::runtime_error("Semantic analysis failed at " +
+                                    std::string(__FILE__) + ":" +
+                                    std::to_string(__LINE__));
+        }
+
+        /******constantExpression为空还没到底，arraySize已经empty，真实的数组(相比arraySize)多了维度******/
+        if(context->arraySize.empty()){
+            ErrorHandler::printErrorContext(context, "more brace for InitValue");
+            throw std::runtime_error("Semantic analysis failed at " +
+                                    std::string(__FILE__) + ":" +
+                                    std::to_string(__LINE__));
+        }
+
+        /******constantInitValue数量得和这一层的array属性值相同******/
+        if (context->constantInitValue().size() != context->arraySize.front()) {
+            ErrorHandler::printErrorContext(context, "Error number for InitValue");
+            throw std::runtime_error("Semantic analysis failed at " +
+                                    std::string(__FILE__) + ":" +
+                                    std::to_string(__LINE__));
+        }
+
+        /******计算arraySize和subArraySize******/
+        arraySize = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
+                            std::multiplies<>());
+        subArraySize = arraySize / context->arraySize.front();
+
+        for (auto constantInitValue: context->constantInitValue()) {
+
+            //更新下一级的locals
+            constantInitValue->dataType = context->dataType;
+            for (auto i = context->arraySize.begin() + 1;
+                i < context->arraySize.end(); ++i) {
+                constantInitValue->arraySize.push_back(*i);
+            }
+            constantInitValue->dimention = context->dimention;
+            this->visit(constantInitValue);
+
+            //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
+            currentSize += subArraySize;
+            for(int i= currentSymbol->getCurrentArraySize();i < currentSize;i++){
+                currentSymbol->setZero();
+            }
+        }
+    }
+
     return {};
 }
 
@@ -601,6 +617,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     if (context->constantInitValue() != nullptr) {
         context->constantInitValue()->dataType = context->dataType;
         context->constantInitValue()->arraySize = context->arraySize;
+        context->constantInitValue()->dimention = context->arraySize.size();//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
     }
     return std::make_tuple(name, context->arraySize, dimension, line);

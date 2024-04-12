@@ -117,7 +117,8 @@ constantDefinition
 
 constantInitValue
     locals [DataType dataType,
-            std::vector<int> arraySize]
+            std::vector<int> arraySize,
+            int dimention]
     : constantExpression
     | LeftBrace (constantInitValue (',' constantInitValue)*)? RightBrace//这里可能考虑的是对数组进行赋值
     ;                                                                           
