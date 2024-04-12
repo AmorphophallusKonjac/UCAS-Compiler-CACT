@@ -41,9 +41,13 @@ functionRParams
     ;
 
 unaryOperator
+    : addOp
+    | Not
+    ;
+
+addOp
     : '+'
     | '-'
-    | '!'
     ;
 
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
@@ -81,8 +85,7 @@ expression
 //expression是最基础的表达式
 
 constantExpression
-    locals [DataType dataType]
-    : number
+    : (addOp)? number
     | BooleanConstant
     ;
 
@@ -98,19 +101,14 @@ declaration
     ;
 
 constantDeclaration
-    locals [DataType dataType]
     : Const basicType constantDefinition (',' constantDefinition)* ';'
     ;
 
 constantDefinition
-    locals [DataType dataType,
-            vector<int> arraySize]
     : Identifier (LeftBracket IntegerConstant RightBracket)* Assign constantInitValue
     ;
 
 constantInitValue
-    locals [DataType dataType,
-            vector<int> arraySize]
     : constantExpression
     | LeftBrace (constantInitValue (',' constantInitValue)*)? RightBrace//这里可能考虑的是对数组进行赋值
     ;                                                                           
@@ -199,7 +197,6 @@ functionFParam
     ;
 
 number
-    locals [DataType dataType]
     : IntegerConstant   # IntegerConstant
     | FloatingConstant  # FloatingConstant
     ;

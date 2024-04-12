@@ -1,7 +1,6 @@
 #include "SemanticAnalyzer.h"
 
-SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer),
-                                                           parser(&tokens) {
+SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens) {
     root = this->parser.compilationUnit();
 
     if (this->parser.getNumberOfSyntaxErrors() > 0 || this->lexer.getNumberOfSyntaxErrors() > 0) {
@@ -9,6 +8,7 @@ SemanticAnalyzer::SemanticAnalyzer(std::ifstream *stream) : input(*stream), lexe
         std::cerr << "parser error: " << parser.getNumberOfSyntaxErrors() << std::endl;
         throw std::runtime_error("Syntax analysis failed");
     }
+    currentBlock = nullptr;
 }
 
 SemanticAnalyzer::~SemanticAnalyzer() = default;
@@ -156,8 +156,14 @@ std::any SemanticAnalyzer::visitFunctionFParams(CACTParser::FunctionFParamsConte
 std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext *context) {
     return visitChildren(context);
 }
-
-std::any SemanticAnalyzer::visitNumber(CACTParser::NumberContext *context) {
+std::any SemanticAnalyzer::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
     return visitChildren(context);
 }
-
+std::any SemanticAnalyzer::visitFloatingConstant(CACTParser::FloatingConstantContext *context) {
+    return visitChildren(context);
+}
+void SemanticAnalyzer::analyze() {
+}
+std::any SemanticAnalyzer::visitAddOp(CACTParser::AddOpContext *context) {
+    return visitChildren(context);
+}

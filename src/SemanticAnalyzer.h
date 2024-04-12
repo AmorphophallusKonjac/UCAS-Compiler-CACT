@@ -1,18 +1,16 @@
 #ifndef COMPILER_SEMANTICANALYZER_H
 #define COMPILER_SEMANTICANALYZER_H
 
-#include "CACTVisitor.h"
 #include "CACTLexer.h"
 #include "CACTParser.h"
 #include "CACTVisitor.h"
-#include "tree/ParseTree.h"
 #include "symbolTable.h"
+#include "tree/ParseTree.h"
 
 using namespace antlr4;
 
-class SemanticAnalyzer : public CACTVisitor{
+class SemanticAnalyzer : public CACTVisitor {
 public:
-
     explicit SemanticAnalyzer(std::ifstream *stream);
 
     std::any visitFunctionType(CACTParser::FunctionTypeContext *context) override;
@@ -94,6 +92,7 @@ public:
     ~SemanticAnalyzer() override;
 
     void analyze();
+    std::any visitAddOp(CACTParser::AddOpContext *context) override;
 
 private:
     ANTLRInputStream input;
@@ -106,4 +105,4 @@ private:
 };
 
 
-#endif //COMPILER_SEMANTICANALYZER_H
+#endif//COMPILER_SEMANTICANALYZER_H
