@@ -90,10 +90,11 @@ public:
 
     std::any visitFloatingConstant(CACTParser::FloatingConstantContext *context) override;
 
+    std::any visitAddOp(CACTParser::AddOpContext *context) override;
+
     ~IRGenerator() override = default;
 
     void generate();
-    std::any visitAddOp(CACTParser::AddOpContext *context) override;
 
 private:
     tree::ParseTree *root;
