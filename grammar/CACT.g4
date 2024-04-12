@@ -43,9 +43,13 @@ functionRParams
     ;
 
 unaryOperator
+    : addOp
+    | Not
+    ;
+
+addOp
     : '+'
     | '-'
-    | '!'
     ;
 
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
@@ -84,7 +88,7 @@ expression
 
 constantExpression
     locals [DataType dataType]
-    : number
+    : (addOp)? number
     | BooleanConstant
     ;
 

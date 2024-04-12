@@ -119,3 +119,6 @@ IRGenerator::IRGenerator(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree
 void IRGenerator::generate() {
     visit(root);
 }
+std::any IRGenerator::visitAddOp(CACTParser::AddOpContext *context) {
+    return visitChildren(context);
+}

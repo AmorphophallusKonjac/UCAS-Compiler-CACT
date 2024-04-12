@@ -1017,3 +1017,6 @@ std::any SemanticAnalyzer::visitFloatingConstant(
                            SymbolType::NUM);
     }
 }
+std::any SemanticAnalyzer::visitAddOp(CACTParser::AddOpContext *context) {
+    return visitChildren(context);
+}

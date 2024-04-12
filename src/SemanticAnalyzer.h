@@ -94,6 +94,7 @@ public:
     ~SemanticAnalyzer() override;
 
     void analyze();
+    std::any visitAddOp(CACTParser::AddOpContext *context) override;
 
 private:
     tree::ParseTree *root;
