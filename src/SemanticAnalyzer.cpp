@@ -497,7 +497,7 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     std::string name = context->Identifier()->getText();
     context->constantInitValue()->dataType = context->dataType;
     context->constantInitValue()->arraySize = context->arraySize;
-    context->constantInitValue()->dimention = context->arraySize.size();//这里必须得传进维数，确定递归层数
+    context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
     this->visit(context->constantInitValue());
     return std::make_tuple(name, context->arraySize, dimension, line);
 }
@@ -512,18 +512,22 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     zero_dim   =    (context->constantExpression() != nullptr) && context->arraySize.empty();
     single_dim =    !zero_dim &&
                     (context->constantInitValue().front()->constantExpression() != nullptr) && //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组
-                    (context->dimention == context->arraySize.size());//确定是第一层进入
+                    (context->dimension == context->arraySize.size());//确定是第一层进入
 
     /******single_dim直接终止递归，否则往下递归******/
     if(zero_dim){
         context->constantExpression()->dataType = context->dataType;
         this->visit(context->constantExpression());
-        currentSymbol->setInitValue(context->constantExpression()->number());
+        currentSymbol->setInitValue(context->constantExpression()->getText(), context->constantExpression()->dataType);
     }
     else if(single_dim){
         //遍历每一个一维元素，直接压栈即可
         for (auto constantInitValue: context->constantInitValue()){
-            currentSymbol->setInitValue(constantInitValue->constantExpression()->number());
+            constantInitValue->dataType = context->dataType;
+            constantInitValue->constantExpression()->dataType = constantInitValue->dataType;
+            
+            this->visit(context->constantExpression());
+            currentSymbol->setInitValue(constantInitValue->constantExpression()->getText(), context->constantExpression()->dataType);
         }
     }else{
         int currentSize = 0;
@@ -570,7 +574,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
                 i < context->arraySize.end(); ++i) {
                 constantInitValue->arraySize.push_back(*i);
             }
-            constantInitValue->dimention = context->dimention;
+            constantInitValue->dimension = context->dimension;
             this->visit(constantInitValue);
 
             //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
@@ -618,7 +622,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     if (context->constantInitValue() != nullptr) {
         context->constantInitValue()->dataType = context->dataType;
         context->constantInitValue()->arraySize = context->arraySize;
-        context->constantInitValue()->dimention = context->arraySize.size();//这里必须得传进维数，确定递归层数
+        context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
     }
     return std::make_tuple(name, context->arraySize, dimension, line);
