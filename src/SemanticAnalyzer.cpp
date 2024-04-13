@@ -518,12 +518,12 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     if(zero_dim){
         context->constantExpression()->dataType = context->dataType;
         this->visit(context->constantExpression());
-        currentSymbol->setInitValue(context->constantExpression()->number());
+        currentSymbol->setInitValue(context->constantExpression()->getText());
     }
     else if(single_dim){
         //遍历每一个一维元素，直接压栈即可
         for (auto constantInitValue: context->constantInitValue()){
-            currentSymbol->setInitValue(constantInitValue->constantExpression()->number());
+            currentSymbol->setInitValue(constantInitValue->constantExpression()->getText());
         }
     }else{
         int currentSize = 0;
