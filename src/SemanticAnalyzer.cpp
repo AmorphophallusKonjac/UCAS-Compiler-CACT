@@ -510,7 +510,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     
     //这里有一点，对于嵌套括号的写法，一定要越过single_dim这一层
     zero_dim   =    (context->constantExpression() != nullptr) && context->arraySize.empty();
-    single_dim =    (context->constantInitValue().front()->constantExpression() != nullptr) && //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组
+    single_dim =    !zero_dim &&
+                    (context->constantInitValue().front()->constantExpression() != nullptr) && //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组
                     (context->dimention == context->arraySize.size());//确定是第一层进入
 
     /******single_dim直接终止递归，否则往下递归******/
