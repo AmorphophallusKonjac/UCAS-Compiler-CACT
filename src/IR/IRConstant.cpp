@@ -59,13 +59,22 @@ IRConstant *IRConstant::getAllOnesValue(const IRType *Ty) {
 IRConstantInt::IRConstantInt(int V) : IRConstant(IRType::IntTy) {
     Val = V;
 }
+IRConstantInt *IRConstantInt::get(int V) {
+    return nullptr;
+}
 
 IRConstantFloat::IRConstantFloat(float V) : IRConstant(IRType::FloatTy) {
     Val = V;
 }
+IRConstantFloat *IRConstantFloat::get(float V) {
+    return nullptr;
+}
 
 IRConstantDouble::IRConstantDouble(double V) : IRConstant(IRType::DoubleTy) {
     Val = V;
+}
+IRConstantDouble *IRConstantDouble::get(double V) {
+    return nullptr;
 }
 
 IRConstantArray::IRConstantArray(IRArrayType *ty, std::vector<IRConstant *> V)

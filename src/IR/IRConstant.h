@@ -39,11 +39,20 @@ public:
 class IRConstantInt : public IRConstant {
     int Val;
 
+protected:
+    /******构造******/
+    explicit IRConstantInt(int V);
+
 public:
     static IRConstantInt *Null, *AllOnes;
 
-    /******构造******/
-    explicit IRConstantInt(int V);
+    /**
+     * 构造 IRConstantInt 的工厂方法，返回一个创建好的对象指针
+     * @param V 常数的值
+     * @return 创建好的对象的指针
+     */
+    static IRConstantInt *get(int V);
+
     /******返回val******/
     inline int getRawValue() const { return Val; }
 };
@@ -51,11 +60,19 @@ public:
 class IRConstantFloat : public IRConstant {
     float Val;
 
+protected:
+    /******构造******/
+    explicit IRConstantFloat(float V);
+
 public:
     static IRConstantFloat *Null;
 
-    /******构造******/
-    explicit IRConstantFloat(float V);
+    /**
+     * 构造 IRConstantFloat 的工厂方法，返回一个创建好的对象指针
+     * @param V 常数的值
+     * @return 创建好的对象的指针
+     */
+    static IRConstantFloat *get(float V);
     /******返回val******/
     inline float getRawValue() const { return Val; }
 };
@@ -63,11 +80,19 @@ public:
 class IRConstantDouble : public IRConstant {
     double Val;
 
+protected:
+    /******构造******/
+    explicit IRConstantDouble(double V);
+
 public:
     static IRConstantDouble *Null;
 
-    /******构造******/
-    explicit IRConstantDouble(double V);
+    /**
+     * 构造 IRConstantFloat 的工厂方法，返回一个创建好的对象指针
+     * @param V 常数的值
+     * @return 创建好的对象的指针
+     */
+    static IRConstantDouble *get(double V);
     /******返回val******/
     inline double getRawValue() const { return Val; }
 };
@@ -76,7 +101,6 @@ class IRConstantArray : public IRConstant {
     IRArrayType *arrayTy;
 
 public:
-
     /******构造******/
     IRConstantArray(IRArrayType *ty, std::vector<IRConstant *> V);
 

@@ -5,7 +5,7 @@
 
 IRAllocationInst::IRAllocationInst(IRType *Ty, IRValue *ArraySize, unsigned int iTy, const std::string &Name, IRInstruction *InsertBefore)
     : IRInstruction(new IRPointerType(Ty), iTy, Name, InsertBefore) {
-    if (!ArraySize) ArraySize = new IRConstantInt(1);
+    if (!ArraySize) ArraySize = IRConstantInt::get(1);
     Operands.reserve(1);
     Operands.emplace_back(ArraySize, this);
 }
