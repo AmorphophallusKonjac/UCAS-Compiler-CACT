@@ -1,5 +1,6 @@
 #include "SemanticAnalyzer.h"
 
+#include <cstddef>
 #include <vector>
 
 #include "symbolTable.h"
@@ -469,20 +470,7 @@ std::any SemanticAnalyzer::visitConstantDeclaration(
     context->dataType = Utils::stot(context->basicType()->getText());
     for (auto constantDefinition: context->constantDefinition()) {
         constantDefinition->dataType = context->dataType;
-        auto constantInfo = std::any_cast<
-                std::tuple<std::string, std::vector<int>, size_t, size_t>>(
-                this->visit(constantDefinition));
-        std::string name;
-        int dimension;
-        std::vector<int> arraySize;
-        int line;
-        std::tie(name, arraySize, dimension, line) = constantInfo;
-        if (dimension == 0) {
-            currentSymbol = this->currentBlock->addNewConst(name, line, context->dataType);
-        } else {
-            currentSymbol = this->currentBlock->addNewConstArray(name, line, context->dataType,
-                                                 arraySize, dimension);
-        }
+        this->visit(constantDefinition);
     }
     return {};
 }
@@ -495,11 +483,20 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
+    /******先构建玩currentsymbol，再去往下访问******/
+    if (dimension == 0) {
+        currentSymbol = this->currentBlock->addNewConst(name, line, context->dataType);
+    } else {
+        currentSymbol = this->currentBlock->addNewConstArray(name, line, context->dataType,
+                                                 context->arraySize, dimension);
+    }
+
     context->constantInitValue()->dataType = context->dataType;
     context->constantInitValue()->arraySize = context->arraySize;
     context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
     this->visit(context->constantInitValue());
-    return std::make_tuple(name, context->arraySize, dimension, line);
+    //return std::make_tuple(name, context->arraySize, dimension, line);
+    return {};
 }
 
 std::any SemanticAnalyzer::visitConstantInitValue(
@@ -510,9 +507,13 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     
     //这里有一点，对于嵌套括号的写法，一定要越过single_dim这一层
     zero_dim   =    (context->constantExpression() != nullptr) && context->arraySize.empty();
-    single_dim =    !zero_dim &&
-                    (context->constantInitValue().front()->constantExpression() != nullptr) && //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组
-                    (context->dimension == context->arraySize.size());//确定是第一层进入
+    single_dim =    !zero_dim && 
+                    (context->dimension >= 1) && (context->LeftBrace()!=nullptr && context->RightBrace()!=nullptr) &&  //确定是一个数组(对应左侧与右侧)(任何数组都可以采用一维的写法)
+                    (context->dimension == context->arraySize.size()) &&                        //确定是第一层进入
+                    (context->constantInitValue().empty() || context->constantInitValue().front()->constantExpression() != nullptr);   
+                    //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组(或者啥都没有就是一对大括号);
+    
+    int arraySize = 0;
 
     /******single_dim直接终止递归，否则往下递归******/
     if(zero_dim){
@@ -522,17 +523,26 @@ std::any SemanticAnalyzer::visitConstantInitValue(
     }
     else if(single_dim){
         //遍历每一个一维元素，直接压栈即可
-        for (auto constantInitValue: context->constantInitValue()){
-            constantInitValue->dataType = context->dataType;
-            constantInitValue->constantExpression()->dataType = constantInitValue->dataType;
+        arraySize = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
+                            std::multiplies<>());
+
+        //如果有元素，先尝试压栈
+        if(!context->constantInitValue().empty()){                                                   //这个vector中没有元素
+            for (auto constantInitValue: context->constantInitValue()){
+                constantInitValue->dataType = context->dataType;
+                constantInitValue->dimension = context->dimension;
             
-            this->visit(context->constantExpression());
-            currentSymbol->setInitValue(constantInitValue->constantExpression()->getText(), context->constantExpression()->dataType);
+                this->visit(constantInitValue);
+            }
+        }
+
+        //补零
+        for(int i= currentSymbol->getCurrentArraySize();i < arraySize;i++){
+            currentSymbol->setZero();
         }
     }else{
-        int currentSize = 0;
-        int arraySize = 0;
         int subArraySize = 0;
+        int currentSize = 0;
 
         /******进行array的参数一致性检查******/
         // type MUST BE array
@@ -554,7 +564,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(
         }
 
         /******constantInitValue数量得和这一层的array属性值相同******/
-        if (context->constantInitValue().size() != context->arraySize.front()) {
+        /******如果是最下一层一维的，可以选择不相同然后补零*****/
+        if ((context->arraySize.size() != 1) && (context->constantInitValue().size() != context->arraySize.front())) {
             ErrorHandler::printErrorContext(context, "Error number for InitValue");
             throw std::runtime_error("Semantic analysis failed at " +
                                     std::string(__FILE__) + ":" +
@@ -578,7 +589,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
             this->visit(constantInitValue);
 
             //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
-            currentSize += subArraySize;
+            currentSize += subArraySize;//这里与上面参数一致性的第三个判断是对应的；当是一维的时候这里可以选择补零，其他情况均不考虑
             for(int i= currentSymbol->getCurrentArraySize();i < currentSize;i++){
                 currentSymbol->setZero();
             }
@@ -593,20 +604,7 @@ std::any SemanticAnalyzer::visitVariableDeclaration(
     context->dataType = Utils::stot(context->basicType()->getText());
     for (auto variableDefinition: context->variableDefinition()) {
         variableDefinition->dataType = context->dataType;
-        auto varInfo = std::any_cast<
-                std::tuple<std::string, std::vector<int>, size_t, size_t>>(
-                this->visit(variableDefinition));
-        std::string name;
-        int dimension;
-        std::vector<int> arraySize;
-        int line;
-        std::tie(name, arraySize, dimension, line) = varInfo;
-        if (dimension == 0) {
-            currentSymbol = this->currentBlock->addNewVar(name, line, context->dataType);
-        } else {
-            currentSymbol = this->currentBlock->addNewVarArray(name, line, context->dataType,
-                                               arraySize, dimension);
-        }
+        this->visit(variableDefinition);
     }
     return {};
 }
@@ -619,13 +617,22 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
+    /******先构建玩currentsymbol，再去往下访问******/
+    if (dimension == 0) {
+        currentSymbol = this->currentBlock->addNewVar(name, line, context->dataType);
+    } else {
+        currentSymbol = this->currentBlock->addNewVarArray(name, line, context->dataType,
+                                                 context->arraySize, dimension);
+    }
+
     if (context->constantInitValue() != nullptr) {
         context->constantInitValue()->dataType = context->dataType;
         context->constantInitValue()->arraySize = context->arraySize;
         context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
     }
-    return std::make_tuple(name, context->arraySize, dimension, line);
+    //return std::make_tuple(name, context->arraySize, dimension, line);
+    return {};
 }
 
 std::any
@@ -661,17 +668,6 @@ std::any SemanticAnalyzer::visitCompoundStatement(
 
     currentBlock = context->thisblockinfo;// 更新currentBlock
     this->visit(context->blockItemList());
-
-    /*if(context->blockItemList() != nullptr){
-      auto blockitem =
-  context->blockItemList()->lastblockitem;//获得最后一条blockitem,查看其是否满足ifelse
-  returnpath if(blockitem->statement() !=nullptr){
-          if(blockitem->statement()->selectionStatement() !=nullptr){
-              currentBlock->setReturnSign(blockitem->statement()->selectionStatement()->thisblockinfo->getReturnSign()
-  || currentBlock->getReturnSign());
-          }
-      }
-  }//考虑本地的returnsign和if-else的结合，只要有一个满足就可以说returnpath满足*/
 
     currentBlock = context->thisblockinfo->getParentBlock();// currentBlock回溯
     return {};
