@@ -1,6 +1,6 @@
 build
 cmake-build-debug
-cmake-buile-server
+cmake-build-server
 
 .DS_Store
 
