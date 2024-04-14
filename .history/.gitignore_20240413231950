@@ -23,7 +23,7 @@ testbench
 share_CACT.sh
 demo.c
 CACT-IR.md
-boot.ps1
+cact-doc
 
 test/runllvm.sh
 test/*/ll

@@ -7,6 +7,7 @@
 #include <numeric>
 #include <string>
 #include <vector>
+//#include <any>
 
 #include "utils/CACT.h"
 #include "utils/ErrorHandler.h"
@@ -55,7 +56,26 @@ private:
 
 public:
 
-    void setInitValue(std::any value){ initValueArray.push_back(value);   };
+    void setInitValue(std::string valueStr, DataType datatype){ 
+        switch (datatype) {
+            case INT:
+                initValueArray.push_back(stoi(valueStr));
+                break;
+            case BOOL:
+                if(valueStr == "true"){
+                    initValueArray.push_back(true);
+                }else{
+                    initValueArray.push_back(false);
+                }
+                break;
+            case DOUBLE:
+                initValueArray.push_back(stod(valueStr));
+                break;
+            case FLOAT:
+                initValueArray.push_back(stof(valueStr));
+                break;
+        }
+    };
     void setZero(){
         initValueArray.push_back(0);
         return;
