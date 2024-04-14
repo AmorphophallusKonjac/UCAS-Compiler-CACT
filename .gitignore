@@ -25,6 +25,7 @@ share_CACT.sh
 demo.c
 CACT-IR.md
 boot.ps1
+.history
 
 test/runllvm.sh
 test/*/ll
