@@ -2,6 +2,9 @@
 #define COMPILER_IRCONSTANT_H
 
 
+#include <any>
+#include <map>
+
 #include "IRDerivedTypes.h"
 #include "IRUser.h"
 
@@ -38,6 +41,7 @@ public:
 
 class IRConstantInt : public IRConstant {
     int Val;
+    static std::map<int, IRConstantInt *> constantMap;
 
 protected:
     /******构造******/
@@ -59,6 +63,7 @@ public:
 
 class IRConstantFloat : public IRConstant {
     float Val;
+    static std::map<float, IRConstantFloat *> constantMap;
 
 protected:
     /******构造******/
@@ -79,6 +84,7 @@ public:
 
 class IRConstantDouble : public IRConstant {
     double Val;
+    static std::map<double, IRConstantDouble *> constantMap;
 
 protected:
     /******构造******/
@@ -102,7 +108,7 @@ class IRConstantArray : public IRConstant {
 
 public:
     /******构造******/
-    IRConstantArray(IRArrayType *ty, std::vector<IRConstant *> V);
+    IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V);
 
     /******强转类型。上面的子类都是primitiveType，这里的类是arrayType，与globalvarible那里强转pointertype同理******/
     inline const IRArrayType *getType() const {
