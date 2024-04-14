@@ -7,7 +7,6 @@
 #include <numeric>
 #include <string>
 #include <vector>
-//#include <any>
 
 #include "utils/CACT.h"
 #include "utils/ErrorHandler.h"
@@ -50,13 +49,13 @@ public:
     ~SymbolInfo(){};
 };
 
-class initValue{
+class initValue {
 private:
     std::vector<std::any> initValueArray;
 
 public:
 
-    void setInitValue(std::string valueStr, DataType datatype){ 
+    void setInitValue(std::string valueStr, DataType datatype){
         switch (datatype) {
             case INT:
                 initValueArray.push_back(stoi(valueStr));
@@ -80,11 +79,11 @@ public:
         initValueArray.push_back(0);
         return;
     }
-    int getCurrentArraySize(){
+    int getCurrentArraySize() {
         return initValueArray.size();
     }
 
-    std::any getInitValue(std::vector<int> indexArray){//获得数组中某个元素的初始值，则需要数组元素的下标
+    std::any getInitValue(std::vector<int> indexArray) {//获得数组中某个元素的初始值，则需要数组元素的下标
         int index = 0;
         std::vector<int>::iterator element = indexArray.begin();
         while (element != indexArray.end()) {
@@ -95,7 +94,7 @@ public:
         return initValueArray[index];
     };
 
-    std::any getInitValue(){//获得某个常量的初始值
+    std::any getInitValue() {//获得某个常量的初始值
         return initValueArray[0];
     };
 };
@@ -106,7 +105,7 @@ private:
     DataType dataType;
     int global = 0;//代表是否是全局变量
 
-public: 
+public:
     DataType getDataType() { return dataType; }
 
     int getGlobal() { return global; }
@@ -237,7 +236,7 @@ public:
     ~FuncSymbolInfo() {
         for (SymbolInfo *symbol: paramList) { delete symbol; };
     };
-}; 
+};
 
 
 /***********各种table***********/

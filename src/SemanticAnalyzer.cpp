@@ -488,7 +488,7 @@ std::any SemanticAnalyzer::visitConstantDefinition(
         currentSymbol = this->currentBlock->addNewConst(name, line, context->dataType);
     } else {
         currentSymbol = this->currentBlock->addNewConstArray(name, line, context->dataType,
-                                                 context->arraySize, dimension);
+                                                             context->arraySize, dimension);
     }
 
     context->constantInitValue()->dataType = context->dataType;
@@ -504,31 +504,33 @@ std::any SemanticAnalyzer::visitConstantInitValue(
 
     bool zero_dim;
     bool single_dim;//确定这个数组的写法，是一维的写法还是多维的写法，由此确定是否需要向下递归
-    
+
     //这里有一点，对于嵌套括号的写法，一定要越过single_dim这一层
+
+    /* clang-format off */
     zero_dim   =    (context->constantExpression() != nullptr) && context->arraySize.empty();
     single_dim =    !zero_dim &&
                     (context->dimension >= 1) && (context->LeftBrace()!=nullptr && context->RightBrace()!=nullptr) &&  //确定是一个数组(对应左侧与右侧)(任何数组都可以采用一维的写法)
                     (context->dimension == context->arraySize.size()) &&                        //确定是第一层进入
                     (context->constantInitValue().empty() || context->constantInitValue().front()->constantExpression() != nullptr);
                     //往下多看一层，如果发现已经是constExpression了那么就代表是一维数组(或者啥都没有就是一对大括号);
+    /* clang-format on */
 
     int arraySize = 0;
 
     /******single_dim直接终止递归，否则往下递归******/
-    if(zero_dim){
+    if (zero_dim) {
         context->constantExpression()->dataType = context->dataType;
         this->visit(context->constantExpression());
         currentSymbol->setInitValue(context->constantExpression()->getText(), context->constantExpression()->dataType);
-    }
-    else if(single_dim){
+    } else if (single_dim) {
         //遍历每一个一维元素，直接压栈即可
         arraySize = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
-                            std::multiplies<>());
+                                    std::multiplies<>());
 
         //如果有元素，先尝试压栈
-        if(!context->constantInitValue().empty()){                                                   //这个vector中没有元素
-            for (auto constantInitValue: context->constantInitValue()){
+        if (!context->constantInitValue().empty()) {//这个vector中没有元素
+            for (auto constantInitValue: context->constantInitValue()) {
                 constantInitValue->dataType = context->dataType;
                 constantInitValue->dimension = context->dimension;
 
@@ -537,10 +539,10 @@ std::any SemanticAnalyzer::visitConstantInitValue(
         }
 
         //补零
-        for(int i= currentSymbol->getCurrentArraySize();i < arraySize;i++){
+        for (int i = currentSymbol->getCurrentArraySize(); i < arraySize; i++) {
             currentSymbol->setZero();
         }
-    }else{
+    } else {
         int subArraySize = 0;
         int currentSize = 0;
 
@@ -551,16 +553,16 @@ std::any SemanticAnalyzer::visitConstantInitValue(
         if (context->constantExpression() != nullptr) {
             ErrorHandler::printErrorContext(context, "less brace for InitValue");
             throw std::runtime_error("Semantic analysis failed at " +
-                                    std::string(__FILE__) + ":" +
-                                    std::to_string(__LINE__));
+                                     std::string(__FILE__) + ":" +
+                                     std::to_string(__LINE__));
         }
 
         /******constantExpression为空还没到底，arraySize已经empty，真实的数组(相比arraySize)多了维度******/
-        if(context->arraySize.empty()){
+        if (context->arraySize.empty()) {
             ErrorHandler::printErrorContext(context, "more brace for InitValue");
             throw std::runtime_error("Semantic analysis failed at " +
-                                    std::string(__FILE__) + ":" +
-                                    std::to_string(__LINE__));
+                                     std::string(__FILE__) + ":" +
+                                     std::to_string(__LINE__));
         }
 
         /******constantInitValue数量得和这一层的array属性值相同******/
@@ -568,13 +570,13 @@ std::any SemanticAnalyzer::visitConstantInitValue(
         if ((context->arraySize.size() != 1) && (context->constantInitValue().size() != context->arraySize.front())) {
             ErrorHandler::printErrorContext(context, "Error number for InitValue");
             throw std::runtime_error("Semantic analysis failed at " +
-                                    std::string(__FILE__) + ":" +
-                                    std::to_string(__LINE__));
+                                     std::string(__FILE__) + ":" +
+                                     std::to_string(__LINE__));
         }
 
         /******计算arraySize和subArraySize******/
         arraySize = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
-                            std::multiplies<>());
+                                    std::multiplies<>());
         subArraySize = arraySize / context->arraySize.front();
 
         for (auto constantInitValue: context->constantInitValue()) {
@@ -582,7 +584,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
             //更新下一级的locals
             constantInitValue->dataType = context->dataType;
             for (auto i = context->arraySize.begin() + 1;
-                i < context->arraySize.end(); ++i) {
+                 i < context->arraySize.end(); ++i) {
                 constantInitValue->arraySize.push_back(*i);
             }
             constantInitValue->dimension = context->dimension;
@@ -590,7 +592,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
 
             //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
             currentSize += subArraySize;//这里与上面参数一致性的第三个判断是对应的；当是一维的时候这里可以选择补零，其他情况均不考虑
-            for(int i= currentSymbol->getCurrentArraySize();i < currentSize;i++){
+            for (int i = currentSymbol->getCurrentArraySize(); i < currentSize; i++) {
                 currentSymbol->setZero();
             }
         }
@@ -622,7 +624,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         currentSymbol = this->currentBlock->addNewVar(name, line, context->dataType);
     } else {
         currentSymbol = this->currentBlock->addNewVarArray(name, line, context->dataType,
-                                                 context->arraySize, dimension);
+                                                           context->arraySize, dimension);
     }
 
     if (context->constantInitValue() != nullptr) {
