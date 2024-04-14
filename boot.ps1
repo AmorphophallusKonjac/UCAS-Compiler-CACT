@@ -1,1 +1,0 @@
-docker run -itd --privileged=true --rm --name CACT --mount type=bind,source="D:\ucas-compiler-cact",target="/root/CACT"  cact bash
