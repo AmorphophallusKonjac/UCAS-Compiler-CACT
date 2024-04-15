@@ -5,12 +5,12 @@
 
 class IRTerminatorInst : public IRInstruction {
 protected:
-    explicit IRTerminatorInst(IRInstruction::TermOps iType, IRInstruction *InsertBefore = nullptr)
-        : IRInstruction(IRType::VoidTy, iType, "", InsertBefore) {
+    explicit IRTerminatorInst(IRInstruction::TermOps iType, IRBasicBlock *parent = nullptr)
+        : IRInstruction(IRType::VoidTy, iType, "", parent) {
     }
     IRTerminatorInst(IRType *Ty, IRInstruction::TermOps iType,
-                     const std::string &Name = "", IRInstruction *InsertBefore = nullptr)
-        : IRInstruction(Ty, iType, Name, InsertBefore) {
+                     const std::string &Name = "", IRBasicBlock *parent = nullptr)
+        : IRInstruction(Ty, iType, Name, parent) {
     }
 
 public:
@@ -35,17 +35,17 @@ public:
 class IRBinaryOperator : public IRInstruction {
 protected:
     IRBinaryOperator(BinaryOps iType, IRValue *S1, IRValue *S2, IRType *Ty,
-                     const std::string &Name, IRInstruction *InsertBefore);
+                     const std::string &Name, IRBasicBlock *parent);
 
 public:
     static IRBinaryOperator *create(BinaryOps Op, IRValue *S1, IRValue *S2,
                                     const std::string &Name = "",
-                                    IRInstruction *InsertBefore = 0);
+                                    IRBasicBlock *parent = nullptr);
 
     static IRBinaryOperator *createNeg(IRValue *Op, const std::string &Name = "",
-                                       IRInstruction *InsertBefore = 0);
+                                       IRBasicBlock *parent = nullptr);
     static IRBinaryOperator *createNot(IRValue *Op, const std::string &Name = "",
-                                       IRInstruction *InsertBefore = 0);
+                                       IRBasicBlock *parent = nullptr);
     static bool isNeg(IRValue *V);
     static bool isNot(IRValue *V);
     static IRValue *getNegArgument(IRBinaryOperator *Bop);

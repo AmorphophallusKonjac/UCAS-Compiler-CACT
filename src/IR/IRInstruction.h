@@ -13,7 +13,7 @@ private:
 protected:
     unsigned iType;// InstructionType: The opcode of the instruction
     IRInstruction(IRType *Ty, unsigned iType, const std::string &Name = "",
-                  IRInstruction *InsertBefore = nullptr);
+                  IRBasicBlock *parent = nullptr);
 
 public:
     /**

@@ -10,7 +10,7 @@ class IRPHINode : public IRInstruction {
 
 public:
     IRPHINode(IRType *Ty, const std::string &Name = "",
-              IRInstruction *InsertBefore = nullptr)
+              IRBasicBlock *InsertBefore = nullptr)
         : IRInstruction(Ty, IRInstruction::PHI, Name, InsertBefore) {
     }
 

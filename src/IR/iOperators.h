@@ -9,7 +9,7 @@ class IRSetCondInst : public IRBinaryOperator {
 
 public:
     IRSetCondInst(BinaryOps Opcode, IRValue *LHS, IRValue *RHS,
-                  const std::string &Name = "", IRInstruction *InsertBefore = 0);
+                  const std::string &Name = "", IRBasicBlock *parent = nullptr);
 
     /// getInverseCondition - Return the inverse of the current condition opcode.
     /// For example seteq -> setne, setgt -> setle, setlt -> setge, etc...

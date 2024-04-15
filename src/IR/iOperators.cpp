@@ -6,14 +6,14 @@
 #include "InstrTypes.h"
 
 
-IRBinaryOperator::IRBinaryOperator(BinaryOps iType, IRValue *S1, IRValue *S2, IRType *Ty, const std::string &Name, IRInstruction *InsertBefore)
-    : IRInstruction(Ty, iType, Name, InsertBefore) {
+IRBinaryOperator::IRBinaryOperator(BinaryOps iType, IRValue *S1, IRValue *S2, IRType *Ty, const std::string &Name, IRBasicBlock *parent)
+    : IRInstruction(Ty, iType, Name, parent) {
     Operands.reserve(2);
     Operands.emplace_back(S1, this);
     Operands.emplace_back(S2, this);
 }
 
-IRBinaryOperator *IRBinaryOperator::create(IRInstruction::BinaryOps Op, IRValue *S1, IRValue *S2, const std::string &Name, IRInstruction *InsertBefore) {
+IRBinaryOperator *IRBinaryOperator::create(BinaryOps Op, IRValue *S1, IRValue *S2, const std::string &Name, IRBasicBlock *parent) {
     switch (Op) {
         // Binary comparison operators...
         case SetLT:
@@ -22,21 +22,21 @@ IRBinaryOperator *IRBinaryOperator::create(IRInstruction::BinaryOps Op, IRValue 
         case SetGE:
         case SetEQ:
         case SetNE:
-            return new IRSetCondInst(Op, S1, S2, Name, InsertBefore);
+            return new IRSetCondInst(Op, S1, S2, Name, parent);
 
         default:
-            return new IRBinaryOperator(Op, S1, S2, S1->getType(), Name, InsertBefore);
+            return new IRBinaryOperator(Op, S1, S2, S1->getType(), Name, parent);
     }
 }
 
-IRBinaryOperator *IRBinaryOperator::createNeg(IRValue *Op, const std::string &Name, IRInstruction *InsertBefore) {
+IRBinaryOperator *IRBinaryOperator::createNeg(IRValue *Op, const std::string &Name, IRBasicBlock *parent) {
     return new IRBinaryOperator(IRInstruction::Sub,
-                                IRConstant::getNullValue(Op->getType()), Op, Op->getType(), Name, InsertBefore);
+                                IRConstant::getNullValue(Op->getType()), Op, Op->getType(), Name, parent);
 }
 
-IRBinaryOperator *IRBinaryOperator::createNot(IRValue *Op, const std::string &Name, IRInstruction *InsertBefore) {
+IRBinaryOperator *IRBinaryOperator::createNot(IRValue *Op, const std::string &Name, IRBasicBlock *parent) {
     return new IRBinaryOperator(IRInstruction::Xor,
-                                IRConstant::getAllOnesValue(Op->getType()), Op, Op->getType(), Name, InsertBefore);
+                                IRConstant::getAllOnesValue(Op->getType()), Op, Op->getType(), Name, parent);
 }
 
 bool IRBinaryOperator::isNeg(IRValue *V) {
@@ -81,8 +81,8 @@ bool IRBinaryOperator::swapOperands() {
     return false;
 }
 
-IRSetCondInst::IRSetCondInst(IRInstruction::BinaryOps Opcode, IRValue *LHS, IRValue *RHS, const std::string &Name, IRInstruction *InsertBefore)
-    : IRBinaryOperator(Opcode, LHS, RHS, IRType::BoolTy, Name, InsertBefore) {
+IRSetCondInst::IRSetCondInst(BinaryOps Opcode, IRValue *LHS, IRValue *RHS, const std::string &Name, IRBasicBlock *parent)
+    : IRBinaryOperator(Opcode, LHS, RHS, IRType::BoolTy, Name, parent) {
     OpType = Opcode;
 }
 IRInstruction::BinaryOps IRSetCondInst::getInverseCondition(IRInstruction::BinaryOps Opcode) {

@@ -8,13 +8,13 @@ class IRCallInst : public IRInstruction {
 
 public:
     IRCallInst(IRValue *F, const std::vector<IRValue *> &Par,
-               const std::string &Name = "", IRInstruction *InsertBefore = nullptr);
+               const std::string &Name = "", IRBasicBlock *parent = nullptr);
 
     // Alternate CallInst ctors w/ no actuals & one actual, respectively.
     IRCallInst(IRValue *F, const std::string &Name = "",
-               IRInstruction *InsertBefore = nullptr);
+               IRBasicBlock *parent = nullptr);
     IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name = "",
-               IRInstruction *InsertBefore = nullptr);
+               IRBasicBlock *parent = nullptr);
 
     virtual IRInstruction *clone() const { return new IRCallInst(*this); }
     bool mayWriteToMemory() const { return true; }
@@ -43,8 +43,8 @@ class ShiftInst : public IRInstruction {
 
 public:
     ShiftInst(OtherOps Opcode, IRValue *S, IRValue *SA, const std::string &Name = "",
-              IRInstruction *InsertBefore = nullptr)
-        : IRInstruction(S->getType(), Opcode, Name, InsertBefore) {
+              IRBasicBlock *parent = nullptr)
+        : IRInstruction(S->getType(), Opcode, Name, parent) {
         assert((Opcode == Shl || Opcode == Shr) && "ShiftInst Opcode invalid!");
         Operands.reserve(2);
         Operands.emplace_back(S, this);

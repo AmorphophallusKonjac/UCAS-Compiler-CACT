@@ -8,7 +8,7 @@ class IRPointerType;
 class IRAllocationInst : public IRInstruction {
 protected:
     IRAllocationInst(IRType *Ty, IRValue *ArraySize, unsigned iTy,
-                     const std::string &Name = "", IRInstruction *InsertBefore = 0);
+                     const std::string &Name = "", IRBasicBlock *parent = nullptr);
 
 public:
     bool isArrayAllocation() const;
@@ -30,8 +30,8 @@ class IRAllocaInst : public IRAllocationInst {
 
 public:
     explicit IRAllocaInst(IRType *Ty, IRValue *ArraySize = nullptr, const std::string &Name = "",
-                          IRInstruction *InsertBefore = nullptr)
-        : IRAllocationInst(Ty, ArraySize, Alloca, Name, InsertBefore) {}
+                          IRBasicBlock *parent = nullptr)
+        : IRAllocationInst(Ty, ArraySize, Alloca, Name, parent) {}
 
     IRInstruction *clone() const override {
         return new IRAllocaInst(*this);
@@ -51,9 +51,9 @@ class IRLoadInst : public IRInstruction {
     }
     bool Volatile;// True if this is a volatile load
 public:
-    IRLoadInst(IRValue *Ptr, const std::string &Name, IRInstruction *InsertBefore);
+    IRLoadInst(IRValue *Ptr, const std::string &Name, IRBasicBlock *parent);
     explicit IRLoadInst(IRValue *Ptr, const std::string &Name = "", bool isVolatile = false,
-               IRInstruction *InsertBefore = 0);
+                        IRBasicBlock *parent = nullptr);
     IRInstruction *clone() const override { return new IRLoadInst(*this); }
 
     /******是否每次要从内存中取值&&存值******/
@@ -80,9 +80,9 @@ class IRStoreInst : public IRInstruction {
     }
     bool Volatile;// True if this is a volatile store
 public:
-    IRStoreInst(IRValue *Val, IRValue *Ptr, IRInstruction *InsertBefore);
+    IRStoreInst(IRValue *Val, IRValue *Ptr, IRBasicBlock *InsertBefore);
     IRStoreInst(IRValue *Val, IRValue *Ptr, bool isVolatile = false,
-                IRInstruction *InsertBefore = 0);
+                IRBasicBlock *parent = nullptr);
     virtual IRInstruction *clone() const { return new IRStoreInst(*this); }
 
     /******是否每次要从内存中取值&&存值******/

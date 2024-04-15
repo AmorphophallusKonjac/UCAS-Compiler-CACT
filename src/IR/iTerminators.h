@@ -13,8 +13,8 @@ class IRReturnInst : public IRTerminatorInst {
     }
 
 public:
-    IRReturnInst(IRValue *RetVal = nullptr, IRInstruction *InsertBefore = nullptr)
-        : IRTerminatorInst(IRInstruction::Ret, InsertBefore) {
+    IRReturnInst(IRValue *RetVal = nullptr, IRBasicBlock *parent = nullptr)
+        : IRTerminatorInst(IRInstruction::Ret, parent) {
         if (RetVal) {
             Operands.reserve(1);
             Operands.emplace_back(RetVal, this);
@@ -50,8 +50,8 @@ class IRBranchInst : public IRTerminatorInst {
 public:
     // If cond = null, then is an unconditional br...
     IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue *cond = nullptr,
-                 IRInstruction *InsertBefore = nullptr);
-    explicit IRBranchInst(IRBasicBlock *IfTrue, IRInstruction *InsertBefore = nullptr);
+                 IRBasicBlock *parent = nullptr);
+    explicit IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *parent = nullptr);
 
     virtual IRInstruction *clone() const { return new IRBranchInst(*this); }
 

@@ -3,9 +3,9 @@
 #include "IRDerivedTypes.h"
 #include "IRFunction.h"
 
-IRCallInst::IRCallInst(IRValue *F, const std::vector<IRValue *> &Par, const std::string &Name, IRInstruction *InsertBefore)
+IRCallInst::IRCallInst(IRValue *F, const std::vector<IRValue *> &Par, const std::string &Name, IRBasicBlock *parent)
     : IRInstruction(dynamic_cast<IRFunctionType *>(F)->getReturnType(),
-                    IRInstruction::Call, Name, InsertBefore) {
+                    IRInstruction::Call, Name, parent) {
     Operands.reserve(1 + Par.size());
     Operands.emplace_back(F, this);
 
@@ -14,16 +14,16 @@ IRCallInst::IRCallInst(IRValue *F, const std::vector<IRValue *> &Par, const std:
     }
 }
 
-IRCallInst::IRCallInst(IRValue *F, const std::string &Name, IRInstruction *InsertBefore)
+IRCallInst::IRCallInst(IRValue *F, const std::string &Name, IRBasicBlock *parent)
     : IRInstruction(dynamic_cast<IRFunctionType *>(F)->getReturnType(),
-                    IRInstruction::Call, Name, InsertBefore) {
+                    IRInstruction::Call, Name, parent) {
     Operands.reserve(1);
     Operands.emplace_back(F, this);
 }
 
-IRCallInst::IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name, IRInstruction *InsertBefore)
+IRCallInst::IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name, IRBasicBlock *parent)
     : IRInstruction(dynamic_cast<IRFunctionType *>(F)->getReturnType(),
-                    IRInstruction::Call, Name, InsertBefore) {
+                    IRInstruction::Call, Name, parent) {
     Operands.reserve(2);
     Operands.emplace_back(F, this);
 
@@ -33,7 +33,6 @@ IRCallInst::IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name, IRI
 IRCallInst::IRCallInst(const IRCallInst &CI)
     : IRInstruction(CI.getType(), IRInstruction::Call) {
     Operands.reserve(CI.Operands.size());
-    for (const auto & Operand : CI.Operands)
+    for (const auto &Operand: CI.Operands)
         Operands.emplace_back(Operand, this);
 }
-

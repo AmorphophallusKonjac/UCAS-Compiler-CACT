@@ -2,8 +2,8 @@
 #include "IRType.h"
 #include "iTerminators.h"
 
-IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue *cond, IRInstruction *InsertBefore)
-    : IRTerminatorInst(IRInstruction::Br, InsertBefore) {
+IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue *cond, IRBasicBlock *parent)
+    : IRTerminatorInst(IRInstruction::Br, parent) {
     Operands.reserve(IfFalse ? 3 : 1);
     Operands.emplace_back(IfTrue, this);
     if (IfFalse) {
@@ -11,8 +11,8 @@ IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue 
         Operands.emplace_back(cond, this);
     }
 }
-IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRInstruction *InsertBefore)
-    : IRTerminatorInst(IRInstruction::Br, InsertBefore) {
+IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *parent)
+    : IRTerminatorInst(IRInstruction::Br, parent) {
     Operands.reserve(1);
     Operands.emplace_back(IfTrue, this);
 }
