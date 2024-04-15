@@ -1,5 +1,9 @@
 #include "symbolTable.h"
+#include "IR/IRDerivedTypes.h"
 #include "IR/IRValue.h"
+#include "IR/IRConstant.h"
+#include "IR/IRGlobalValue.h"
+#include "IR/IRGlobalVariable.h"
 
 #include <iostream>
 
@@ -47,11 +51,43 @@ IROperand *SymbolInfo::getOp() {
     return operand;
 }
 
-void ConstSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
-    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
-    irvalue = new IRValue(new IRType("", id), vty, name);
+void ConstSymbolInfo::setIRValue(std::any Value){ 
+    if      (Value.type() == typeid(int))   { irValue = IRConstantInt::get(std::any_cast<int>(Value)); }
+    else if (Value.type() == typeid(double)){ irValue = IRConstantDouble::get(std::any_cast<double>(Value)); }
+    else if (Value.type() == typeid(float)) { irValue = IRConstantFloat::get(std::any_cast<float>(Value)); }
+    else if (Value.type() == typeid(bool))  { irValue = IRConstantBool::get(std::any_cast<bool>(Value)); }
 }
-void VarSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
+
+void VarSymbolInfo::setIRValue(std::any  Value){ 
+    if      (Value.type() == typeid(int))   
+    { irValue = new IRGlobalVariable  
+    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+    IRConstantInt::get(std::any_cast<int>(Value)), this->getName()); }
+
+    else if (Value.type() == typeid(double)){ irValue = new IRGlobalVariable  
+    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+    IRConstantDouble::get(std::any_cast<double>(Value)), this->getName()); }
+
+    else if (Value.type() == typeid(float)) { irValue = new IRGlobalVariable  
+    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+    IRConstantFloat::get(std::any_cast<float>(Value)), this->getName()); }
+
+    else if (Value.type() == typeid(bool))  { irValue = new IRGlobalVariable  
+    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+    IRConstantBool::get(std::any_cast<bool>(Value)), this->getName()); }
+
+
+    //IRInstruction(IRType *Ty, unsigned iType, const std::string &Name = "",
+    //            IRInstruction *InsertBefore = nullptr);
+
+    
+    //irValue = new IRGlobalVariable  (IRType::FloatTy, false, IRGlobalValue::InternalLinkage,
+    //                               IRConstantFloat::get(Value), this->getName());//Linkage有啥用？
+
+
+                //Linkage有啥用？ }
+}
+/*void VarSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
     //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
     switch (vty) {
         case IRValue::InstructionVal:
@@ -71,7 +107,7 @@ void VarArraySymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty
         case IRValue::GlobalVariableVal:
     }
     irvalue = new IRValue(new IRType("", id), vty, name);
-}
+}*/
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)
@@ -102,6 +138,7 @@ FuncSymbolInfo::FuncSymbolInfo(const std::string &name, int line, DataType retur
 SymbolInfo *FuncSymbolInfo::addParamVar(const std::string &name, int line, DataType dataType) {
     VarSymbolInfo *newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量
     paramList.push_back(newParam);                                       //函数形参压栈
+    addCount();
     return newParam;
 }
 
@@ -111,6 +148,7 @@ FuncSymbolInfo::addParamArray(const std::string &name, int line, DataType dataTy
     VarArraySymbolInfo *newParam = new VarArraySymbolInfo(name, line, dataType, 0, arraySize,
                                                           dimension);//函数形参数组的全局属性和arraysize都是0
     paramList.push_back(newParam);
+    addCount();
     return newParam;
 }
 
@@ -165,6 +203,7 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
+    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -181,6 +220,7 @@ VarSymbolInfo *BlockInfo::addNewVar(const std::string &name, int line, DataType 
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
+    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -199,6 +239,7 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
+    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -217,6 +258,7 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
+    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;

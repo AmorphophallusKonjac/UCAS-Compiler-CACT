@@ -27,7 +27,7 @@ private:
     IROperand *operand;
 
 protected:
-    IRValue* irvalue;
+    IRValue* irValue;
 
 public:
     std::string getName() { return name; };
@@ -48,7 +48,8 @@ public:
     //datatype:VOID,BOOL,INT,FLOAT,DOUBLE
     //arraysize:针对数组而言
     //symboltype:CONST,VAR,CONST_ARRAY,VAR_ARRAY,FUNC
-    virtual void setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name);
+    virtual void setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name) {};
+    IRValue* getIRValue() { return irValue; };
 
     SymbolInfo(const std::string &name, int line);
 
@@ -105,6 +106,15 @@ public:
     };
 };
 
+class IRSymbolCount{
+protected:
+    unsigned IRcount;
+
+public:
+    void addCount(){ IRcount++; };
+    unsigned getCount(){ return IRcount; };
+};
+
 /***********常量变量数组符号表***********/
 class ConstVarArraySymbolInfo : public SymbolInfo, public initValue {
 private:
@@ -135,6 +145,8 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::CONST; }
 
+    void setIRValue(std::any Value);
+
     ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
     ~ConstSymbolInfo(){};
@@ -149,6 +161,8 @@ public:
     std::vector<int> getArraySize() override { return std::vector<int>(); }
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
+
+    void setIRValue(std::any Value);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -209,7 +223,7 @@ class BlockInfo;//为了funcsymbolinfo的定义
 class GlobalBlock;
 
 
-class FuncSymbolInfo : public SymbolInfo {
+class FuncSymbolInfo : public SymbolInfo, public IRSymbolCount{
 private:
     int stack_size = 0;//函数需要栈的大小
     DataType returnType;
@@ -283,7 +297,7 @@ public:
 
 /***********BlockInfo与Globalblock,block是记录符号表，函数表，块表的基本单位***********/
 //对于块而言，这里不再强调它的line
-class BlockInfo {
+class BlockInfo : public IRSymbolCount{
 protected:
     BlockInfo *parentBlock;
     FuncSymbolInfo *belongTo = nullptr;//块属于某一个函数
