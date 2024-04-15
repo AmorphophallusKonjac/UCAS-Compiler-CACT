@@ -138,7 +138,6 @@ FuncSymbolInfo::FuncSymbolInfo(const std::string &name, int line, DataType retur
 SymbolInfo *FuncSymbolInfo::addParamVar(const std::string &name, int line, DataType dataType) {
     VarSymbolInfo *newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量
     paramList.push_back(newParam);                                       //函数形参压栈
-    addCount();
     return newParam;
 }
 
@@ -148,7 +147,6 @@ FuncSymbolInfo::addParamArray(const std::string &name, int line, DataType dataTy
     VarArraySymbolInfo *newParam = new VarArraySymbolInfo(name, line, dataType, 0, arraySize,
                                                           dimension);//函数形参数组的全局属性和arraysize都是0
     paramList.push_back(newParam);
-    addCount();
     return newParam;
 }
 
@@ -203,7 +201,6 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
-    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -220,7 +217,6 @@ VarSymbolInfo *BlockInfo::addNewVar(const std::string &name, int line, DataType 
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
-    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -239,7 +235,6 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
-    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;
@@ -258,7 +253,6 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
-    addCount();
 
     //对symboltable进行操作
     symbolTable.symbolList[name] = newSymbol;

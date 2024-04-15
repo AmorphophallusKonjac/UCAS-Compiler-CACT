@@ -106,15 +106,6 @@ public:
     };
 };
 
-class IRSymbolCount{
-protected:
-    unsigned IRcount;
-
-public:
-    void addCount(){ IRcount++; };
-    unsigned getCount(){ return IRcount; };
-};
-
 /***********常量变量数组符号表***********/
 class ConstVarArraySymbolInfo : public SymbolInfo, public initValue {
 private:
@@ -223,7 +214,7 @@ class BlockInfo;//为了funcsymbolinfo的定义
 class GlobalBlock;
 
 
-class FuncSymbolInfo : public SymbolInfo, public IRSymbolCount{
+class FuncSymbolInfo : public SymbolInfo{
 private:
     int stack_size = 0;//函数需要栈的大小
     DataType returnType;
@@ -297,7 +288,7 @@ public:
 
 /***********BlockInfo与Globalblock,block是记录符号表，函数表，块表的基本单位***********/
 //对于块而言，这里不再强调它的line
-class BlockInfo : public IRSymbolCount{
+class BlockInfo {
 protected:
     BlockInfo *parentBlock;
     FuncSymbolInfo *belongTo = nullptr;//块属于某一个函数

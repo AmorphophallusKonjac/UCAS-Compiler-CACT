@@ -1,5 +1,6 @@
 #ifndef COMPILER_IRFUNCTION_H
 #define COMPILER_IRFUNCTION_H
+#include "symbolTable.h"
 #pragma once
 
 #include "IRArgument.h"
@@ -14,6 +15,7 @@ private:
     std::vector<IRArgument *> ArgumentList;
     std::vector<IRBasicBlock *> BasicBlocks;
     IRModule *Parent;
+    unsigned IRSymbolCount;
 
     void setParent(IRModule *parent);
 
@@ -45,6 +47,11 @@ public:
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::FunctionVal;
     }
+
+    /******每一个函数维护自己这个函数内记录了多少个IRSymbol******/
+    void addCount(){ IRSymbolCount++; }
+    unsigned getCount(){ return IRSymbolCount; }
+    void setCount(unsigned Count){ IRSymbolCount = Count; }
 };
 
 
