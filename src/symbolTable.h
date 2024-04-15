@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "IR/IRValue.h"
+#include "IR/IRType.h"
 #include "utils/CACT.h"
 #include "utils/ErrorHandler.h"
 
@@ -23,6 +25,9 @@ private:
     int line;//表示是第几行声明的变量，函数，或者块
     std::string name;
     IROperand *operand;
+
+protected:
+    IRValue* irvalue;
 
 public:
     std::string getName() { return name; };
@@ -43,6 +48,7 @@ public:
     //datatype:VOID,BOOL,INT,FLOAT,DOUBLE
     //arraysize:针对数组而言
     //symboltype:CONST,VAR,CONST_ARRAY,VAR_ARRAY,FUNC
+    virtual void setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name);
 
     SymbolInfo(const std::string &name, int line);
 

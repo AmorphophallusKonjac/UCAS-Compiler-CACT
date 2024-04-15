@@ -1,4 +1,5 @@
 #include "symbolTable.h"
+#include "IR/IRValue.h"
 
 #include <iostream>
 
@@ -46,6 +47,31 @@ IROperand *SymbolInfo::getOp() {
     return operand;
 }
 
+void ConstSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
+    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
+    irvalue = new IRValue(new IRType("", id), vty, name);
+}
+void VarSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
+    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
+    switch (vty) {
+        case IRValue::InstructionVal:
+        case IRValue::GlobalVariableVal:
+    }
+    irvalue = new IRValue(new IRType("", id), vty, name);
+}
+void ConstArraySymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
+    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
+    irvalue = new IRValue(new IRType("", id), vty, name);
+}
+
+void VarArraySymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
+    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
+    switch (vty) {
+        case IRValue::InstructionVal:
+        case IRValue::GlobalVariableVal:
+    }
+    irvalue = new IRValue(new IRType("", id), vty, name);
+}
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)
