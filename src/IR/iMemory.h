@@ -26,7 +26,9 @@ public:
 };
 
 class IRAllocaInst : public IRAllocationInst {
-    IRAllocaInst(const IRAllocaInst &);
+    IRAllocaInst(const IRAllocaInst &LI)
+        : IRAllocationInst(LI.getType()->getElementType(), const_cast<IRAllocaInst *>(&LI)->getArraySize(), IRInstruction::Alloca) {
+    }
 
 public:
     explicit IRAllocaInst(IRType *Ty, IRValue *ArraySize = nullptr, const std::string &Name = "",
