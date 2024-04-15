@@ -1,6 +1,7 @@
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
 
+#include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -153,7 +154,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(std::any Value, IRValue::ValueTy vTy, IRInstruction* insertbefore, unsigned SymbolCount);
+    void setIRValue(std::any Value, IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 

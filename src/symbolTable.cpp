@@ -1,4 +1,5 @@
 #include "symbolTable.h"
+#include "IR/IRBasicBlock.h"
 #include "IR/IRDerivedTypes.h"
 #include "IR/IRValue.h"
 #include "IR/IRConstant.h"
@@ -62,7 +63,7 @@ void ConstSymbolInfo::setIRValue(std::any Value){
     else if (Value.type() == typeid(bool))  { irValue = IRConstantBool::get(std::any_cast<bool>(Value)); }
 }
 
-void VarSymbolInfo::setIRValue(std::any Value, IRValue::ValueTy vTy, IRInstruction* insertbefore, unsigned SymbolCount){ 
+void VarSymbolInfo::setIRValue(std::any Value, IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){ 
     switch (vTy) {
         case IRValue::GlobalVariableVal :
             if      (Value.type() == typeid(int))   
@@ -85,16 +86,16 @@ void VarSymbolInfo::setIRValue(std::any Value, IRValue::ValueTy vTy, IRInstructi
         case IRValue::InstructionVal :
             if      (Value.type() == typeid(int))   
             { irValue = new IRAllocaInst  
-            (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+            (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
 
             else if (Value.type() == typeid(double)){ irValue = new IRAllocaInst  
-            (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+            (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
 
             else if (Value.type() == typeid(float)) { irValue = new IRAllocaInst  
-            (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+            (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
 
             else if (Value.type() == typeid(bool))  { irValue = new IRAllocaInst 
-            (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+            (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
     }
     //            IRInstruction *InsertBefore = nullptr);
 
