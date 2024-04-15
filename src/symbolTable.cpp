@@ -4,8 +4,12 @@
 #include "IR/IRConstant.h"
 #include "IR/IRGlobalValue.h"
 #include "IR/IRGlobalVariable.h"
+#include "IR/IRInstruction.h"
+#include "IR/imemory.h"
 
+#include <cstddef>
 #include <iostream>
+#include <string>
 
 std::string ToString(DataType x) {
     if (x == VOID) {
@@ -58,26 +62,40 @@ void ConstSymbolInfo::setIRValue(std::any Value){
     else if (Value.type() == typeid(bool))  { irValue = IRConstantBool::get(std::any_cast<bool>(Value)); }
 }
 
-void VarSymbolInfo::setIRValue(std::any  Value){ 
-    if      (Value.type() == typeid(int))   
-    { irValue = new IRGlobalVariable  
-    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-    IRConstantInt::get(std::any_cast<int>(Value)), this->getName()); }
+void VarSymbolInfo::setIRValue(std::any Value, IRValue::ValueTy vTy, IRInstruction* insertbefore, unsigned SymbolCount){ 
+    switch (vTy) {
+        case IRValue::GlobalVariableVal :
+            if      (Value.type() == typeid(int))   
+            { irValue = new IRGlobalVariable  
+            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+            IRConstantInt::get(std::any_cast<int>(Value)), this->getName()+std::to_string(SymbolCount)); }
 
-    else if (Value.type() == typeid(double)){ irValue = new IRGlobalVariable  
-    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-    IRConstantDouble::get(std::any_cast<double>(Value)), this->getName()); }
+            else if (Value.type() == typeid(double)){ irValue = new IRGlobalVariable  
+            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+            IRConstantDouble::get(std::any_cast<double>(Value)), this->getName()+std::to_string(SymbolCount)); }
 
-    else if (Value.type() == typeid(float)) { irValue = new IRGlobalVariable  
-    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-    IRConstantFloat::get(std::any_cast<float>(Value)), this->getName()); }
+            else if (Value.type() == typeid(float)) { irValue = new IRGlobalVariable  
+            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+            IRConstantFloat::get(std::any_cast<float>(Value)), this->getName()+std::to_string(SymbolCount)); }
 
-    else if (Value.type() == typeid(bool))  { irValue = new IRGlobalVariable  
-    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-    IRConstantBool::get(std::any_cast<bool>(Value)), this->getName()); }
+            else if (Value.type() == typeid(bool))  { irValue = new IRGlobalVariable  
+            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+            IRConstantBool::get(std::any_cast<bool>(Value)), this->getName()+std::to_string(SymbolCount)); }
 
+        case IRValue::InstructionVal :
+            if      (Value.type() == typeid(int))   
+            { irValue = new IRAllocaInst  
+            (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
 
-    //IRInstruction(IRType *Ty, unsigned iType, const std::string &Name = "",
+            else if (Value.type() == typeid(double)){ irValue = new IRAllocaInst  
+            (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+
+            else if (Value.type() == typeid(float)) { irValue = new IRAllocaInst  
+            (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+
+            else if (Value.type() == typeid(bool))  { irValue = new IRAllocaInst 
+            (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), insertbefore); }
+    }
     //            IRInstruction *InsertBefore = nullptr);
 
     

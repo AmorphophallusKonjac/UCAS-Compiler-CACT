@@ -153,7 +153,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(std::any Value);
+    void setIRValue(std::any Value, IRValue::ValueTy vTy, IRInstruction* insertbefore, unsigned SymbolCount);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
