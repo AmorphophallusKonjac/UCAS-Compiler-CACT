@@ -7,6 +7,7 @@
 #include "IR/IRGlobalVariable.h"
 #include "IR/IRInstruction.h"
 #include "IR/imemory.h"
+#include "IR/IRFunction.h"
 
 #include <cstddef>
 #include <iostream>
@@ -56,77 +57,182 @@ IROperand *SymbolInfo::getOp() {
     return operand;
 }
 
-void ConstSymbolInfo::setIRValue(std::any Value){ 
-    if      (Value.type() == typeid(int))   { irValue = IRConstantInt::get(std::any_cast<int>(Value)); }
-    else if (Value.type() == typeid(double)){ irValue = IRConstantDouble::get(std::any_cast<double>(Value)); }
-    else if (Value.type() == typeid(float)) { irValue = IRConstantFloat::get(std::any_cast<float>(Value)); }
-    else if (Value.type() == typeid(bool))  { irValue = IRConstantBool::get(std::any_cast<bool>(Value)); }
+void ConstSymbolInfo::setIRValue(){ 
+    irValue = initValueArray[0];
 }
 
-void VarSymbolInfo::setIRValue(std::any Value, IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){ 
+void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){ 
     switch (vTy) {
         case IRValue::GlobalVariableVal :
-            if      (Value.type() == typeid(int))   
-            { irValue = new IRGlobalVariable  
-            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-            IRConstantInt::get(std::any_cast<int>(Value)), this->getName()+std::to_string(SymbolCount)); }
-
-            else if (Value.type() == typeid(double)){ irValue = new IRGlobalVariable  
-            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-            IRConstantDouble::get(std::any_cast<double>(Value)), this->getName()+std::to_string(SymbolCount)); }
-
-            else if (Value.type() == typeid(float)) { irValue = new IRGlobalVariable  
-            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-            IRConstantFloat::get(std::any_cast<float>(Value)), this->getName()+std::to_string(SymbolCount)); }
-
-            else if (Value.type() == typeid(bool))  { irValue = new IRGlobalVariable  
-            (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-            IRConstantBool::get(std::any_cast<bool>(Value)), this->getName()+std::to_string(SymbolCount)); }
+            switch (initValueArray[0]->getType()->getPrimitiveID()) {
+                case IRType::BoolTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRPointerType(IRType::BoolTy), false, IRGlobalValue::InternalLinkage,
+                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::IntTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRPointerType(IRType::IntTy), false, IRGlobalValue::InternalLinkage,
+                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::FloatTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
+                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::DoubleTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRPointerType(IRType::DoubleTy), false, IRGlobalValue::InternalLinkage,
+                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                    break;
+            }
+            //IRConstantBool::get(std::any_cast<bool>(Value))
+            break;
 
         case IRValue::InstructionVal :
-            if      (Value.type() == typeid(int))   
-            { irValue = new IRAllocaInst  
-            (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
-
-            else if (Value.type() == typeid(double)){ irValue = new IRAllocaInst  
-            (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
-
-            else if (Value.type() == typeid(float)) { irValue = new IRAllocaInst  
-            (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
-
-            else if (Value.type() == typeid(bool))  { irValue = new IRAllocaInst 
-            (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), parent); }
+            switch (initValueArray[0]->getType()->getPrimitiveID()) {
+                case IRType::BoolTyID:
+                    irValue = new IRAllocaInst 
+                    (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::IntTyID:
+                    irValue = new IRAllocaInst  
+                    (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::FloatTyID:
+                    irValue = new IRAllocaInst  
+                    (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::DoubleTyID:
+                    irValue = new IRAllocaInst  
+                    (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+            }
+            break;
     }
-    //            IRInstruction *InsertBefore = nullptr);
-
-    
-    //irValue = new IRGlobalVariable  (IRType::FloatTy, false, IRGlobalValue::InternalLinkage,
-    //                               IRConstantFloat::get(Value), this->getName());//Linkage有啥用？
-
-
-                //Linkage有啥用？ }
-}
-/*void VarSymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
-    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
-    switch (vty) {
-        case IRValue::InstructionVal:
-        case IRValue::GlobalVariableVal:
-    }
-    irvalue = new IRValue(new IRType("", id), vty, name);
-}
-void ConstArraySymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
-    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
-    irvalue = new IRValue(new IRType("", id), vty, name);
 }
 
-void VarArraySymbolInfo::setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name){
-    //IRValue(IRType *Ty, ValueTy vty, std::string name = "")
-    switch (vty) {
-        case IRValue::InstructionVal:
-        case IRValue::GlobalVariableVal:
+void ConstArraySymbolInfo::setIRValue(unsigned SymbolCount){
+    switch (initValueArray.front()->getType()->getPrimitiveID()) {
+        case IRType::BoolTyID:
+            irValue = new IRGlobalVariable
+            (new IRArrayType(IRType::BoolTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
+            new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
+            this->getName()+std::to_string(SymbolCount));
+            break;
+        case IRType::IntTyID:
+            irValue = new IRGlobalVariable
+            (new IRArrayType(IRType::IntTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
+            new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
+            this->getName()+std::to_string(SymbolCount));
+            break;
+        case IRType::FloatTyID:
+            irValue = new IRGlobalVariable
+            (new IRArrayType(IRType::FloatTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
+            new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
+            this->getName()+std::to_string(SymbolCount));
+            break;
+        case IRType::DoubleTyID:
+            irValue = new IRGlobalVariable
+            (new IRArrayType(IRType::DoubleTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
+            new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),
+            this->getName()+std::to_string(SymbolCount));
+            break;
+
     }
-    irvalue = new IRValue(new IRType("", id), vty, name);
-}*/
+}
+
+void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){
+    // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
+    // IRArrayType(IRType *ElType, unsigned NumEl)
+    switch (vTy) {
+        case IRValue::GlobalVariableVal : //数组类型
+            switch (initValueArray.front()->getType()->getPrimitiveID()) {
+                case IRType::BoolTyID:
+                    irValue = new IRGlobalVariable
+                    (new IRArrayType(IRType::BoolTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
+                    new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
+                    this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::IntTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRArrayType(IRType::IntTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
+                    new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
+                    this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::FloatTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRArrayType(IRType::FloatTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
+                    new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
+                    this->getName()+std::to_string(SymbolCount));
+                    break;
+                case IRType::DoubleTyID:
+                    irValue = new IRGlobalVariable  
+                    (new IRArrayType(IRType::DoubleTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
+                    new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),
+                    this->getName()+std::to_string(SymbolCount));
+                    break;
+            }
+            break;
+
+        case IRValue::InstructionVal :
+            switch (initValueArray.front()->getType()->getPrimitiveID()) {
+                case IRType::BoolTyID:
+                    irValue = new IRAllocaInst 
+                    (IRType::BoolTy, new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
+                     this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::IntTyID:
+                    irValue = new IRAllocaInst  
+                    (IRType::IntTy, new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
+                     this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::FloatTyID:
+                    irValue = new IRAllocaInst  
+                    (IRType::FloatTy, new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
+                    this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+                case IRType::DoubleTyID:
+                    //函数里面不会像globalvariable一样初始化，但是放在这里方便后续分配空间
+                    irValue = new IRAllocaInst  
+                    (IRType::DoubleTy, new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),
+                     this->getName()+std::to_string(SymbolCount), parent);
+                    break;
+            }
+            break;
+    }
+}
+
+void FuncSymbolInfo::setIRValue(IRModule* irModule){
+
+    /******通过这个类自己的属性Params来构建IR需要的Params******/
+    //里面的IRtype已经new过了
+    //std::vector<IRType *> IRParams;
+    // for(auto param :getparamList()){
+    //     IRParams.push_back(param->getIRValue()->getType());
+    // }
+
+    /******通过这个类自己的属性Result来构建IR需要的Result******/
+    const IRType *IRResult;
+    switch (returnType) {
+        case VOID:
+            IRResult = IRType::getPrimitiveType(IRType::VoidTyID);
+        case BOOL:
+            IRResult = IRType::getPrimitiveType(IRType::BoolTyID);
+        case INT:
+            IRResult = IRType::getPrimitiveType(IRType::IntTyID);
+        case FLOAT:
+            IRResult = IRType::getPrimitiveType(IRType::FloatTyID);
+        case DOUBLE:
+            IRResult = IRType::getPrimitiveType(IRType::DoubleTyID);
+    }
+
+    irValue = new IRFunction(new IRFunctionType(const_cast<IRType *>(IRResult), IRParams), IRGlobalValue::InternalLinkage, 
+                            this->getName(), irModule);
+    /******将已经分配出的参数个数算进去******/
+    dynamic_cast<IRFunction*>(irValue)->setCount(IRParams.size());
+}
+
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)

@@ -5,6 +5,7 @@ grammar CACT;
     #include <string>
     #include "utils/CACT.h"
     #include "symbolTable.h"
+    #include "IR/IRBasicBlock.h"
 }
 
 /****** parser ******/
@@ -212,13 +213,16 @@ functionDefinition
 
 functionFParams
     locals [FuncSymbolInfo * thisfuncinfo,
-            std::vector < SymbolInfo * > paramList]
+            std::vector < SymbolInfo * > paramList,
+            IRBasicBlock* irbasicblock]
     : functionFParam (',' functionFParam)*
     ;
 
 functionFParam
     locals [FuncSymbolInfo * thisfuncinfo,
-            SymbolInfo * Fparam]
+            SymbolInfo * Fparam,
+            unsigned beforeFuncCount,
+            IRBasicBlock* irbasicblock]
     : basicType Identifier (LeftBracket IntegerConstant? RightBracket (LeftBracket IntegerConstant? RightBracket)*)?
     ;
 

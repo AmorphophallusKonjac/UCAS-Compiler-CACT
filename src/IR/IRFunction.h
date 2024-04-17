@@ -1,7 +1,7 @@
 #ifndef COMPILER_IRFUNCTION_H
 #define COMPILER_IRFUNCTION_H
-#include "symbolTable.h"
 #pragma once
+#include "symbolTable.h"
 
 #include "IRArgument.h"
 #include "IRDerivedTypes.h"
@@ -15,13 +15,13 @@ private:
     std::vector<IRArgument *> ArgumentList;
     std::vector<IRBasicBlock *> BasicBlocks;
     IRModule *Parent;
-    unsigned IRSymbolCount;
+    unsigned IRSymbolCount = 0;
 
     void setParent(IRModule *parent);
 
 public:
-    IRFunction(IRFunctionType *Ty, LinkageTypes Linkage,
-               const std::string &N = "", IRModule *M = nullptr);
+    IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, 
+                const std::string &N, IRModule *M);
     ~IRFunction() = default;
 
     //const IRType *getReturnType() const;            // Return the type of the ret val

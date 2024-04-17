@@ -1,4 +1,5 @@
 #include "IRGlobalVariable.h"
+#include "IR/IRDerivedTypes.h"
 #include "IRConstant.h"
 #include <iostream>
 void IRGlobalVariable::setParent(IRModule *parent) {
@@ -25,7 +26,8 @@ void IRGlobalVariable::print(std::ostream &OS) const {
     this->getType()->IRpointerPrintAlign(OS);
 }
 
-IRGlobalVariable::IRGlobalVariable(IRType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)
+//对于一个全局变量他是一个指针类或数组
+IRGlobalVariable::IRGlobalVariable(IRSequentialType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)
     : IRGlobalValue(Ty, IRValue::GlobalVariableVal, Linkage, Name), isConstantGlobal(isConstant) {
     if (Initializer) {
         Operands.emplace_back(dynamic_cast<IRValue *>(Initializer), this);

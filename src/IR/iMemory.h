@@ -31,6 +31,7 @@ class IRAllocaInst : public IRAllocationInst {
     }
 
 public:
+//
     explicit IRAllocaInst(IRType *Ty, IRValue *ArraySize = nullptr, const std::string &Name = "",
                           IRBasicBlock *parent = nullptr)
         : IRAllocationInst(Ty, ArraySize, Alloca, Name, parent) {}

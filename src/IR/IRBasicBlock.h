@@ -11,7 +11,7 @@ class IRTerminatorInst;
 
 class IRBasicBlock : public IRValue {
 private:
-    std::vector<IRInstruction *> InstList;
+    std::vector<IRInstruction *> InstList; 
 
     IRFunction *parent;
 

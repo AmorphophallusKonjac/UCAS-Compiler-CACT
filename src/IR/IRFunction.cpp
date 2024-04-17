@@ -36,6 +36,8 @@ void IRFunction::print(std::ostream &OS) const {
     OS << "}" << std::endl;
 
 }
+
+//这里无法传一个primitiveType的Ty进来，因为在进来之前必须对IRFunctionType给一系列参数进行初始化
 IRFunction::IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, const std::string &N, IRModule *M)
     : IRGlobalValue(Ty, IRValue::FunctionVal, Linkage, N) {
     Parent = M;

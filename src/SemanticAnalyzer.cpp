@@ -1,8 +1,10 @@
 #include "SemanticAnalyzer.h"
 
 #include <cstddef>
+#include <string>
 #include <vector>
 
+#include "IR/IRValue.h"
 #include "symbolTable.h"
 #include "utils/CACT.h"
 #include "utils/ReturnValue.h"
@@ -496,6 +498,16 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
     this->visit(context->constantInitValue());
     //return std::make_tuple(name, context->arraySize, dimension, line);
+
+    IRFunction* irCurrentFunc;
+    //irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+    if (dimension == 0) {                                                      //const externaldeclaration
+        dynamic_cast<ConstSymbolInfo*>(currentSymbol)->setIRValue();
+    } else {                                                                         //constarray externaldeclaration
+        dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(irCurrentFunc->getCount());
+    }
+    irCurrentFunc->addCount();
+
     return {};
 }
 
@@ -539,8 +551,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(
         }
 
         //补零
-        for (int i = currentSymbol->getCurrentArraySize(); i < arraySize; i++) {
-            currentSymbol->setZero();
+        for (int i = currentSymbol->getinitValueArraySize(); i < arraySize; i++) {
+            currentSymbol->setZero(context->constantExpression()->dataType);
         }
     } else {
         int subArraySize = 0;
@@ -592,8 +604,8 @@ std::any SemanticAnalyzer::visitConstantInitValue(
 
             //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
             currentSize += subArraySize;//这里与上面参数一致性的第三个判断是对应的；当是一维的时候这里可以选择补零，其他情况均不考虑
-            for (int i = currentSymbol->getCurrentArraySize(); i < currentSize; i++) {
-                currentSymbol->setZero();
+            for (int i = currentSymbol->getinitValueArraySize(); i < currentSize; i++) {
+                currentSymbol->setZero(context->constantExpression()->dataType);
             }
         }
     }
@@ -634,6 +646,24 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         this->visit(context->constantInitValue());
     }
     //return std::make_tuple(name, context->arraySize, dimension, line);
+
+    /******在访问完下面的definition之后根据他们的不同类型进行setIRValue******/
+    //有一个疑问对于每一个symbol而言，有要求他们的basicblock必须是第一个吗？
+    IRFunction* irCurrentFunc;
+    //irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+    if (dimension == 0) {
+        if(dynamic_cast<CACTParser::BlockItemContext*>(context->parent->parent->parent))                    //var instruction
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+        else                                                                                                //var externaldeclaration
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+    } else {
+        if(dynamic_cast<CACTParser::BlockItemContext*>(context->parent->parent->parent))                    //vararray instruction
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+        else                                                                                                //vararray externaldeclaration
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+    }
+    irCurrentFunc->addCount();
+
     return {};
 }
 
@@ -927,6 +957,12 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
             context->Identifier()->getText(),
             context->Identifier()->getSymbol()->getLine(), returnType);
     // 全局块中的函数表添加，同时获得这个funcdefinition的funcsymbolinfo，为将来的blockinfo初始化做准备
+
+    currentFunc = context->thisfuncinfo;// 更新currentFunc
+    /******先构建一个basicblock,后续对他的parent进行赋值******/
+    IRBasicBlock* irfirstbasicblock;
+    irfirstbasicblock = new IRBasicBlock("0");
+
     if (context->functionFParams() != nullptr) {
         if (context->Identifier()->getText() == std::string("main")) {
             ErrorHandler::printErrorContext(
@@ -937,18 +973,20 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
                                      std::to_string(__LINE__));
         } else {
             context->functionFParams()->thisfuncinfo = context->thisfuncinfo;
-            this->visit(
-                    context
-                            ->functionFParams());// 先去访问参数，在将参数都访问完之后可以获得一个完整的函数定义，再去定义blockinfo
+            context->functionFParams()->irbasicblock = irfirstbasicblock;
+            this->visit(context->functionFParams());// 先去访问参数，在将参数都访问完之后可以获得一个完整的函数定义，再去定义blockinfo
                                                  // 等待下面的参数层完善这个函数
         }
     }
 
-    currentFunc = context->thisfuncinfo;// 更新currentFunc
+     /******构建函数,设置basicblock parent,设置irmodule******/
+    //currentFunc->setIRValue(ir);
+    //irfirstbasicblock->setParent(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
+    //ir->addFunction(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
+
     context->compoundStatement()->thisfuncinfo = context->thisfuncinfo;
 
     this->visit(context->compoundStatement());// 进入函数体
-    // currentFunc->setOp(new IRLabel(ctx->Ident()->getText()));
     context->thisblockinfo =
             context->compoundStatement()
                     ->thisblockinfo;// 接收compoundstatement创建的新的blockinfo
@@ -966,10 +1004,16 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
 
 std::any SemanticAnalyzer::visitFunctionFParams(
         CACTParser::FunctionFParamsContext *context) {
+    unsigned beforeFuncCount = 0;
+
+    /******先构建一个basicblock,后续对他的parent进行赋值******/
     for (auto fparam: context->functionFParam()) {
         fparam->thisfuncinfo = context->thisfuncinfo;// 继续将函数往下传
+        fparam->beforeFuncCount = beforeFuncCount++;
+        fparam->irbasicblock = context->irbasicblock;
         this->visit(fparam);                         // 具体参数
     }
+
     return {nullptr};
 }
 
@@ -978,13 +1022,21 @@ std::any SemanticAnalyzer::visitFunctionFParam(
     std::string basicTypeText = context->basicType()->getText();
     DataType basicType;
     basicType = Utils::stot(basicTypeText);
+    SymbolInfo* symbolInfo;
+
+    unsigned beforeFuncCount = 0;//这时候还没有进入函数，因此没有irFunc,也没有irbasicblock
 
     int dimension;
     dimension = context->LeftBracket().size();// 计算维数
+
+    /******new一个basicblock往里面添加******/
+
     if (!dimension) {
-        context->thisfuncinfo->addParamVar(
+        symbolInfo = context->thisfuncinfo->addParamVar(
                 context->Identifier()->getText(),
                 context->Identifier()->getSymbol()->getLine(), basicType);
+
+        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, beforeFuncCount, context->irbasicblock);
     } else {
         int valid_size;// 标记了数字的个数//第一维可能标记为0
         valid_size = context->IntegerConstant().size();
@@ -995,6 +1047,7 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 param_array.push_back(stoi(integetconstant->getText()));
             }
         } else if (valid_size == (dimension - 1)) {
+            /******如果第一维是空的话那么给0******/
             param_array.push_back(0);
             for (auto integetconstant: context->IntegerConstant()) {
                 param_array.push_back(stoi(integetconstant->getText()));
@@ -1006,11 +1059,15 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                                      std::to_string(__LINE__));
         }// 分析得到paramlist
 
-        context->thisfuncinfo->addParamArray(
+        symbolInfo = context->thisfuncinfo->addParamArray(
                 context->Identifier()->getText(),
                 context->Identifier()->getSymbol()->getLine(), basicType, param_array,
-                dimension);
+                    dimension);
+
+        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, beforeFuncCount, context->irbasicblock);
     }
+    
+    //currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());
 
     return {nullptr};
 }

@@ -26,10 +26,16 @@ protected:
 public:
     ~IRGlobalValue() = default;
 
+    /******注意这里的强制转换类型，对于IRGlobalValue，全部将type类型强制转换为pointertype******/
     inline IRPointerType *getType() const {
         return (IRPointerType *) IRUser::getType();
     }
+    /******提供一个不强制转换类型的函数******/
+    inline IRType *getOriginType() const {
+        return IRUser::getType();
+    }
 
+    /******linkage的作用目前尚不明确******/
     bool hasExternalLinkage() const { return Linkage == ExternalLinkage; }
     bool hasLinkOnceLinkage() const { return Linkage == LinkOnceLinkage; }
     bool hasWeakLinkage() const { return Linkage == WeakLinkage; }
@@ -38,8 +44,10 @@ public:
     void setLinkage(LinkageTypes LT) { Linkage = LT; }
     LinkageTypes getLinkage() const { return Linkage; }
 
+    /******获得最大块******/
     inline IRModule *getParent() { return Parent; }
 
+    /******classof判断******/
     static inline bool classof(const IRGlobalValue *T) { return true; }
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::FunctionVal ||

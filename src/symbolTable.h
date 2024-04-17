@@ -1,5 +1,7 @@
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
+#include "IR/IRConstant.h"
+#pragma once
 
 #include <cstddef>
 #include <iostream>
@@ -11,6 +13,7 @@
 
 #include "IR/IRValue.h"
 #include "IR/IRType.h"
+#include "IR/IRModule.h"
 #include "utils/CACT.h"
 #include "utils/ErrorHandler.h"
 
@@ -19,6 +22,7 @@ std::string ToString(DataType x);
 int SizeOfDataType(DataType x);
 
 class IROperand;
+class IRModule;
 
 /***********符号表***********/
 class SymbolInfo {
@@ -58,52 +62,66 @@ public:
 };
 
 class initValue {
-private:
-    std::vector<std::any> initValueArray;
+protected:
+    std::vector<IRConstant*> initValueArray;
 
 public:
 
     void setInitValue(std::string valueStr, DataType datatype){
+        IRConstant* irconst;
+
+        /******根据数据类型来获取IRConstant******/
         switch (datatype) {
-            case INT:
-                initValueArray.push_back(stoi(valueStr));
-                break;
             case BOOL:
                 if(valueStr == "true"){
-                    initValueArray.push_back(true);
+                    irconst = IRConstantBool::get(true); 
                 }else{
-                    initValueArray.push_back(false);
+                    irconst = IRConstantBool::get(false); 
                 }
                 break;
-            case DOUBLE:
-                initValueArray.push_back(stod(valueStr));
+            case INT:
+                irconst = IRConstantInt::get(stoi(valueStr)); 
                 break;
             case FLOAT:
-                initValueArray.push_back(stof(valueStr));
+                irconst = IRConstantFloat::get(stof(valueStr)); 
+                break;
+            case DOUBLE:
+                irconst = IRConstantDouble::get(stod(valueStr)); 
                 break;
         }
+
+        initValueArray.push_back(irconst);
     };
-    void setZero(){
-        initValueArray.push_back(0);
+
+    void setZero(DataType datatype){
+        IRConstant* irconst;
+
+        /******根据数据类型来获取IRConstant******/
+        switch (datatype) {
+            case BOOL:
+                irconst = IRConstantBool::get(0); 
+                break;
+            case INT:
+                irconst = IRConstantInt::get(0); 
+                break;
+            case FLOAT:
+                irconst = IRConstantFloat::get(0); 
+                break;
+            case DOUBLE:
+                irconst = IRConstantDouble::get(0); 
+                break;
+        }
+
+        initValueArray.push_back(irconst);
         return;
     }
-    int getCurrentArraySize() {
+
+    int getinitValueArraySize() {
         return initValueArray.size();
     }
 
-    std::any getInitValue(std::vector<int> indexArray) {//获得数组中某个元素的初始值，则需要数组元素的下标
-        int index = 0;
-        std::vector<int>::iterator element = indexArray.begin();
-        while (element != indexArray.end()) {
-            index += std::accumulate(element, indexArray.end(), 1, std::multiplies<int>());
-            element++;
-        }
-
-        return initValueArray[index];
-    };
-
-    std::any getInitValue() {//获得某个常量的初始值
-        return initValueArray[0];
+    std::vector<IRConstant*> getInitValueArray() {//获得某个常量的初始值
+        return initValueArray;
     };
 };
 
@@ -137,7 +155,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::CONST; }
 
-    void setIRValue(std::any Value);
+    void setIRValue();
 
     ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -154,7 +172,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(std::any Value, IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -176,6 +194,8 @@ public:
     int getArrayLength() { return std::accumulate(arraySize.begin(), arraySize.end(), 1, std::multiplies<int>()); }
 
     SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
+
+    void setIRValue(unsigned SymbolCount);
 
     ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                          const std::vector<int> arraySize, int dimension);
@@ -199,6 +219,8 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
+
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
 
@@ -220,6 +242,7 @@ private:
     int stack_size = 0;//函数需要栈的大小
     DataType returnType;
     std::vector<SymbolInfo *> paramList;
+    std::vector<IRType *> IRParams;
     BlockInfo *baseblock;//函数的基本块
 public:
     virtual int getStackSize() { return stack_size; }
@@ -242,6 +265,8 @@ public:
     SymbolInfo *addParamArray(const std::string &name, int line, DataType dataType, const std::vector<int> arraySize,
                               int dimension);
 
+    void setIRValue(IRModule* irModule);
+    std::vector<IRType *> &getIRParams(){ return IRParams; };
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);
     FuncSymbolInfo(const std::string &name, int line, DataType returnType);
 
