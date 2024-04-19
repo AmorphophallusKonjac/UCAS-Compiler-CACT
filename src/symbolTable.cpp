@@ -8,6 +8,7 @@
 #include "IR/IRInstruction.h"
 #include "IR/iMemory.h"
 #include "IR/IRFunction.h"
+#include "cassert"
 
 #include <cstddef>
 #include <iostream>
@@ -57,11 +58,15 @@ IROperand *SymbolInfo::getOp() {
     return operand;
 }
 
-void ConstSymbolInfo::setIRValue(){ 
+void ConstSymbolInfo::setIRValue(){
+    assert(!initValueArray.empty());
+
     irValue = initValueArray[0];
 }
 
-void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){ 
+void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){
+    assert(!initValueArray.empty());
+
     switch (vTy) {
         case IRValue::GlobalVariableVal :
             switch (initValueArray[0]->getType()->getPrimitiveID()) {
@@ -113,6 +118,8 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBas
 }
 
 void ConstArraySymbolInfo::setIRValue(unsigned SymbolCount){
+    assert(!initValueArray.empty());
+
     switch (initValueArray.front()->getType()->getPrimitiveID()) {
         case IRType::BoolTyID:
             irValue = new IRGlobalVariable
@@ -143,6 +150,7 @@ void ConstArraySymbolInfo::setIRValue(unsigned SymbolCount){
 }
 
 void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){
+    assert(!initValueArray.empty());
     // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
     // IRArrayType(IRType *ElType, unsigned NumEl)
     switch (vTy) {

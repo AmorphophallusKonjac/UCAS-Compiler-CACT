@@ -644,23 +644,32 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         context->constantInitValue()->arraySize = context->arraySize;
         context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
+    }else{
+        currentSymbol->setZero(context->dataType);      //如果没有显式初始化
     }
     //return std::make_tuple(name, context->arraySize, dimension, line);
 
     /******在访问完下面的definition之后根据他们的不同类型进行setIRValue******/
     //有一个疑问对于每一个symbol而言，有要求他们的basicblock必须是第一个吗？
+    /******如果是global的，那么不需要进行currentFunc的getIRValue******/
     IRFunction* irCurrentFunc;
-    irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
     if (dimension == 0) {
-        if(currentBlock != globalBlock)                    //var instruction
-            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+        if(currentBlock != globalBlock) {                    //var instruction
+            irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+            dynamic_cast<VarSymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
+                                                                     irCurrentFunc->getBasicBlockList()[0]);
+        }
         else                                                                                                //var externaldeclaration
-            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal);
     } else {
-        if(currentBlock != globalBlock)                    //vararray instruction
-            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+        if(currentBlock != globalBlock) {                   //vararray instruction
+            irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+            dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal,
+                                                                          irCurrentFunc->getCount(),
+                                                                          irCurrentFunc->getBasicBlockList()[0]);
+        }
         else                                                                                                //vararray externaldeclaration
-            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal);
     }
     irCurrentFunc->addCount();
 

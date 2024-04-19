@@ -172,7 +172,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -219,7 +219,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
-    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
 
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
