@@ -101,6 +101,8 @@ private:
     GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
     FuncSymbolInfo *currentFunc;
+    IRBasicBlock *currentIRBasicBlock;
+    IRFunction *currentIRFunc;
     IRModule *ir;
 };
 

@@ -5,11 +5,11 @@
 #include "CACTParser.h"
 #include "CACTVisitor.h"
 #include "IR/IRModule.h"
+#include "IRGenerator.h"
+#include "SemanticAnalyzer.h"
 #include "symbolTable.h"
 #include "tree/ParseTree.h"
 #include "utils/ErrorHandler.h"
-#include "SemanticAnalyzer.h"
-#include "IRGenerator.h"
 
 using namespace antlr4;
 
@@ -18,6 +18,7 @@ public:
     explicit FrontEnd(std::ifstream *stream, IRModule *ir);
 
     void analyze();
+
 private:
     ANTLRInputStream input;
     CACTLexer lexer;
