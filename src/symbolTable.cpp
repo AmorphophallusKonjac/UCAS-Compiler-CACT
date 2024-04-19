@@ -59,56 +59,70 @@ IROperand *SymbolInfo::getOp() {
 }
 
 void ConstSymbolInfo::setIRValue(){
-    assert(!initValueArray.empty());
+
+    IRConstant* irinitailizer;
+    if(!initValueArray.empty()){
+        irinitailizer = initValueArray[0];
+    }else{
+        irinitailizer = nullptr;
+    }
+    //assert(!initValueArray.empty());
 
     irValue = initValueArray[0];
 }
 
-void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){
-    assert(!initValueArray.empty());
+void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent){
+
+    IRConstant* irinitailizer;
+    if(!initValueArray.empty()){
+        irinitailizer = initValueArray[0];
+    }else{
+        irinitailizer = nullptr;
+    }
+    //assert(!initValueArray.empty());
 
     switch (vTy) {
         case IRValue::GlobalVariableVal :
-            switch (initValueArray[0]->getType()->getPrimitiveID()) {
-                case IRType::BoolTyID:
+            switch (dataType) {
+                case BOOL:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::BoolTy), false, IRGlobalValue::InternalLinkage,
-                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                     irinitailizer, this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::IntTyID:
+                case INT:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::IntTy), false, IRGlobalValue::InternalLinkage,
-                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                     irinitailizer, this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::FloatTyID:
+                case FLOAT:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                     irinitailizer, this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::DoubleTyID:
+                case DOUBLE:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::DoubleTy), false, IRGlobalValue::InternalLinkage,
-                    initValueArray[0], this->getName()+std::to_string(SymbolCount));
+                     irinitailizer, this->getName()+std::to_string(SymbolCount));
                     break;
             }
             //IRConstantBool::get(std::any_cast<bool>(Value))
             break;
 
         case IRValue::InstructionVal :
-            switch (initValueArray[0]->getType()->getPrimitiveID()) {
-                case IRType::BoolTyID:
+            switch (dataType) {
+                case BOOL:
                     irValue = new IRAllocaInst 
                     (IRType::BoolTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::IntTyID:
+                case INT:
                     irValue = new IRAllocaInst  
                     (IRType::IntTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::FloatTyID:
+                case FLOAT:
                     irValue = new IRAllocaInst  
                     (IRType::FloatTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::DoubleTyID:
+                case DOUBLE:
                     irValue = new IRAllocaInst  
                     (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
@@ -117,90 +131,130 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBas
     }
 }
 
-void ConstArraySymbolInfo::setIRValue(unsigned SymbolCount){
+void ConstArraySymbolInfo::setIRValue(DataType dataType, unsigned SymbolCount){
+
+    IRConstant* irinitailizer;
+    if(!initValueArray.empty()){
+        switch (dataType) {
+            case BOOL:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray);
+                break;
+            case INT:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray);
+                break;
+            case FLOAT:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray);
+                break;
+            case DOUBLE:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray);
+                break;
+        }
+    }else{
+        irinitailizer = nullptr;
+    }
     assert(!initValueArray.empty());
 
-    switch (initValueArray.front()->getType()->getPrimitiveID()) {
-        case IRType::BoolTyID:
+    switch (dataType) {
+        case BOOL:
             irValue = new IRGlobalVariable
             (new IRArrayType(IRType::BoolTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
-            new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
+             irinitailizer,
             this->getName()+std::to_string(SymbolCount));
             break;
-        case IRType::IntTyID:
+        case INT:
             irValue = new IRGlobalVariable
             (new IRArrayType(IRType::IntTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
-            new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
+             irinitailizer,
             this->getName()+std::to_string(SymbolCount));
             break;
-        case IRType::FloatTyID:
+        case FLOAT:
             irValue = new IRGlobalVariable
             (new IRArrayType(IRType::FloatTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
-            new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
+             irinitailizer,
             this->getName()+std::to_string(SymbolCount));
             break;
-        case IRType::DoubleTyID:
+        case DOUBLE:
             irValue = new IRGlobalVariable
             (new IRArrayType(IRType::DoubleTy, initValueArray.size()), true, IRGlobalValue::InternalLinkage,
-            new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),
+             irinitailizer,
             this->getName()+std::to_string(SymbolCount));
             break;
 
     }
 }
 
-void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent){
+void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent){
+
+    IRConstant* irinitailizer;
+    if(!initValueArray.empty()){
+        switch (dataType) {
+            case BOOL:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray);
+                break;
+            case INT:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray);
+                break;
+            case FLOAT:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray);
+                break;
+            case DOUBLE:
+                irinitailizer = new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray);
+                break;
+        }
+    }else{
+        irinitailizer = nullptr;
+    }
     assert(!initValueArray.empty());
     // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
     // IRArrayType(IRType *ElType, unsigned NumEl)
     switch (vTy) {
         case IRValue::GlobalVariableVal : //数组类型
-            switch (initValueArray.front()->getType()->getPrimitiveID()) {
-                case IRType::BoolTyID:
+            switch (dataType) {
+                case BOOL:
                     irValue = new IRGlobalVariable
                     (new IRArrayType(IRType::BoolTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                    new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
+                     irinitailizer,
                     this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::IntTyID:
+                case INT:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::IntTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                    new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
+                     irinitailizer,
                     this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::FloatTyID:
+                case FLOAT:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::FloatTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                    new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
+                     irinitailizer,
                     this->getName()+std::to_string(SymbolCount));
                     break;
-                case IRType::DoubleTyID:
+                case DOUBLE:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::DoubleTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                    new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),
+                     irinitailizer,
                     this->getName()+std::to_string(SymbolCount));
                     break;
             }
             break;
 
         case IRValue::InstructionVal :
-            switch (initValueArray.front()->getType()->getPrimitiveID()) {
-                case IRType::BoolTyID:
+            switch (dataType) {
+                case BOOL:
                     irValue = new IRAllocaInst 
                     (IRType::BoolTy, new IRConstantArray(new IRArrayType(IRType::BoolTy, initValueArray.size()), initValueArray),
                      this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::IntTyID:
+                case INT:
                     irValue = new IRAllocaInst  
                     (IRType::IntTy, new IRConstantArray(new IRArrayType(IRType::IntTy, initValueArray.size()), initValueArray),
                      this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::FloatTyID:
+                case FLOAT:
                     irValue = new IRAllocaInst  
                     (IRType::FloatTy, new IRConstantArray(new IRArrayType(IRType::FloatTy, initValueArray.size()), initValueArray),
                     this->getName()+std::to_string(SymbolCount), parent);
                     break;
-                case IRType::DoubleTyID:
+                case DOUBLE:
                     //函数里面不会像globalvariable一样初始化，但是放在这里方便后续分配空间
                     irValue = new IRAllocaInst  
                     (IRType::DoubleTy, new IRConstantArray(new IRArrayType(IRType::DoubleTy, initValueArray.size()), initValueArray),

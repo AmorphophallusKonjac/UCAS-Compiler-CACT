@@ -500,11 +500,11 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     //return std::make_tuple(name, context->arraySize, dimension, line);
 
     IRFunction* irCurrentFunc;
-    //irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+    irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
     if (dimension == 0) {                                                      //const externaldeclaration
         dynamic_cast<ConstSymbolInfo*>(currentSymbol)->setIRValue();
     } else {                                                                         //constarray externaldeclaration
-        dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(irCurrentFunc->getCount());
+        dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, irCurrentFunc->getCount());
     }
     irCurrentFunc->addCount();
 
@@ -552,7 +552,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
 
         //补零
         for (int i = currentSymbol->getinitValueArraySize(); i < arraySize; i++) {
-            currentSymbol->setZero(context->constantExpression()->dataType);
+            currentSymbol->setZero(context->dataType);
         }
     } else {
         int subArraySize = 0;
@@ -605,7 +605,7 @@ std::any SemanticAnalyzer::visitConstantInitValue(
             //上面已经访问了一个子数组，然后将所有的空缺部位全部填上0
             currentSize += subArraySize;//这里与上面参数一致性的第三个判断是对应的；当是一维的时候这里可以选择补零，其他情况均不考虑
             for (int i = currentSymbol->getinitValueArraySize(); i < currentSize; i++) {
-                currentSymbol->setZero(context->constantExpression()->dataType);
+                currentSymbol->setZero(context->dataType);
             }
         }
     }
@@ -656,22 +656,23 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     if (dimension == 0) {
         if(currentBlock != globalBlock) {                    //var instruction
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<VarSymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
+            dynamic_cast<VarSymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, context->dataType, irCurrentFunc->getCount(),
                                                                      irCurrentFunc->getBasicBlockList()[0]);
+            irCurrentFunc->addCount();
         }
         else                                                                                                //var externaldeclaration
-            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal);
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, context->dataType);
     } else {
         if(currentBlock != globalBlock) {                   //vararray instruction
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal,
+            dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, context->dataType,
                                                                           irCurrentFunc->getCount(),
                                                                           irCurrentFunc->getBasicBlockList()[0]);
+            irCurrentFunc->addCount();
         }
         else                                                                                                //vararray externaldeclaration
-            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal);
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, context->dataType);
     }
-    irCurrentFunc->addCount();
 
     return {};
 }
@@ -1046,7 +1047,7 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getText(),
                 context->Identifier()->getSymbol()->getLine(), basicType);
 
-        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, beforeFuncCount, context->irbasicblock);
+        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, beforeFuncCount, context->irbasicblock);
     } else {
         int valid_size;// 标记了数字的个数//第一维可能标记为0
         valid_size = context->IntegerConstant().size();
@@ -1074,7 +1075,7 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getSymbol()->getLine(), basicType, param_array,
                     dimension);
 
-        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, beforeFuncCount, context->irbasicblock);
+        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, beforeFuncCount, context->irbasicblock);
     }
     
     //currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());

@@ -53,7 +53,7 @@ public:
     //datatype:VOID,BOOL,INT,FLOAT,DOUBLE
     //arraysize:针对数组而言
     //symboltype:CONST,VAR,CONST_ARRAY,VAR_ARRAY,FUNC
-    virtual void setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name) {};
+    //virtual void setIRValue(IRType::PrimitiveID id, IRValue::ValueTy vty, std::string & name) {};
     IRValue* getIRValue() { return irValue; };
 
     SymbolInfo(const std::string &name, int line);
@@ -172,7 +172,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -195,7 +195,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
 
-    void setIRValue(unsigned SymbolCount);
+    void setIRValue(DataType dataType, unsigned SymbolCount);
 
     ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                          const std::vector<int> arraySize, int dimension);
@@ -219,7 +219,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
-    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
 
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
