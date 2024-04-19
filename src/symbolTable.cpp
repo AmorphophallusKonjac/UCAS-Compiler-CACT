@@ -6,7 +6,7 @@
 #include "IR/IRGlobalValue.h"
 #include "IR/IRGlobalVariable.h"
 #include "IR/IRInstruction.h"
-#include "IR/imemory.h"
+#include "IR/iMemory.h"
 #include "IR/IRFunction.h"
 
 #include <cstddef>
@@ -203,6 +203,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, 
     }
 }
 
+
 void FuncSymbolInfo::setIRValue(IRModule* irModule){
 
     /******通过这个类自己的属性Params来构建IR需要的Params******/
@@ -217,20 +218,29 @@ void FuncSymbolInfo::setIRValue(IRModule* irModule){
     switch (returnType) {
         case VOID:
             IRResult = IRType::getPrimitiveType(IRType::VoidTyID);
+            break;
         case BOOL:
             IRResult = IRType::getPrimitiveType(IRType::BoolTyID);
+            break;
         case INT:
             IRResult = IRType::getPrimitiveType(IRType::IntTyID);
+            break;
         case FLOAT:
             IRResult = IRType::getPrimitiveType(IRType::FloatTyID);
+            break;
         case DOUBLE:
             IRResult = IRType::getPrimitiveType(IRType::DoubleTyID);
+            break;
     }
 
     irValue = new IRFunction(new IRFunctionType(const_cast<IRType *>(IRResult), IRParams), IRGlobalValue::InternalLinkage, 
                             this->getName(), irModule);
     /******将已经分配出的参数个数算进去******/
-    dynamic_cast<IRFunction*>(irValue)->setCount(IRParams.size());
+    if(IRParams.empty()){
+        dynamic_cast<IRFunction*>(irValue)->setCount(0);
+    }else{
+        dynamic_cast<IRFunction*>(irValue)->setCount(IRParams.size());
+    }
 }
 
 

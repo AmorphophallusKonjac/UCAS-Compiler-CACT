@@ -650,14 +650,14 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     /******在访问完下面的definition之后根据他们的不同类型进行setIRValue******/
     //有一个疑问对于每一个symbol而言，有要求他们的basicblock必须是第一个吗？
     IRFunction* irCurrentFunc;
-    //irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+    irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
     if (dimension == 0) {
-        if(dynamic_cast<CACTParser::BlockItemContext*>(context->parent->parent->parent))                    //var instruction
+        if(currentBlock != globalBlock)                    //var instruction
             dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
         else                                                                                                //var externaldeclaration
             dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
     } else {
-        if(dynamic_cast<CACTParser::BlockItemContext*>(context->parent->parent->parent))                    //vararray instruction
+        if(currentBlock != globalBlock)                    //vararray instruction
             dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
         else                                                                                                //vararray externaldeclaration
             dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, irCurrentFunc->getCount(), irCurrentFunc->getBasicBlockList()[0]);
@@ -979,10 +979,11 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
         }
     }
 
-     /******构建函数,设置basicblock parent,设置irmodule******/
-    //currentFunc->setIRValue(ir);
-    //irfirstbasicblock->setParent(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
-    //ir->addFunction(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
+
+    /******构建函数,设置basicblock parent,设置irCurrentFunc的basicblocklist******/
+    currentFunc->setIRValue(ir);
+    irfirstbasicblock->setParent(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
+    dynamic_cast<IRFunction*>(currentFunc->getIRValue())->addBasicBlock(irfirstbasicblock);
 
     context->compoundStatement()->thisfuncinfo = context->thisfuncinfo;
 
@@ -1086,7 +1087,7 @@ std::any SemanticAnalyzer::visitIntegerConstant(
         CACTParser::IntegerConstantContext *context) {
     return ReturnValue(DataType::INT, 0, std::vector<int>(), SymbolType::NUM);
 }
-
+ 
 std::any SemanticAnalyzer::visitFloatingConstant(
         CACTParser::FloatingConstantContext *context) {
     unsigned length = context->FloatingConstant()->getText().size();

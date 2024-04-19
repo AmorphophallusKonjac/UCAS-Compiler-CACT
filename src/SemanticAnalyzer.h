@@ -100,7 +100,7 @@ private:
     tree::ParseTree *root;
     GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
-    FuncSymbolInfo *currentFunc;
+    FuncSymbolInfo *currentFunc = nullptr;
     ConstVarArraySymbolInfo *currentSymbol;
     IRModule *ir;
 };

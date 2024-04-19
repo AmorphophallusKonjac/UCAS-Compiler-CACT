@@ -35,8 +35,8 @@ private:
     ValueTy vTy;
 
 public:
-    void operator=(const IRValue &) = delete;
-    IRValue(const IRValue &) = delete;
+    //void operator=(const IRValue &) = delete;
+    //IRValue(const IRValue &) = delete;
     IRValue(IRType *Ty, ValueTy vty, std::string name = "");
     virtual ~IRValue() = default;
 
@@ -45,7 +45,7 @@ public:
     virtual void print(std::ostream &OS) const = 0;
 
     /******了解IRvalue的type指针******/
-    inline IRType *getType() const { return ty; }
+    IRType *getType() const { return ty; }
 
     inline bool hasName() const { return name != ""; }
     inline const std::string &getName() const { return name; }
