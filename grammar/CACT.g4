@@ -200,6 +200,7 @@ expressionStatement
 //表达式语句
 
 lValue
+    locals [bool loadable]
     : Identifier (LeftBracket expression RightBracket)*
     ;
 //lvalue一般是针对数组

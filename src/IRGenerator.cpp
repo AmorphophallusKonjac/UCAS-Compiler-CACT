@@ -3,6 +3,7 @@
 #include "IR/IRConstant.h"
 #include "IR/iMemory.h"
 #include "IR/iOperators.h"
+#include "IR/iOther.h"
 std::any IRGenerator::visitCompilationUnit(
     CACTParser::CompilationUnitContext *context) {
     return visitChildren(context);
@@ -16,6 +17,19 @@ std::any IRGenerator::visitBasicType(CACTParser::BasicTypeContext *context) {
 }
 std::any IRGenerator::visitPrimaryExpression(
     CACTParser::PrimaryExpressionContext *context) {
+    if (context->lValue()) {
+        auto ret = std::any_cast<IRValue *>(visit(context->lValue()));
+        if (context->lValue()->loadable) {
+            ret = dynamic_cast<IRValue *>(
+                new IRLoadInst(ret, std::to_string(currentIRFunc->getCount()),
+                               currentIRBasicBlock));
+        }
+        return ret;
+    } else if (context->number()) {
+        return visit(context->number());
+    } else {
+        return visit(context->expression());
+    }
     return visitChildren(context);
 }
 std::any IRGenerator::visitUnaryExpression(
@@ -31,17 +45,34 @@ std::any IRGenerator::visitUnaryExpression(
             auto ret = dynamic_cast<IRValue *>(IRBinaryOperator::createNeg(
                 val, std::to_string(currentIRFunc->getCount()),
                 currentIRBasicBlock));
-
+            currentIRFunc->addCount();
             return ret;
         } else {  // "!"
+            auto ret = dynamic_cast<IRValue *>(IRBinaryOperator::createNot(
+                val, std::to_string(currentIRFunc->getCount()),
+                currentIRBasicBlock));
+            currentIRFunc->addCount();
+            return ret;
         }
-    } else {
+    } else {  // function
+        auto rParams = std::any_cast<std::vector<IRValue *>>(
+            visit(context->functionRParams()));
+        auto func = globalBlock->lookUpFunc(context->Identifier()->getText())
+                        ->getIRValue();
+        auto ret = dynamic_cast<IRValue *>(new IRCallInst(
+            func, rParams, std::to_string(currentIRFunc->getCount()),
+            currentIRBasicBlock));
+        currentIRFunc->addCount();
+        return ret;
     }
-    return visitChildren(context);
 }
 std::any IRGenerator::visitFunctionRParams(
     CACTParser::FunctionRParamsContext *context) {
-    return visitChildren(context);
+    std::vector<IRValue *> rParams;
+    for (auto param : context->expression()) {
+        rParams.push_back(std::any_cast<IRValue *>(visit(param)));
+    }
+    return rParams;
 }
 std::any IRGenerator::visitUnaryOperator(
     CACTParser::UnaryOperatorContext *context) {
@@ -203,6 +234,12 @@ std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
             currentIRFunc->addCount();
         }
     }
+    if (context->expression().size() < symbol->getArraySize().size() ||
+        symbol->getSymbolType() == SymbolType::CONST) {
+        context->loadable = false;
+    } else {
+        context->loadable = true;
+    }
     return varPtr;
 }
 std::any IRGenerator::visitSelectionStatement(
@@ -245,11 +282,16 @@ std::any IRGenerator::visitFunctionFParam(
 }
 std::any IRGenerator::visitIntegerConstant(
     CACTParser::IntegerConstantContext *context) {
-    return visitChildren(context);
+    return IRConstantInt::get(std::stoi(context->getText()));
 }
 std::any IRGenerator::visitFloatingConstant(
     CACTParser::FloatingConstantContext *context) {
-    return visitChildren(context);
+    std::string st = context->getText();
+    if (st[st.size() - 1] == 'f' || st[st.size() - 1] == 'F') {  // float
+        return IRConstantFloat::get(std::stof(st));
+    } else {  // double
+        return IRConstantDouble::get(std::stod(st));
+    }
 }
 IRGenerator::IRGenerator(GlobalBlock *globalBlock, IRModule *ir,
                          tree::ParseTree *root)
