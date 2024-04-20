@@ -173,7 +173,8 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr, IRValue* IRinitializer = nullptr);
+    void setIRValue(IRValue* irvalue) { irValue = irValue; };
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount=0, IRBasicBlock* parent=nullptr, IRValue* IRinitializer=nullptr, IRModule* irmodule=nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -196,7 +197,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::CONST_ARRAY; }
 
-    void setIRValue(DataType dataType, unsigned SymbolCount);
+    void setIRValue(IRModule* irmodule=nullptr, unsigned SymbolCount=0);
 
     ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                          const std::vector<int> arraySize, int dimension);
@@ -220,7 +221,8 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
-    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr, IRValue* IRinitializer = nullptr);
+    void setIRValue(IRValue* irvalue) { irValue = irValue; };
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount=0, IRBasicBlock* parent=nullptr, IRValue* IRinitializer=nullptr, IRModule* irmodule=nullptr);
 
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
@@ -242,9 +244,11 @@ class FuncSymbolInfo : public SymbolInfo{
 private:
     int stack_size = 0;//函数需要栈的大小
     DataType returnType;
-    std::vector<SymbolInfo *> paramList;
-    std::vector<IRType *> IRParams;
-    std::vector<IRArgument *> IRArgs;
+
+    std::vector<SymbolInfo *> paramList;//所有的symbol,将来作为User的IRValue全放在里面
+    std::vector<IRType *> IRParams;//IRFunctionType需要的
+    std::vector<IRArgument *> IRArgs;//将来作为Value的IRValue全放在里面
+
     BlockInfo *baseblock;//函数的基本块
 public:
     virtual int getStackSize() { return stack_size; }
@@ -257,8 +261,6 @@ public:
 
     virtual SymbolType getSymbolType() { return SymbolType::FUNC; }
 
-    std::vector<SymbolInfo *> getparamList() { return paramList; }
-
     int getparamNum() { return paramList.size(); }
 
     SymbolInfo *addParamVar(const std::string &name, int line, DataType dataType);
@@ -267,6 +269,7 @@ public:
                               int dimension);
 
     void setIRValue(IRModule* irModule);
+    std::vector<SymbolInfo *> &getparamList() { return paramList; }
     std::vector<IRType *> &getIRParams(){ return IRParams; };
     std::vector<IRArgument *> &getIRArgs() { return IRArgs; };
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);

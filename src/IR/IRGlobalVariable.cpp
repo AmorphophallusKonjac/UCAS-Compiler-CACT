@@ -11,24 +11,25 @@ void IRGlobalVariable::setParent(IRModule *parent) {
 的时候规范与这里不尽相同(那个地方只用调用value中name的打印和直接type的打印)
 **/
 void IRGlobalVariable::printPrefixName(std::ostream &OS) const{
-    OS << "@" << this->getName() << std::endl;
+    OS << "@" << this->getName();
 }
 
 void IRGlobalVariable::print(std::ostream &OS) const {
     // TODO
     /******打印module_name******/
     this->printPrefixName(OS);
-    OS << " = global " << std::endl;
+    OS << " = global ";
     this->getInitializer()->print(OS);//获得初始化use的value值，并进行打印
 
     //这里的gettype获得的必然是一个pointtype，我在这里通过这个函数去获得它的elementtype，
     //然后看他实际上是一个什么样的类型，在栈中需要分配多大的空间，来打印align
     this->getType()->IRpointerPrintAlign(OS);
+    OS << std::endl;
 }
 
 //对于一个全局变量他是一个指针类或数组
-IRGlobalVariable::IRGlobalVariable(IRSequentialType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)
-    : IRGlobalValue(Ty, IRValue::GlobalVariableVal, Linkage, Name), isConstantGlobal(isConstant) {
+IRGlobalVariable::IRGlobalVariable(IRType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)
+    : IRGlobalValue(new IRPointerType(Ty), IRValue::GlobalVariableVal, Linkage, Name), isConstantGlobal(isConstant) {
     if (Initializer) {
         Operands.emplace_back(dynamic_cast<IRValue *>(Initializer), this);
     }

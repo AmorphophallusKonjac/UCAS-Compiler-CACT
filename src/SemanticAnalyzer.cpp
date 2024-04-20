@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "IR/IRArgument.h"
+#include "IR/IRDerivedTypes.h"
+#include "IR/IRFunction.h"
+#include "IR/IRType.h"
 #include "IR/IRValue.h"
 #include "symbolTable.h"
 #include "utils/CACT.h"
@@ -506,10 +510,10 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     } else {                                                                         //constarray externaldeclaration
         if(currentBlock != globalBlock){
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, irCurrentFunc->getCount());
+            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(ir);
             irCurrentFunc->addCount();
         }else{
-            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, 0);
+            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(ir);
         }
     }
 
@@ -653,7 +657,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(
 
         /*如果没有显式初始化，那么通过一个循环把所有相关初始化为0的数全部压进去*/
         unsigned loop ;
-        if(context->arraySize.empty()){loop = 0;}
+        if(context->arraySize.empty()){loop = 1;}
         else{loop = std::accumulate(context->arraySize.begin(),context->arraySize.end(),1,std::multiplies());}
 
         for(int i=0;i < loop;i++) {
@@ -669,22 +673,21 @@ std::any SemanticAnalyzer::visitVariableDefinition(
     if (dimension == 0) {
         if(currentBlock != globalBlock) {                    //var instruction
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<VarSymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, context->dataType, irCurrentFunc->getCount(),
+            dynamic_cast<VarSymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
                                                                      irCurrentFunc->getBasicBlockList()[0]);
             irCurrentFunc->addCount();
         }
         else                                                                                                //var externaldeclaration
-            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, context->dataType);
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, 0, nullptr, nullptr, ir);
     } else {
         if(currentBlock != globalBlock) {                   //vararray instruction
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, context->dataType,
-                                                                          irCurrentFunc->getCount(),
+            dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
                                                                           irCurrentFunc->getBasicBlockList()[0]);
             irCurrentFunc->addCount();
         }
         else                                                                                                //vararray externaldeclaration
-            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, context->dataType);
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, 0, nullptr, nullptr, ir);
     }
 
     return {};
@@ -986,6 +989,7 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
     IRBasicBlock* irfirstbasicblock;
     irfirstbasicblock = new IRBasicBlock("0");
 
+    /******构建了paramlist,IRArgs(缺少母函数)，IRparams******/
     if (context->functionFParams() != nullptr) {
         if (context->Identifier()->getText() == std::string("main")) {
             ErrorHandler::printErrorContext(
@@ -1003,10 +1007,28 @@ std::any SemanticAnalyzer::visitFunctionDefinition(
     }
 
 
-    /******构建函数,设置basicblock parent,设置irCurrentFunc的basicblocklist******/
+    /******构建函数,设置basicblock parent,设置irCurrentFunc的basicblocklist,setIRValue中构建IRargs的母函数******/
     currentFunc->setIRValue(ir);
     irfirstbasicblock->setParent(dynamic_cast<IRFunction*>(currentFunc->getIRValue()));
     dynamic_cast<IRFunction*>(currentFunc->getIRValue())->addBasicBlock(irfirstbasicblock);
+
+    /******从每个函数的(paramList)symbol出发，构建每个symbol的IRValue******/
+    for(size_t i = 0;i < currentFunc->getparamList().size();i++){
+        SymbolInfo* symbol;
+        IRValue* arg;
+        symbol = currentFunc->getparamList()[i];
+        arg = currentFunc->getIRArgs()[i];
+
+        if(dynamic_cast<VarArraySymbolInfo*>(symbol)){
+            dynamic_cast<VarArraySymbolInfo*>(symbol)->setIRValue(IRValue::InstructionVal,dynamic_cast<IRFunction*>(currentFunc->getIRValue())->getCount(),
+                                                         irfirstbasicblock, arg);
+        }else if(dynamic_cast<VarSymbolInfo*>(symbol)){
+            dynamic_cast<VarSymbolInfo*>(symbol)->setIRValue(IRValue::InstructionVal,dynamic_cast<IRFunction*>(currentFunc->getIRValue())->getCount(),
+                                                         irfirstbasicblock, arg);
+        }
+
+        dynamic_cast<IRFunction*>(currentFunc->getIRValue())->addCount();
+    }
 
     context->compoundStatement()->thisfuncinfo = context->thisfuncinfo;
 
@@ -1033,7 +1055,7 @@ std::any SemanticAnalyzer::visitFunctionFParams(
     /******先构建一个basicblock,后续对他的parent进行赋值******/
     for (auto fparam: context->functionFParam()) {
         fparam->thisfuncinfo = context->thisfuncinfo;// 继续将函数往下传
-        fparam->beforeFuncCount = beforeFuncCount++;
+        fparam->beforeFuncCount = ++beforeFuncCount;
         fparam->irbasicblock = context->irbasicblock;
         this->visit(fparam);                         // 具体参数
     }
@@ -1047,9 +1069,27 @@ std::any SemanticAnalyzer::visitFunctionFParam(
     DataType basicType;
     basicType = Utils::stot(basicTypeText);
     SymbolInfo* symbolInfo;
+    IRArgument* irarg;
+    IRType* irElType;
+    IRType* irType;
 
     int dimension;
     dimension = context->LeftBracket().size();// 计算维数
+
+    switch (basicType) {
+        case BOOL:
+            irElType = const_cast<IRType*>(IRType::getPrimitiveType(IRType::BoolTyID));
+            break;
+        case INT:
+            irElType = const_cast<IRType*>(IRType::getPrimitiveType(IRType::IntTyID));
+            break;
+        case FLOAT:
+            irElType = const_cast<IRType*>(IRType::getPrimitiveType(IRType::FloatTyID));
+            break;
+        case DOUBLE:
+            irElType = const_cast<IRType*>(IRType::getPrimitiveType(IRType::DoubleTyID));
+            break;
+    }
 
     /******new一个basicblock往里面添加******/
 
@@ -1058,9 +1098,10 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getText(),
                 context->Identifier()->getSymbol()->getLine(), basicType);
 
+        irType = irElType;
         //变量设置IRValue 
-        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
-                                                context->beforeFuncCount, context->irbasicblock);
+        //dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
+        //                                       context->beforeFuncCount, context->irbasicblock);
     } else {
         int valid_size;// 标记了数字的个数//第一维可能标记为0
         valid_size = context->IntegerConstant().size();
@@ -1088,13 +1129,21 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getSymbol()->getLine(), basicType, param_array,
                     dimension);
 
+        unsigned arraysize;//记录这个paramarray有多大
+        arraysize = std::accumulate(param_array.begin(),param_array.end(),1,std::multiplies());
+        irType = new IRArrayType(irElType,arraysize);
+
         //变量设置IRValue 
-        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
-                                                        context->beforeFuncCount, context->irbasicblock);
+        //dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
+        //                                                context->beforeFuncCount, context->irbasicblock);
     }
     
+    /******与paramlist同步构建IRargs与IRparams******/
+    irarg = new IRArgument(irType,std::to_string(context->beforeFuncCount));
+    currentFunc->getIRArgs().push_back(irarg);
+    currentFunc->getIRParams().push_back(irType);
     /******将新加入参数的类型加入到当前函数中******/
-    currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());
+    //currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());
 
     return {nullptr};
 }

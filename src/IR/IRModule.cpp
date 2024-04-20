@@ -23,6 +23,7 @@ void IRModule::print(std::ostream &OS) {
 
     /******打印函数******/
     for(auto func:this->funcList){
+        OS << std::endl;
         func->print(OS);
     }
     // TODO

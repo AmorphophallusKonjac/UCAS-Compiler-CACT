@@ -39,6 +39,8 @@ public:
         return V->getType() == IRType::IntTy;// Must be a 'int' index
     }
     virtual const IRType *getIndexType() const { return IRType::IntTy; }
+
+    void IRpointerPrintAlign(std::ostream &OS);
 };
 
 class IRArrayType : public IRSequentialType {
@@ -54,7 +56,6 @@ public:
 class IRPointerType : public IRSequentialType {
 public:
     explicit IRPointerType(IRType *ElType);
-    void IRpointerPrintAlign(std::ostream &OS);
 
 };
 #endif//COMPILER_IRDERIVEDTYPES_H

@@ -15,7 +15,7 @@ class IRGlobalVariable : public IRGlobalValue {
     bool isConstantGlobal;
 
 public:
-    IRGlobalVariable(IRSequentialType *Ty, bool isConstant, LinkageTypes Linkage,
+    IRGlobalVariable(IRType *Ty, bool isConstant, LinkageTypes Linkage,
                      IRConstant *Initializer = nullptr, const std::string &Name = "",
                      IRModule *Parent = nullptr);
 

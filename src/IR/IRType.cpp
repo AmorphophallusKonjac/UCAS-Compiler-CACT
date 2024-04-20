@@ -5,6 +5,7 @@
 
 #include "IRDerivedTypes.h"
 #include <iostream>
+#include <string>
 
 static std::map<const IRType *, std::string> ConcreteTypeDescriptions;
 
@@ -111,12 +112,13 @@ void IRType::print(std::ostream &OS) const {
             case IRType::ArrayTyID:
                 const IRArrayType* arraytype;
                 arraytype = dynamic_cast<const IRArrayType*>(this);
-                OS << "[ " << arraytype->getNumElements() << " x " << arraytype->getElementType()->getName() << "]";
+                OS << "[" << arraytype->getNumElements() << "x" << arraytype->getElementType()->getName() << "]";
                 break;
                 /*@global_array = [2 x [2 x double]] = @global_array = [4 x double]
                 %1 = alloca [2 x [2 x double]] = */
             case IRType::PointerTyID:
-                OS << dynamic_cast<const IRPointerType*>(this)->getElementType()->getName();
+                //OS << dynamic_cast<const IRPointerType*>(this)->getElementType()->getName();
+                dynamic_cast<const IRPointerType*>(this)->getElementType()->print(OS);
                 OS << "*";//指针加一个*
                 break;
         }
@@ -144,19 +146,30 @@ IRPointerType::IRPointerType(IRType *ElType)
     : IRSequentialType(IRType::PointerTyID, ElType) {
 }
 
-void IRPointerType::IRpointerPrintAlign(std::ostream &OS) {
-    switch (this->getElementType()->getPrimitiveID()) {
-        case IRType::BoolTyID:
-            OS << " align 4 ";
-            break;
-        case IRType::IntTyID:
-            OS << " align 4 ";
-            break;
-        case IRType::FloatTyID:
-            OS << " align 4 ";
-            break;
-        case IRType::DoubleTyID:    
-            OS << " align 8 ";
-            break;
+void IRSequentialType::IRpointerPrintAlign(std::ostream &OS) {
+    static unsigned alignSize = 1;
+    if(this->getElementType()->isPrimitiveType()){
+        switch (this->getElementType()->getPrimitiveID()) {
+            case IRType::BoolTyID:
+                alignSize = 4*alignSize;
+                break;
+            case IRType::IntTyID:
+                alignSize = 4*alignSize;
+                break;
+            case IRType::FloatTyID:
+                alignSize = 4*alignSize;
+                break;
+            case IRType::DoubleTyID:    
+                alignSize = 8*alignSize;
+                break;
+                
+        }
+
+        OS << ", align " << std::to_string(alignSize);
+        alignSize = 1;
+    }else{//是数组
+        alignSize = dynamic_cast<IRArrayType*>(this->getElementType())->getNumElements() * alignSize;   //乘一层
+        dynamic_cast<IRSequentialType*>(this->getElementType())->IRpointerPrintAlign(OS);                  //往下递归
     }
+
 }

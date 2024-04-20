@@ -234,7 +234,7 @@ void IRInstruction::print(std::ostream &OS) const {
             //instruction begin
             this->printPrefixName(OS);
             OS << " = ";
-            OS << this->getOpcodeName() << " " ;//打印alloc
+            OS << this->getOpcodeName() << "  " ;//打印alloc
 
             IRSequentialType * allocType;
             allocType = dynamic_cast<IRSequentialType *>(this->getType());
@@ -246,8 +246,7 @@ void IRInstruction::print(std::ostream &OS) const {
             //dynamic_cast<IRPointerType *>(this->getType())->print(OS);
             //打印对应的prmitive type而不是他本身的pointer type
 
-            OS << "," ;                                                 //打印,
-            dynamic_cast<IRPointerType *>(this->getType())->IRpointerPrintAlign(OS);//打印align
+            dynamic_cast<IRSequentialType *>(this->getType())->IRpointerPrintAlign(OS);//打印align
             //这里的alloca一定是一个IRPointer
             break;
         case Load:
@@ -260,7 +259,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Store:
             //instruction begin
-            OS << this->getOpcodeName() << " " ;//打印store
+            OS << this->getOpcodeName() << "  " ;//打印store
 
             operand1 = this->getOperand(0);
             /******如果是一个Constant，那么可以直接调用打印方法******/
@@ -281,6 +280,7 @@ void IRInstruction::print(std::ostream &OS) const {
             //这里只可能是这三种情况，globalvarible不可能，因为它是指针
 
             // /******这里必然是IRPointerType******/
+            OS << "  " ;
             operand2 = dynamic_cast<IRStoreInst *>(const_cast<IRInstruction *>(this))->getPointerOperand();
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
