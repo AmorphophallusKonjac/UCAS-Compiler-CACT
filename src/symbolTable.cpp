@@ -204,7 +204,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, uns
     }else{
         irinitailizer = nullptr;
     }
-    assert(!initValueArray.empty());
+    //assert(!initValueArray.empty());
     // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
     // IRArrayType(IRType *ElType, unsigned NumEl)
     switch (vTy) {

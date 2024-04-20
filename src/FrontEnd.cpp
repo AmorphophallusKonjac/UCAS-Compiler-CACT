@@ -17,6 +17,28 @@ void FrontEnd::analyze() {
 
     //! 进行第一遍 visit, 进行全局语义检查, 添加全局变量、函数、局部变量在栈上的分配
     analyzer.analyze();
+
+    std::string strsrc = ir->getName();
+
+    /**替换test**/
+    std::string strTest = "test";
+    std::string strIRgen = "IRgen";
+    size_t pos1 = strsrc.find(strTest);  // 查找目标子串的位置
+    if (pos1 != std::string::npos) {
+        strsrc.replace(pos1, strTest.length(), strIRgen);  // 替换子串
+    }
+
+    /**替换cact**/
+    std::string strCact = "cact";
+    std::string strIr = "ir";
+    size_t pos2 = strsrc.find(strCact);
+    if(pos2 != std::string::npos){
+        strsrc.replace(pos2, strCact.length(), strIr);  // 替换子串
+    }
+
+    std::ofstream outputFile(strsrc);
+
+    ir->print(outputFile);
     //! 进行第二遍 visit, 添加各个指令
     generator.generate();
 }

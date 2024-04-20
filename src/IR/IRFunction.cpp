@@ -18,7 +18,7 @@ void IRFunction::print(std::ostream &OS) const {
 
     /******打印function本身******/
     OS << "define " << std::endl;
-    this->getFunctionType()->print(OS);
+    //this->getFunctionType()->print(OS);
     this->printPrefixName(OS);
 
     /******打印arg******/
@@ -53,7 +53,7 @@ void IRFunction::addArgument(IRArgument *arg) {
     ArgumentList.push_back(arg);
 }
 IRFunctionType *IRFunction::getFunctionType() const {
-    return dynamic_cast<IRFunctionType *>(getType());
+    return dynamic_cast<IRFunctionType *>(getOriginType());
 }
 /*const IRType *IRFunction::getReturnType() const {
     return getFunctionType()->getReturnType();

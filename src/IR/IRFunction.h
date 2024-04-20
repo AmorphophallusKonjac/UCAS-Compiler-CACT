@@ -24,7 +24,7 @@ public:
                 const std::string &N, IRModule *M);
     ~IRFunction() = default;
 
-    //const IRType *getReturnType() const;            // Return the type of the ret val
+    const IRType *getReturnType() const;            // Return the type of the ret val
 
     /******IRFunction继承IRvalue，获得它的IRtype指针******/
     IRFunctionType *getFunctionType() const;        // Return the FunctionType for me

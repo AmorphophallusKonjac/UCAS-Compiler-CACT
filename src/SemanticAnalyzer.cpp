@@ -500,13 +500,17 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     //return std::make_tuple(name, context->arraySize, dimension, line);
 
     IRFunction* irCurrentFunc;
-    irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
     if (dimension == 0) {                                                      //const externaldeclaration
         dynamic_cast<ConstSymbolInfo*>(currentSymbol)->setIRValue();
     } else {                                                                         //constarray externaldeclaration
-        dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, irCurrentFunc->getCount());
+        if(currentBlock != globalBlock){
+            irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
+            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, irCurrentFunc->getCount());
+            irCurrentFunc->addCount();
+        }else{
+            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(context->dataType, 0);
+        }
     }
-    irCurrentFunc->addCount();
 
     return {};
 }

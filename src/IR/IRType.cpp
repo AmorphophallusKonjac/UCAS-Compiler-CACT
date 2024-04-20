@@ -105,7 +105,7 @@ void IRType::print(std::ostream &OS) const {
     }else if(this->isDerivedType()){
         switch (this->getPrimitiveID()) {//这里是可以通过primitiveID来判断他是属于哪个具体类的
             case IRType::FunctionTyID:
-                OS << dynamic_cast<IRFunctionType*>(this->getType())->getReturnType()->getName() << std::endl;
+                OS << dynamic_cast<const IRFunctionType*>(this)->getReturnType()->getName() << std::endl;
                 break;
             case IRType::ArrayTyID:
                 IRArrayType* arraytype;
