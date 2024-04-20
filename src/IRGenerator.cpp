@@ -20,6 +20,23 @@ std::any IRGenerator::visitPrimaryExpression(
 }
 std::any IRGenerator::visitUnaryExpression(
     CACTParser::UnaryExpressionContext *context) {
+    if (context->primaryExpression()) {
+        return visit(context->primaryExpression());
+    } else if (context->unaryOperator()) {
+        auto val = std::any_cast<IRValue *>(context->unaryExpression());
+        std::string opSt = context->unaryOperator()->getText();
+        if (opSt == "+") {
+            return val;
+        } else if (opSt == "-") {
+            auto ret = dynamic_cast<IRValue *>(IRBinaryOperator::createNeg(
+                val, std::to_string(currentIRFunc->getCount()),
+                currentIRBasicBlock));
+
+            return ret;
+        } else {  // "!"
+        }
+    } else {
+    }
     return visitChildren(context);
 }
 std::any IRGenerator::visitFunctionRParams(
@@ -32,7 +49,25 @@ std::any IRGenerator::visitUnaryOperator(
 }
 std::any IRGenerator::visitMultiplicativeExpression(
     CACTParser::MultiplicativeExpressionContext *context) {
-    return visitChildren(context);
+    auto ret = std::any_cast<IRValue *>(visit(context->unaryExpression(0)));
+    auto len = context->unaryExpression().size();
+    for (int i = 1; i < len; ++i) {
+        auto val = std::any_cast<IRValue *>(visit(context->unaryExpression(i)));
+        IRInstruction::BinaryOps op;
+        std::string opSt = context->multiplicativeOp(i - 1)->getText();
+        if (opSt == "*") {
+            op = IRInstruction::Mul;
+        } else if (opSt == "/") {
+            op = IRInstruction::Div;
+        } else {  // "%"
+            op = IRInstruction::Rem;
+        }
+        ret = IRBinaryOperator::create(
+            op, ret, val, std::to_string(currentIRFunc->getCount()),
+            currentIRBasicBlock);
+        currentIRFunc->addCount();
+    }
+    return ret;
 }
 std::any IRGenerator::visitAdditiveExpression(
     CACTParser::AdditiveExpressionContext *context) {
@@ -40,7 +75,19 @@ std::any IRGenerator::visitAdditiveExpression(
         std::any_cast<IRValue *>(visit(context->multiplicativeExpression(0)));
     auto len = context->multiplicativeExpression().size();
     for (int i = 1; i < len; ++i) {
-        context->op->getText();
+        auto val = std::any_cast<IRValue *>(
+            visit(context->multiplicativeExpression(i)));
+        IRInstruction::BinaryOps op;
+        std::string opSt = context->additiveOp(i - 1)->getText();
+        if (opSt == "+") {  // "+"
+            op = IRInstruction::Add;
+        } else {  // "-"
+            op = IRInstruction::Sub;
+        }
+        ret = IRBinaryOperator::create(
+            op, ret, val, std::to_string(currentIRFunc->getCount()),
+            currentIRBasicBlock);
+        currentIRFunc->addCount();
     }
     return ret;
 }

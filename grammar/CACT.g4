@@ -56,27 +56,58 @@ addOp
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
 //unaryExpression的优先级比较高
 multiplicativeExpression
-    : unaryExpression (op=('*' | '/' | '%') unaryExpression)*
+    : unaryExpression (multiplicativeOp unaryExpression)*
+    ;
+
+multiplicativeOp
+    : '*'
+    | '/'
+    | '%'
     ;
 
 additiveExpression
-    : multiplicativeExpression (op=('+' | '-') multiplicativeExpression)*
+    : multiplicativeExpression (additiveOp multiplicativeExpression)*
+    ;
+
+additiveOp
+    : '+'
+    | '-'
     ;
 
 relationalExpression
-    : additiveExpression (op=('<' | '>' | '<=' | '>=') additiveExpression)?
+    : additiveExpression (relationalOp additiveExpression)?
+    ;
+
+relationalOp
+    : '<'
+    | '>'
+    | '<='
+    | '>='
     ;
 
 equalityExpression
-    : relationalExpression (op=('==' | '!=') relationalExpression)?
+    : relationalExpression (equalityOp relationalExpression)?
+    ;
+
+equalityOp
+    : '=='
+    | '!='
     ;
 
 logicalAndExpression
-    : equalityExpression (op='&&' equalityExpression)*
+    : equalityExpression (logicalAndOp equalityExpression)*
+    ;
+
+logicalAndOp
+    : '&&'
     ;
 
 logicalOrExpression
-    : logicalAndExpression (op='||' logicalAndExpression)*
+    : logicalAndExpression (logicalOrOp logicalAndExpression)*
+    ;
+
+logicalOrOp
+    : '||'
     ;
 
 /*****************************以上*****************************/
