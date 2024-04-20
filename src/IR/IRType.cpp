@@ -108,14 +108,14 @@ void IRType::print(std::ostream &OS) const {
                 OS << dynamic_cast<const IRFunctionType*>(this)->getReturnType()->getName() << std::endl;
                 break;
             case IRType::ArrayTyID:
-                IRArrayType* arraytype;
-                arraytype = dynamic_cast<IRArrayType*>(this->getType());
+                const IRArrayType* arraytype;
+                arraytype = dynamic_cast<const IRArrayType*>(this);
                 OS << "[ " << arraytype->getNumElements() << " x " <<arraytype->getElementType()->getName() << "]" << std::endl;
                 break;
                 /*@global_array = [2 x [2 x double]] = @global_array = [4 x double]
                 %1 = alloca [2 x [2 x double]] = */
             case IRType::PointerTyID:
-                OS << dynamic_cast<IRPointerType*>(this->getType())->getElementType()->getName() << std::endl;
+                OS << dynamic_cast<const IRPointerType*>(this)->getElementType()->getName() << std::endl;
                 OS << "*" << std::endl;//指针加一个*
                 break;
         }
