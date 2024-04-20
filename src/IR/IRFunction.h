@@ -21,7 +21,7 @@ private:
 
 public:
     IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, 
-                const std::string &N, IRModule *M);
+            const std::string &N, IRModule *M);
     ~IRFunction() = default;
 
     const IRType *getReturnType() const;            // Return the type of the ret val

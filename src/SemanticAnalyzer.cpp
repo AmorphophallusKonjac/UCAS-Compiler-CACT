@@ -650,12 +650,12 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
     }else{
+
+        /*如果没有显式初始化，那么通过一个循环把所有相关初始化为0的数全部压进去*/
         unsigned loop ;
-        if(context->arraySize.empty()){
-            loop = 0;
-        }else{
-            loop = std::accumulate(context->arraySize.begin(),context->arraySize.end(),1,std::multiplies());
-        }
+        if(context->arraySize.empty()){loop = 0;}
+        else{loop = std::accumulate(context->arraySize.begin(),context->arraySize.end(),1,std::multiplies());}
+
         for(int i=0;i < loop;i++) {
             currentSymbol->setZero(context->dataType);      //如果没有显式初始化
         }
@@ -1048,8 +1048,6 @@ std::any SemanticAnalyzer::visitFunctionFParam(
     basicType = Utils::stot(basicTypeText);
     SymbolInfo* symbolInfo;
 
-    unsigned beforeFuncCount = 0;//这时候还没有进入函数，因此没有irFunc,也没有irbasicblock
-
     int dimension;
     dimension = context->LeftBracket().size();// 计算维数
 
@@ -1060,7 +1058,9 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getText(),
                 context->Identifier()->getSymbol()->getLine(), basicType);
 
-        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, beforeFuncCount, context->irbasicblock);
+        //变量设置IRValue 
+        dynamic_cast<VarSymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
+                                                context->beforeFuncCount, context->irbasicblock);
     } else {
         int valid_size;// 标记了数字的个数//第一维可能标记为0
         valid_size = context->IntegerConstant().size();
@@ -1088,10 +1088,13 @@ std::any SemanticAnalyzer::visitFunctionFParam(
                 context->Identifier()->getSymbol()->getLine(), basicType, param_array,
                     dimension);
 
-        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, beforeFuncCount, context->irbasicblock);
+        //变量设置IRValue 
+        dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal, basicType, 
+                                                        context->beforeFuncCount, context->irbasicblock);
     }
     
-    //currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());
+    /******将新加入参数的类型加入到当前函数中******/
+    currentFunc->getIRParams().push_back(symbolInfo->getIRValue()->getType());
 
     return {nullptr};
 }

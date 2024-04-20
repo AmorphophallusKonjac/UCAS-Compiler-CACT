@@ -62,26 +62,15 @@ void ConstSymbolInfo::setIRValue(){
     irValue = initValueArray[0];
 }
 
-void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent){
+void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer){
 
-    IRConstant* irinitailizer;
+    IRValue* irinitailizer;
+
+    /******对一个var而言,所有显式和非显式的初始化全部都在外面做好之后压到initvaluearray里面******/
     if(!initValueArray.empty()){
         irinitailizer = initValueArray[0];
     }else{
-        switch (dataType) {
-            case BOOL:
-                irinitailizer = IRConstantBool::get(false);
-                break;
-            case INT:
-                irinitailizer = IRConstantInt::get(0);
-                break;
-            case FLOAT:
-                irinitailizer = IRConstantFloat::get(0.0);
-                break;
-            case DOUBLE:
-                irinitailizer = IRConstantDouble::get(0.0);
-                break;
-        }
+        irinitailizer = IRinitializer;
     }
     //assert(!initValueArray.empty());
 
@@ -91,22 +80,22 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned
                 case BOOL:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::BoolTy), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer, this->getName()+std::to_string(SymbolCount));
+                     dynamic_cast<IRConstant*>(irinitailizer), this->getName()+std::to_string(SymbolCount));
                     break;
                 case INT:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::IntTy), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer, this->getName()+std::to_string(SymbolCount));
+                     dynamic_cast<IRConstant*>(irinitailizer), this->getName()+std::to_string(SymbolCount));
                     break;
                 case FLOAT:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::FloatTy), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer, this->getName()+std::to_string(SymbolCount));
+                     dynamic_cast<IRConstant*>(irinitailizer), this->getName()+std::to_string(SymbolCount));
                     break;
                 case DOUBLE:
                     irValue = new IRGlobalVariable  
                     (new IRPointerType(IRType::DoubleTy), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer, this->getName()+std::to_string(SymbolCount));
+                     dynamic_cast<IRConstant*>(irinitailizer), this->getName()+std::to_string(SymbolCount));
                     break;
             }
             //IRConstantBool::get(std::any_cast<bool>(Value))
@@ -131,7 +120,11 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned
                     (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
             }
-            new IRStoreInst(irinitailizer,irValue,parent);
+
+            /******如果有initailizer的话就有store指令*****/
+            if(irinitailizer){
+                new IRStoreInst(irinitailizer,irValue,parent);
+            }
             break;
     }
 }
@@ -157,7 +150,7 @@ void ConstArraySymbolInfo::setIRValue(DataType dataType, unsigned SymbolCount){
     }else{
         irinitailizer = nullptr;
     }
-    assert(!initValueArray.empty());
+    //assert(!initValueArray.empty());
 
     switch (dataType) {
         case BOOL:
@@ -188,9 +181,9 @@ void ConstArraySymbolInfo::setIRValue(DataType dataType, unsigned SymbolCount){
     }
 }
 
-void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent){
+void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer){
 
-    IRConstant* irinitailizer;
+    IRValue* irinitailizer;
     if(!initValueArray.empty()){
         switch (dataType) {
             case BOOL:
@@ -207,7 +200,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, uns
                 break;
         }
     }else{
-        irinitailizer = nullptr;
+        irinitailizer = IRinitializer;
     }
     //assert(!initValueArray.empty());
     // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
@@ -218,25 +211,25 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, uns
                 case BOOL:
                     irValue = new IRGlobalVariable
                     (new IRArrayType(IRType::BoolTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer,
+                     dynamic_cast<IRConstant*>(irinitailizer),
                     this->getName()+std::to_string(SymbolCount));
                     break;
                 case INT:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::IntTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer,
+                     dynamic_cast<IRConstant*>(irinitailizer),
                     this->getName()+std::to_string(SymbolCount));
                     break;
                 case FLOAT:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::FloatTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer,
+                     dynamic_cast<IRConstant*>(irinitailizer),
                     this->getName()+std::to_string(SymbolCount));
                     break;
                 case DOUBLE:
                     irValue = new IRGlobalVariable  
                     (new IRArrayType(IRType::DoubleTy, initValueArray.size()), false, IRGlobalValue::InternalLinkage,
-                     irinitailizer,
+                     dynamic_cast<IRConstant*>(irinitailizer),
                     this->getName()+std::to_string(SymbolCount));
                     break;
             }
@@ -266,20 +259,17 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, uns
                      this->getName()+std::to_string(SymbolCount), parent);
                     break;
             }
-            new IRStoreInst(irinitailizer,irValue,parent);
+
+            /******如果有initailizer的话就有store指令*****/
+            if(irinitailizer){
+                new IRStoreInst(irinitailizer,irValue,parent);
+            }
             break;
     }
 }
 
 
 void FuncSymbolInfo::setIRValue(IRModule* irModule){
-
-    /******通过这个类自己的属性Params来构建IR需要的Params******/
-    //里面的IRtype已经new过了
-    //std::vector<IRType *> IRParams;
-    // for(auto param :getparamList()){
-    //     IRParams.push_back(param->getIRValue()->getType());
-    // }
 
     /******通过这个类自己的属性Result来构建IR需要的Result******/
     const IRType *IRResult;
@@ -307,7 +297,13 @@ void FuncSymbolInfo::setIRValue(IRModule* irModule){
     if(IRParams.empty()){
         dynamic_cast<IRFunction*>(irValue)->setCount(0);
     }else{
+        /******如果不为空，这个时候再将参数全部加进去*****/
         dynamic_cast<IRFunction*>(irValue)->setCount(IRParams.size());
+        for(auto param :getparamList()){
+            IRArgs.push_back(new IRArgument(param->getIRValue()->getType(),
+                                                param->getIRValue()->getName(),
+                                                dynamic_cast<IRFunction*>(irValue)));
+        }
     }
 }
 

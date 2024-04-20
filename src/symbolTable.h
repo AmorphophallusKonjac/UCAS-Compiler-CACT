@@ -1,7 +1,8 @@
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
-#include "IR/IRConstant.h"
 #pragma once
+#include "IR/IRArgument.h"
+#include "IR/IRConstant.h"
 
 #include <cstddef>
 #include <iostream>
@@ -172,7 +173,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR; }
 
-    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr, IRValue* IRinitializer = nullptr);
 
     VarSymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -219,7 +220,7 @@ public:
 
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
-    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr);
+    void setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned SymbolCount = 0, IRBasicBlock* parent = nullptr, IRValue* IRinitializer = nullptr);
 
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);
@@ -243,6 +244,7 @@ private:
     DataType returnType;
     std::vector<SymbolInfo *> paramList;
     std::vector<IRType *> IRParams;
+    std::vector<IRArgument *> IRArgs;
     BlockInfo *baseblock;//函数的基本块
 public:
     virtual int getStackSize() { return stack_size; }
@@ -255,7 +257,6 @@ public:
 
     virtual SymbolType getSymbolType() { return SymbolType::FUNC; }
 
-
     std::vector<SymbolInfo *> getparamList() { return paramList; }
 
     int getparamNum() { return paramList.size(); }
@@ -267,6 +268,7 @@ public:
 
     void setIRValue(IRModule* irModule);
     std::vector<IRType *> &getIRParams(){ return IRParams; };
+    std::vector<IRArgument *> &getIRArgs() { return IRArgs; };
     // FuncSymbolInfo(const std::string & name, DataType returnType, int paramNum);
     FuncSymbolInfo(const std::string &name, int line, DataType returnType);
 

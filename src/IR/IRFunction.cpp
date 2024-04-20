@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "IR/IRArgument.h"
 #include "IRModule.h"
 
 void IRFunction::setParent(IRModule *parent) {
@@ -25,6 +26,7 @@ void IRFunction::print(std::ostream &OS) const {
     OS << "(" ;
     for(auto arg: ArgumentList){
         arg->print(OS);
+        OS << ", ";
     }
     OS << ")";
 
@@ -41,9 +43,9 @@ void IRFunction::print(std::ostream &OS) const {
 IRFunction::IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, const std::string &N, IRModule *M)
     : IRGlobalValue(Ty, IRValue::FunctionVal, Linkage, N) {
     Parent = M;
-    for (unsigned i = 0, e = Ty->getNumParams(); i < e; ++i) {
+    /*for (unsigned i = 0, e = args.size(); i < e; ++i) {
         ArgumentList.push_back(new IRArgument(Ty->getParamType(i)));
-    }
+    }*/
     if (M) {
         M->addFunction(this);
     }
