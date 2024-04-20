@@ -8,6 +8,7 @@
 #include "symbolTable.h"
 #include "utils/CACT.h"
 #include "utils/ReturnValue.h"
+#include "IR/iMemory.h"
 
 SemanticAnalyzer::SemanticAnalyzer(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root)
     : globalBlock(globalBlock), ir(ir), root(root), currentBlock(globalBlock), currentFunc(nullptr) {
@@ -649,7 +650,15 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         context->constantInitValue()->dimension = dimension;//这里必须得传进维数，确定递归层数
         this->visit(context->constantInitValue());
     }else{
-        currentSymbol->setZero(context->dataType);      //如果没有显式初始化
+        unsigned loop ;
+        if(context->arraySize.empty()){
+            loop = 0;
+        }else{
+            loop = std::accumulate(context->arraySize.begin(),context->arraySize.end(),1,std::multiplies());
+        }
+        for(int i=0;i < loop;i++) {
+            currentSymbol->setZero(context->dataType);      //如果没有显式初始化
+        }
     }
     //return std::make_tuple(name, context->arraySize, dimension, line);
 

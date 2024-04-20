@@ -24,16 +24,16 @@ void IRConstant::print(std::ostream &OS) const {
     /******根据IRConstant中的type类型来打印出它的value值******/
     switch (this->getType()->getPrimitiveID()) {
         case IRType::IntTyID:
-            OS << dynamic_cast<const IRConstantInt *>(this)->getRawValue() << std::endl;
+            OS << dynamic_cast<const IRConstantInt *>(this)->getRawValue() << " ";
             break;
         case IRType::FloatTyID:
-            OS << dynamic_cast<const IRConstantFloat *>(this)->getRawValue() << std::endl;
+            OS << dynamic_cast<const IRConstantFloat *>(this)->getRawValue() << " ";
             break;
         case IRType::DoubleTyID:
-            OS << dynamic_cast<const IRConstantDouble *>(this)->getRawValue() << std::endl;
+            OS << dynamic_cast<const IRConstantDouble *>(this)->getRawValue() << " ";
             break;
         case IRType::BoolTyID:
-            OS << dynamic_cast<const IRConstantBool *>(this)->getRawValue() << std::endl;
+            OS << dynamic_cast<const IRConstantBool *>(this)->getRawValue() << " ";
             break;
     }
     // TODO

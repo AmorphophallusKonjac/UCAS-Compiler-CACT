@@ -8,28 +8,28 @@ void IRFunction::setParent(IRModule *parent) {
     Parent = parent;
 }
 void IRFunction::printPrefixName(std::ostream &OS) const{
-    OS << "@" <<this->getName() << std::endl;
+    OS << "@" <<this->getName() << " ";
 }
 void IRFunction::print(std::ostream &OS) const {
     // TODO
 
     /******打印function开始标识？******/
-    OS << "; Function\n" << std::endl;
+    OS << "; Function" << std::endl;
 
     /******打印function本身******/
-    OS << "define " << std::endl;
-    //this->getFunctionType()->print(OS);
+    OS << "define " ;
+    this->getFunctionType()->print(OS);
     this->printPrefixName(OS);
 
     /******打印arg******/
-    OS << "(" << std::endl;
+    OS << "(" ;
     for(auto arg: ArgumentList){
         arg->print(OS);
     }
-    OS << ")" << std::endl;
+    OS << ")";
 
     /******打印basciblock******/
-    OS << "{\n" << std::endl;
+    OS << "{" << std::endl;
     for(auto basicblock:BasicBlocks){
         basicblock->print(OS);
     }

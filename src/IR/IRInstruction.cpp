@@ -146,7 +146,7 @@ void IRInstruction::SetCCIRInstPrint(std::ostream &OS) const {
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
 }
 void IRInstruction::printPrefixName(std::ostream &OS) const {
-    OS << "%" << this->getName() << std::endl;
+    OS << "%" << this->getName();
 }
 void IRInstruction::print(std::ostream &OS) const {
 
@@ -233,11 +233,20 @@ void IRInstruction::print(std::ostream &OS) const {
         case Alloca:
             //instruction begin
             this->printPrefixName(OS);
-            OS << this->getOpcodeName() << " " << std::endl;//打印alloc
-            dynamic_cast<IRPointerType *>(this->getType())->print(OS);
+            OS << " = ";
+            OS << this->getOpcodeName() << " " ;//打印alloc
+
+            IRSequentialType * allocType;
+            allocType = dynamic_cast<IRSequentialType *>(this->getType());
+            if(allocType->getPrimitiveID() == IRType::PointerTyID){
+                allocType->getElementType()->print(OS);
+            }else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
+                allocType->print(OS);
+            }
+            //dynamic_cast<IRPointerType *>(this->getType())->print(OS);
             //打印对应的prmitive type而不是他本身的pointer type
 
-            OS << "," << std::endl;                                                 //打印,
+            OS << "," ;                                                 //打印,
             dynamic_cast<IRPointerType *>(this->getType())->IRpointerPrintAlign(OS);//打印align
             //这里的alloca一定是一个IRPointer
             break;
@@ -251,7 +260,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Store:
             //instruction begin
-            OS << this->getOpcodeName() << " " << std::endl;//打印store
+            OS << this->getOpcodeName() << " " ;//打印store
 
             operand1 = this->getOperand(0);
             /******如果是一个Constant，那么可以直接调用打印方法******/
@@ -352,5 +361,6 @@ void IRInstruction::print(std::ostream &OS) const {
         default:
             throw "<Invalid operator> ";
     }
+    OS << std::endl;
     // TODO
 }

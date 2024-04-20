@@ -59,15 +59,6 @@ IROperand *SymbolInfo::getOp() {
 }
 
 void ConstSymbolInfo::setIRValue(){
-
-    IRConstant* irinitailizer;
-    if(!initValueArray.empty()){
-        irinitailizer = initValueArray[0];
-    }else{
-        irinitailizer = nullptr;
-    }
-    //assert(!initValueArray.empty());
-
     irValue = initValueArray[0];
 }
 
@@ -77,7 +68,20 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned
     if(!initValueArray.empty()){
         irinitailizer = initValueArray[0];
     }else{
-        irinitailizer = nullptr;
+        switch (dataType) {
+            case BOOL:
+                irinitailizer = IRConstantBool::get(false);
+                break;
+            case INT:
+                irinitailizer = IRConstantInt::get(0);
+                break;
+            case FLOAT:
+                irinitailizer = IRConstantFloat::get(0.0);
+                break;
+            case DOUBLE:
+                irinitailizer = IRConstantDouble::get(0.0);
+                break;
+        }
     }
     //assert(!initValueArray.empty());
 
@@ -127,6 +131,7 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, unsigned
                     (IRType::DoubleTy, nullptr, this->getName()+std::to_string(SymbolCount), parent);
                     break;
             }
+            new IRStoreInst(irinitailizer,irValue,parent);
             break;
     }
 }
@@ -261,6 +266,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, DataType dataType, uns
                      this->getName()+std::to_string(SymbolCount), parent);
                     break;
             }
+            new IRStoreInst(irinitailizer,irValue,parent);
             break;
     }
 }

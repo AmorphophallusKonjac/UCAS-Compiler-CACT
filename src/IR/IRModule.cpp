@@ -18,13 +18,11 @@ void IRModule::print(std::ostream &OS) {
 
     /******打印全局变量******/
     for(auto var:this->varList){
-        OS << "\n" << std::endl;
         var->print(OS);
     }
 
     /******打印函数******/
     for(auto func:this->funcList){
-        OS << "\n" << std::endl;
         func->print(OS);
     }
     // TODO

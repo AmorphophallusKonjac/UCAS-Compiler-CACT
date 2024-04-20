@@ -55,5 +55,6 @@ class IRPointerType : public IRSequentialType {
 public:
     explicit IRPointerType(IRType *ElType);
     void IRpointerPrintAlign(std::ostream &OS);
+
 };
 #endif//COMPILER_IRDERIVEDTYPES_H
