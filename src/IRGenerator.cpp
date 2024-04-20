@@ -36,7 +36,13 @@ std::any IRGenerator::visitMultiplicativeExpression(
 }
 std::any IRGenerator::visitAdditiveExpression(
     CACTParser::AdditiveExpressionContext *context) {
-    return visitChildren(context);
+    auto ret =
+        std::any_cast<IRValue *>(visit(context->multiplicativeExpression(0)));
+    auto len = context->multiplicativeExpression().size();
+    for (int i = 1; i < len; ++i) {
+        context->op->getText();
+    }
+    return ret;
 }
 std::any IRGenerator::visitRelationalExpression(
     CACTParser::RelationalExpressionContext *context) {
@@ -55,7 +61,17 @@ std::any IRGenerator::visitLogicalOrExpression(
     return visitChildren(context);
 }
 std::any IRGenerator::visitExpression(CACTParser::ExpressionContext *context) {
-    return visitChildren(context);
+    IRValue *ret = nullptr;
+    if (context->additiveExpression()) {  // 加法
+        ret = std::any_cast<IRValue *>(visit(context->additiveExpression()));
+    } else {  // 布尔常量
+        if (context->BooleanConstant()->getText() == "true") {
+            ret = dynamic_cast<IRValue *>(IRConstantBool::get(true));
+        } else {
+            ret = dynamic_cast<IRValue *>(IRConstantBool::get(false));
+        }
+    }
+    return ret;
 }
 std::any IRGenerator::visitConstantExpression(
     CACTParser::ConstantExpressionContext *context) {
