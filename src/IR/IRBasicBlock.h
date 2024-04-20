@@ -16,7 +16,7 @@ private:
     IRFunction *parent;
 
 public:
-    explicit IRBasicBlock(const std::string &Name = "", IRFunction *Parent = 0);
+    explicit IRBasicBlock(const std::string &Name = "", IRFunction *Parent = nullptr);
     IRBasicBlock(const std::string &Name, IRBasicBlock *InsertBefore);
     ~IRBasicBlock() override = default;
 

@@ -83,7 +83,7 @@ class IRStoreInst : public IRInstruction {
     }
     bool Volatile;// True if this is a volatile store
 public:
-    IRStoreInst(IRValue *Val, IRValue *Ptr, IRBasicBlock *InsertBefore);
+    IRStoreInst(IRValue *Val, IRValue *Ptr, IRBasicBlock *parent);
     IRStoreInst(IRValue *Val, IRValue *Ptr, bool isVolatile = false,
                 IRBasicBlock *parent = nullptr);
     virtual IRInstruction *clone() const { return new IRStoreInst(*this); }
