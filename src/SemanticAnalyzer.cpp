@@ -510,7 +510,7 @@ std::any SemanticAnalyzer::visitConstantDefinition(
     } else {                                                                         //constarray externaldeclaration
         if(currentBlock != globalBlock){
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
-            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(ir);
+            dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(ir, irCurrentFunc->getCount(), currentFunc->getName());
             irCurrentFunc->addCount();
         }else{
             dynamic_cast<ConstArraySymbolInfo*>(currentSymbol)->setIRValue(ir);
@@ -683,11 +683,12 @@ std::any SemanticAnalyzer::visitVariableDefinition(
         if(currentBlock != globalBlock) {                   //vararray instruction
             irCurrentFunc = dynamic_cast<IRFunction*>(currentFunc->getIRValue());
             dynamic_cast<VarArraySymbolInfo *>(currentSymbol)->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
-                                                                          irCurrentFunc->getBasicBlockList()[0]);
+                                                                          irCurrentFunc->getBasicBlockList()[0], nullptr, ir, currentFunc->getName());
             irCurrentFunc->addCount();
         }
         else                                                                                                //vararray externaldeclaration
-            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, 0, nullptr, nullptr, ir);
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->setIRValue(IRValue::GlobalVariableVal, 0, nullptr, 
+                                                                        nullptr, ir);
     }
 
     return {};

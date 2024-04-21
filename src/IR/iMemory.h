@@ -103,4 +103,33 @@ public:
     }
 };
 
+class IRMemcpyInst : public IRInstruction {
+    IRMemcpyInst(const IRMemcpyInst &MI) : IRInstruction(MI.getType(), Memcpy) {
+        Volatile = MI.isVolatile();
+        Operands.reserve(2);
+        Operands.emplace_back(MI.Operands[0], this);
+        Operands.emplace_back(MI.Operands[1], this);
+    }
+    bool Volatile;// True if this is a volatile store
+public:
+    IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, IRBasicBlock *InsertBefore);
+    IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, bool isVolatile = false,
+                IRBasicBlock *parent = nullptr);
+    virtual IRInstruction *clone() const { return new IRMemcpyInst(*this); }
+
+    /******是否每次要从内存中取值&&存值******/
+    bool isVolatile() const { return Volatile; }
+    void setVolatile(bool V) { Volatile = V; }
+    virtual bool mayWriteToMemory() const { return true; }
+
+    /******load&&store中与存储地址相关的operand******/
+    IRValue *getSrcPointerOperand() { return getOperand(0); }
+    IRValue *getDestPointerOperand() { return getOperand(1); }
+
+    static inline bool classof(const IRMemcpyInst *) { return true; }
+    static inline bool classof(const IRInstruction *I) {
+        return I->getOpcode() == IRInstruction::Memcpy;
+    }
+};
+
 #endif//COMPILER_IMEMORY_H

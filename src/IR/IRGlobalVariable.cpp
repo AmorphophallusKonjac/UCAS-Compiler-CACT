@@ -19,6 +19,10 @@ void IRGlobalVariable::print(std::ostream &OS) const {
     /******打印module_name******/
     this->printPrefixName(OS);
     OS << " = global ";
+    if(this->Linkage == AppendingLinkage)
+        OS << "privateFuncVarArray ";
+    else if(this->Linkage == ExternalLinkage)
+        OS << "externalFuncConstArray ";
     this->getInitializer()->print(OS);//获得初始化use的value值，并进行打印
 
     //这里的gettype获得的必然是一个pointtype，我在这里通过这个函数去获得它的elementtype，

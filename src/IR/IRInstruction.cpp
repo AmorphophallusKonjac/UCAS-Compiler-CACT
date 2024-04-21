@@ -76,6 +76,8 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
             return "load";
         case Store:
             return "store";
+        case Memcpy:
+            return "memcpy";
 
         // Other instructions...
         case PHI:
@@ -287,6 +289,21 @@ void IRInstruction::print(std::ostream &OS) const {
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
             break;
+        case Memcpy:
+        //instruction begin
+            OS << this->getOpcodeName() << "  " ;//打印store
+
+            operand1 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getSrcPointerOperand();
+            operand1->getType()->print(OS);
+            operand1->printPrefixName(OS);
+
+            // /******这里必然是IRPointerType******/
+            OS << "  " ;
+            operand2 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getDestPointerOperand();
+            operand2->getType()->print(OS);
+            operand2->printPrefixName(OS);
+            break;
+
 
         // Other instructions...
         case PHI:
