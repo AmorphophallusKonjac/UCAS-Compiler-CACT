@@ -34,10 +34,18 @@ void IRConstant::print(std::ostream &OS) const {
             OS << dynamic_cast<const IRConstantDouble *>(this)->getRawValue();
             break;
         case IRType::BoolTyID:
-            OS << std::to_string(dynamic_cast<const IRConstantBool *>(this)->getRawValue());
+            OS << std::boolalpha << dynamic_cast<const IRConstantBool *>(this)->getRawValue();
             break;
+        case IRType::ArrayTyID:
+            OS << "[";
+            for(auto iruse: dynamic_cast<const IRConstantArray *>(this)->getValues()){
+                dynamic_cast<IRConstant*>(iruse.get())->print(OS);
+                OS << ", ";
+            }
+            // 回退2个字符
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
+            OS << "]";
     }
-    // TODO
 }
 
 IRConstant *IRConstant::getNullValue(const IRType *Ty) {

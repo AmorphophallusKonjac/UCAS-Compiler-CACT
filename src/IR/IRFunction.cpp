@@ -28,6 +28,9 @@ void IRFunction::print(std::ostream &OS) const {
         arg->print(OS);
         OS << ", ";
     }
+    // 如果参数列表不空回退2个字符
+    if(!ArgumentList.empty())
+        OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
     OS << ")";
 
     /******打印basciblock******/

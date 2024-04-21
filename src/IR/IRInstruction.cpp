@@ -243,6 +243,8 @@ void IRInstruction::print(std::ostream &OS) const {
             }else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
                 allocType->print(OS);
             }
+            // 回退一个字符
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
             //dynamic_cast<IRPointerType *>(this->getType())->print(OS);
             //打印对应的prmitive type而不是他本身的pointer type
 

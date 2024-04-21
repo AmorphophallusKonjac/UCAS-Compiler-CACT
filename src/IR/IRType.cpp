@@ -112,13 +112,15 @@ void IRType::print(std::ostream &OS) const {
             case IRType::ArrayTyID:
                 const IRArrayType* arraytype;
                 arraytype = dynamic_cast<const IRArrayType*>(this);
-                OS << "[" << arraytype->getNumElements() << "x" << arraytype->getElementType()->getName() << "]";
+                OS << "[" << arraytype->getNumElements() << " x " << arraytype->getElementType()->getName() << "]";
                 break;
                 /*@global_array = [2 x [2 x double]] = @global_array = [4 x double]
                 %1 = alloca [2 x [2 x double]] = */
             case IRType::PointerTyID:
                 //OS << dynamic_cast<const IRPointerType*>(this)->getElementType()->getName();
                 dynamic_cast<const IRPointerType*>(this)->getElementType()->print(OS);
+                // 回退一个字符
+                OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
                 OS << "*";//指针加一个*
                 break;
         }
