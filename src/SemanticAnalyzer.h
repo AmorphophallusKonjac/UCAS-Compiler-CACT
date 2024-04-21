@@ -90,7 +90,12 @@ public:
     std::any visitIntegerConstant(CACTParser::IntegerConstantContext *context) override;
 
     std::any visitFloatingConstant(CACTParser::FloatingConstantContext *context) override;
-
+    std::any visitMultiplicativeOp(CACTParser::MultiplicativeOpContext *context) override;
+    std::any visitAdditiveOp(CACTParser::AdditiveOpContext *context) override;
+    std::any visitRelationalOp(CACTParser::RelationalOpContext *context) override;
+    std::any visitEqualityOp(CACTParser::EqualityOpContext *context) override;
+    std::any visitLogicalAndOp(CACTParser::LogicalAndOpContext *context) override;
+    std::any visitLogicalOrOp(CACTParser::LogicalOrOpContext *context) override;
     ~SemanticAnalyzer() override;
 
     void analyze();

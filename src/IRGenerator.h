@@ -11,7 +11,7 @@
 using namespace antlr4;
 
 class IRGenerator : public CACTVisitor {
-public:
+   public:
     IRGenerator(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root);
 
     std::any visitCompilationUnit(CACTParser::CompilationUnitContext *context) override;
@@ -28,7 +28,8 @@ public:
 
     std::any visitUnaryOperator(CACTParser::UnaryOperatorContext *context) override;
 
-    std::any visitMultiplicativeExpression(CACTParser::MultiplicativeExpressionContext *context) override;
+    std::any visitMultiplicativeExpression(
+        CACTParser::MultiplicativeExpressionContext *context) override;
 
     std::any visitAdditiveExpression(CACTParser::AdditiveExpressionContext *context) override;
 
@@ -92,11 +93,23 @@ public:
 
     std::any visitAddOp(CACTParser::AddOpContext *context) override;
 
+    std::any visitMultiplicativeOp(CACTParser::MultiplicativeOpContext *context) override;
+
+    std::any visitAdditiveOp(CACTParser::AdditiveOpContext *context) override;
+
+    std::any visitRelationalOp(CACTParser::RelationalOpContext *context) override;
+
+    std::any visitEqualityOp(CACTParser::EqualityOpContext *context) override;
+
+    std::any visitLogicalAndOp(CACTParser::LogicalAndOpContext *context) override;
+
+    std::any visitLogicalOrOp(CACTParser::LogicalOrOpContext *context) override;
+
     ~IRGenerator() override = default;
 
     void generate();
 
-private:
+   private:
     tree::ParseTree *root;
     GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
@@ -106,5 +119,4 @@ private:
     IRModule *ir;
 };
 
-
-#endif//COMPILER_IRGENERATOR_H
+#endif  // COMPILER_IRGENERATOR_H
