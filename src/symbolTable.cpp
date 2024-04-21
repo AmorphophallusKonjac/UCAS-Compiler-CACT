@@ -157,7 +157,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, 
                 srcGlobalVar = new IRGlobalVariable
                 (irinitailizer->getType(), false, IRGlobalValue::AppendingLinkage,  //这里linkage的意思暂且定为是说附加到某个VarArray上，不是真正的global
                  dynamic_cast<IRConstant*>(irinitailizer),
-                "__"+this->getName()+"_"+"global"+"_"+FuncName,irmodule);
+                "__"+this->getName()+std::to_string(SymbolCount)+"_"+"global"+"_"+FuncName,irmodule);
                 new IRMemcpyInst(srcGlobalVar,irValue,parent);
             }
             break;

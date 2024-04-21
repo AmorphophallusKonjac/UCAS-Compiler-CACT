@@ -17,7 +17,8 @@ void IRModule::print(std::ostream &OS) {
     OS << "source_filename = " << "\"" << this->name << "\"" << std::endl;
 
     /******打印全局变量******/
-    OS << std::endl;
+    if(!this->varList.empty())
+        OS << std::endl;
     for(auto var:this->varList){
         var->print(OS);
     }
