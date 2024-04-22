@@ -125,6 +125,8 @@ constantExpression
     ;
 
 condition
+    locals [IRBasicBlock *trueBlock,
+            IRBasicBlock *falseBlock]
     : logicalOrExpression
     ;
 

@@ -37,7 +37,7 @@ std::any IRGenerator::visitUnaryExpression(CACTParser::UnaryExpressionContext *c
     if (context->primaryExpression()) {
         return visit(context->primaryExpression());
     } else if (context->unaryOperator()) {
-        auto val = std::any_cast<IRValue *>(context->unaryExpression());
+        auto val = std::any_cast<IRValue *>(visit(context->unaryExpression()));
         std::string opSt = context->unaryOperator()->getText();
         if (opSt == "+") {
             return val;
@@ -53,7 +53,11 @@ std::any IRGenerator::visitUnaryExpression(CACTParser::UnaryExpressionContext *c
             return ret;
         }
     } else {  // function
-        auto rParams = std::any_cast<std::vector<IRValue *>>(visit(context->functionRParams()));
+
+        std::vector<IRValue *> rParams;
+        if (context->functionRParams()) {
+            rParams = std::any_cast<std::vector<IRValue *>>(visit(context->functionRParams()));
+        }
         auto func = globalBlock->lookUpFunc(context->Identifier()->getText())->getIRValue();
         auto ret = dynamic_cast<IRValue *>(new IRCallInst(
                 func, rParams, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
@@ -209,22 +213,24 @@ std::any IRGenerator::visitExpressionStatement(CACTParser::ExpressionStatementCo
 std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
     auto symbol = currentBlock->lookUpSymbol(context->Identifier()->getText());
     auto varPtr = symbol->getIRValue();
-    auto size =
-            dynamic_cast<IRSequentialType *>(varPtr->getType())->getElementType()->getPrimitiveSize();
-    if (!context->expression().empty()) {  // 左值是数组
-        auto arraySize = symbol->getArraySize();
-        for (int i = 0; i < context->expression().size(); ++i) {
-            auto idxSize = dynamic_cast<IRValue *>(IRConstantInt::get(std::accumulate(
-                    arraySize.begin() + i + 1, arraySize.end(), size, std::multiplies())));
-            auto idx = std::any_cast<IRValue *>(visit(context->expression(i)));
-            auto offset = dynamic_cast<IRValue *>(IRBinaryOperator::create(
-                    IRInstruction::Mul, idx, idxSize, std::to_string(currentIRFunc->getCount()),
-                    currentIRBasicBlock));
-            currentIRFunc->addCount();
-            varPtr = dynamic_cast<IRValue *>(IRBinaryOperator::create(
-                    IRInstruction::Add, varPtr, offset, std::to_string(currentIRFunc->getCount()),
-                    currentIRBasicBlock));
-            currentIRFunc->addCount();
+    if (symbol->getSymbolType() != SymbolType::CONST) {
+        auto size =
+                dynamic_cast<IRSequentialType *>(varPtr->getType())->getElementType()->getPrimitiveSize();
+        if (!context->expression().empty()) {  // 左值是数组
+            auto arraySize = symbol->getArraySize();
+            for (int i = 0; i < context->expression().size(); ++i) {
+                auto idxSize = dynamic_cast<IRValue *>(IRConstantInt::get(std::accumulate(
+                        arraySize.begin() + i + 1, arraySize.end(), size, std::multiplies())));
+                auto idx = std::any_cast<IRValue *>(visit(context->expression(i)));
+                auto offset = dynamic_cast<IRValue *>(IRBinaryOperator::create(
+                        IRInstruction::Mul, idx, idxSize, std::to_string(currentIRFunc->getCount()),
+                        currentIRBasicBlock));
+                currentIRFunc->addCount();
+                varPtr = dynamic_cast<IRValue *>(IRBinaryOperator::create(
+                        IRInstruction::Add, varPtr, offset, std::to_string(currentIRFunc->getCount()),
+                        currentIRBasicBlock));
+                currentIRFunc->addCount();
+            }
         }
     }
     if (context->expression().size() < symbol->getArraySize().size() ||
@@ -238,12 +244,50 @@ std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
 
 std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementContext *context) {
     currentBlock = context->thisblockinfo;
-    visitChildren(context);
+
+    IRBasicBlock *trueBlock = nullptr;
+    IRBasicBlock *falseBlock = nullptr;
+    IRBasicBlock *nextBlock = nullptr;
+    if (context->Else()) {
+        trueBlock = new IRBasicBlock();
+        falseBlock = new IRBasicBlock();
+        nextBlock = new IRBasicBlock();
+    } else {
+        trueBlock = new IRBasicBlock();
+        falseBlock = new IRBasicBlock();
+        nextBlock = falseBlock;
+    }
+    context->condition()->trueBlock = trueBlock;
+    context->condition()->falseBlock = falseBlock;
+    visit(context->condition());
+
+    //! visit true statement
+    trueBlock->setParent(currentIRFunc);
+    currentIRFunc->addBasicBlock(trueBlock);
+    trueBlock->setName(std::to_string(currentIRFunc->getCount()));
+    currentIRFunc->addCount();
+    currentIRBasicBlock = trueBlock;
+    visit(context->statement(0));
+
+    //! visit false statement
+    if (context->Else()) {
+        falseBlock->setParent(currentIRFunc);
+        currentIRFunc->addBasicBlock(falseBlock);
+        falseBlock->setName(std::to_string(currentIRFunc->getCount()));
+        currentIRFunc->addCount();
+        currentIRBasicBlock = falseBlock;
+        visit(context->statement(1));
+    }
+
+
     currentBlock = currentBlock->getParentBlock();
     return {};
 }
 
 std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementContext *context) {
+    currentBlock = context->thisblockinfo;
+    visitChildren(context);
+    currentBlock = currentBlock->getParentBlock();
     return visitChildren(context);
 }
 
@@ -275,15 +319,15 @@ std::any IRGenerator::visitFunctionFParam(CACTParser::FunctionFParamContext *con
 }
 
 std::any IRGenerator::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
-    return IRConstantInt::get(std::stoi(context->getText()));
+    return dynamic_cast<IRValue *>(IRConstantInt::get(std::stoi(context->getText())));
 }
 
 std::any IRGenerator::visitFloatingConstant(CACTParser::FloatingConstantContext *context) {
     std::string st = context->getText();
     if (st[st.size() - 1] == 'f' || st[st.size() - 1] == 'F') {  // float
-        return IRConstantFloat::get(std::stof(st));
+        return dynamic_cast<IRValue *>(IRConstantFloat::get(std::stof(st)));
     } else {  // double
-        return IRConstantDouble::get(std::stod(st));
+        return dynamic_cast<IRValue *>(IRConstantDouble::get(std::stod(st)));
     }
 }
 

@@ -15,9 +15,6 @@ int main(int argc, const char *argv[]) {
     std::ifstream stream;
     stream.open(file);
 
-    std::vector<std::any> vector;
-    vector.push_back(1);
-
     if (!stream.is_open()) {
         std::cerr << "Error: Fail to open " << file << std::endl;
         return 1;
@@ -32,6 +29,8 @@ int main(int argc, const char *argv[]) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
+
+    frontEnd.print();
 
 
     return 0;

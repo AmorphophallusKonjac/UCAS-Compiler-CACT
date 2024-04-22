@@ -1,8 +1,12 @@
 #include "FrontEnd.h"
+#include <filesystem>
+
 FrontEnd::FrontEnd(std::ifstream *stream, IRModule *ir)
-    : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens), ir(ir), root(parser.compilationUnit()), analyzer(&globalBlock, ir, root), generator(&globalBlock, ir, root) {
+        : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens), ir(ir), root(parser.compilationUnit()),
+          analyzer(&globalBlock, ir, root), generator(&globalBlock, ir, root) {
     globalBlock.initIOFunction();
 }
+
 void FrontEnd::analyze() {
     if (this->parser.getNumberOfSyntaxErrors() > 0 ||
         this->lexer.getNumberOfSyntaxErrors() > 0) {
@@ -18,8 +22,12 @@ void FrontEnd::analyze() {
     //! 进行第一遍 visit, 进行全局语义检查, 添加全局变量、函数、局部变量在栈上的分配
     analyzer.analyze();
 
-    std::string strsrc = ir->getName();
+    //! 进行第二遍 visit, 添加各个指令
+    generator.generate();
+}
 
+void FrontEnd::print() {
+    std::string strsrc = ir->getName();
     /**替换test**/
     std::string strTest = "test";
     std::string strIRgen = "IRgen";
@@ -32,13 +40,17 @@ void FrontEnd::analyze() {
     std::string strCact = "cact";
     std::string strIr = "ir";
     size_t pos2 = strsrc.find(strCact);
-    if(pos2 != std::string::npos){
+    if (pos2 != std::string::npos) {
         strsrc.replace(pos2, strCact.length(), strIr);  // 替换子串
     }
 
+    std::filesystem::path path(strsrc);
+    std::string dirPath = path.parent_path().string();
+    if (!std::filesystem::exists(dirPath)) {
+        std::filesystem::create_directories(dirPath);
+    }
     std::ofstream outputFile(strsrc);
 
     ir->print(outputFile);
-    //! 进行第二遍 visit, 添加各个指令
-    generator.generate();
+
 }

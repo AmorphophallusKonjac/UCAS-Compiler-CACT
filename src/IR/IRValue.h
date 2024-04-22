@@ -3,17 +3,25 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "IRUse.h"
 
 class IRType;
+
 class IRConstant;
+
 class IRArgument;
+
 class IRInstruction;
+
 class IRBasicBlock;
+
 class IRGlobalValue;
+
 class IRFunction;
+
 class IRGlobalVariable;
 
 class IRValue {
@@ -38,17 +46,22 @@ public:
     //void operator=(const IRValue &) = delete;
     //IRValue(const IRValue &) = delete;
     IRValue(IRType *Ty, ValueTy vty, std::string name = "");
+
     virtual ~IRValue() = default;
 
     /******printPrefixName虚函数******/
     virtual void printPrefixName(std::ostream &OS) const {};
+
     virtual void print(std::ostream &OS) const = 0;
 
     /******了解IRvalue的type指针******/
     IRType *getType() const { return ty; }
 
     inline bool hasName() const { return name != ""; }
+
     inline const std::string &getName() const { return name; }
+
+    void setName(std::string Name) { name = std::move(Name); }
 
     /******知道这个IRvalue是哪一个子类******/
     inline ValueTy getValueType() const { return vTy; }
@@ -63,6 +76,7 @@ public:
     void addUse(IRUse &U) {
         Uses.push_back(&U);
     }
+
     /**
      * delete all Use* in Uses which equals &U. It should only be used by ths Use class
      * @param U
@@ -71,6 +85,7 @@ public:
         auto ptr = std::find(Uses.begin(), Uses.end(), &U);
         Uses.erase(ptr);
     }
+
     std::vector<IRUse *> getUses() const {
         return Uses;
     }

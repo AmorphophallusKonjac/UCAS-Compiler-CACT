@@ -501,6 +501,7 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
 }
 void GlobalBlock::initIOFunction() {
     // 建立I/O函数的符号表
+    // TODO: build I/O函数的IRFunction
     this->addNewFunc("print_int", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::INT);
     this->addNewFunc("print_float", 0, DataType::VOID)

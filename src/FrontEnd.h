@@ -19,6 +19,8 @@ public:
 
     void analyze();
 
+    void print();
+
 private:
     ANTLRInputStream input;
     CACTLexer lexer;
