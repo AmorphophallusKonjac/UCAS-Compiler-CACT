@@ -27,12 +27,16 @@ basicType
     ;
 
 primaryExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : lValue
     | number 
     | LeftParen expression RightParen
     ;
 
 unaryExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : primaryExpression
     | unaryOperator unaryExpression
     | Identifier LeftParen (functionRParams)? RightParen
@@ -56,6 +60,8 @@ addOp
 /*以下优先级是往下递减的，A->B op B，则B的优先级比A的优先级要高 */
 //unaryExpression的优先级比较高
 multiplicativeExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : unaryExpression (multiplicativeOp unaryExpression)*
     ;
 
@@ -66,6 +72,8 @@ multiplicativeOp
     ;
 
 additiveExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : multiplicativeExpression (additiveOp multiplicativeExpression)*
     ;
 
@@ -75,6 +83,8 @@ additiveOp
     ;
 
 relationalExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : additiveExpression (relationalOp additiveExpression)?
     ;
 
@@ -86,6 +96,8 @@ relationalOp
     ;
 
 equalityExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : relationalExpression (equalityOp relationalExpression)?
     ;
 
@@ -95,6 +107,8 @@ equalityOp
     ;
 
 logicalAndExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : equalityExpression (logicalAndOp equalityExpression)*
     ;
 
@@ -103,6 +117,8 @@ logicalAndOp
     ;
 
 logicalOrExpression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : logicalAndExpression (logicalOrOp logicalAndExpression)*
     ;
 
@@ -113,6 +129,8 @@ logicalOrOp
 /*****************************以上*****************************/
 
 expression
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : additiveExpression
     | BooleanConstant
     ;

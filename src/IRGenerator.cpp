@@ -4,6 +4,7 @@
 #include "IR/iMemory.h"
 #include "IR/iOperators.h"
 #include "IR/iOther.h"
+#include "IR/iTerminators.h"
 
 std::any IRGenerator::visitCompilationUnit(CACTParser::CompilationUnitContext *context) {
     return visitChildren(context);
@@ -24,21 +25,32 @@ std::any IRGenerator::visitPrimaryExpression(CACTParser::PrimaryExpressionContex
             ret = dynamic_cast<IRValue *>(new IRLoadInst(
                     ret, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
         }
+        if (context->trueBlock) {
+            new IRBranchInst(context->trueBlock, context->falseBlock, ret, currentIRBasicBlock);
+        }
         return ret;
     } else if (context->number()) {
         return visit(context->number());
     } else {
+        context->expression()->trueBlock = context->trueBlock;
+        context->expression()->falseBlock = context->falseBlock;
         return visit(context->expression());
     }
-    return visitChildren(context);
+    return {};
 }
 
 std::any IRGenerator::visitUnaryExpression(CACTParser::UnaryExpressionContext *context) {
     if (context->primaryExpression()) {
+        context->primaryExpression()->trueBlock = context->trueBlock;
+        context->primaryExpression()->falseBlock = context->falseBlock;
         return visit(context->primaryExpression());
     } else if (context->unaryOperator()) {
-        auto val = std::any_cast<IRValue *>(visit(context->unaryExpression()));
         std::string opSt = context->unaryOperator()->getText();
+        if (opSt == "!") {
+            context->unaryExpression()->trueBlock = context->falseBlock;
+            context->unaryExpression()->falseBlock = context->trueBlock;
+        }
+        auto val = std::any_cast<IRValue *>(visit(context->unaryExpression()));
         if (opSt == "+") {
             return val;
         } else if (opSt == "-") {
@@ -62,6 +74,9 @@ std::any IRGenerator::visitUnaryExpression(CACTParser::UnaryExpressionContext *c
         auto ret = dynamic_cast<IRValue *>(new IRCallInst(
                 func, rParams, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
         currentIRFunc->addCount();
+        if (context->trueBlock) {
+            new IRBranchInst(context->trueBlock, context->falseBlock, ret, currentIRBasicBlock);
+        }
         return ret;
     }
 }
@@ -80,8 +95,12 @@ std::any IRGenerator::visitUnaryOperator(CACTParser::UnaryOperatorContext *conte
 
 std::any IRGenerator::visitMultiplicativeExpression(
         CACTParser::MultiplicativeExpressionContext *context) {
-    auto ret = std::any_cast<IRValue *>(visit(context->unaryExpression(0)));
     auto len = context->unaryExpression().size();
+    if (len == 1) {
+        context->unaryExpression(0)->trueBlock = context->trueBlock;
+        context->unaryExpression(0)->falseBlock = context->falseBlock;
+    }
+    auto ret = std::any_cast<IRValue *>(visit(context->unaryExpression(0)));
     for (int i = 1; i < len; ++i) {
         auto val = std::any_cast<IRValue *>(visit(context->unaryExpression(i)));
         IRInstruction::BinaryOps op;
@@ -101,8 +120,12 @@ std::any IRGenerator::visitMultiplicativeExpression(
 }
 
 std::any IRGenerator::visitAdditiveExpression(CACTParser::AdditiveExpressionContext *context) {
-    auto ret = std::any_cast<IRValue *>(visit(context->multiplicativeExpression(0)));
     auto len = context->multiplicativeExpression().size();
+    if (len == 1) {
+        context->multiplicativeExpression(0)->trueBlock = context->trueBlock;
+        context->multiplicativeExpression(0)->falseBlock = context->falseBlock;
+    }
+    auto ret = std::any_cast<IRValue *>(visit(context->multiplicativeExpression(0)));
     for (int i = 1; i < len; ++i) {
         auto val = std::any_cast<IRValue *>(visit(context->multiplicativeExpression(i)));
         IRInstruction::BinaryOps op;
@@ -120,30 +143,111 @@ std::any IRGenerator::visitAdditiveExpression(CACTParser::AdditiveExpressionCont
 }
 
 std::any IRGenerator::visitRelationalExpression(CACTParser::RelationalExpressionContext *context) {
-    return visitChildren(context);
+    if (context->relationalOp()) {
+        auto lVal = std::any_cast<IRValue *>(visit(context->additiveExpression(0)));
+        auto rVal = std::any_cast<IRValue *>(visit(context->additiveExpression(1)));
+        IRInstruction::BinaryOps op;
+        std::string opSt = context->relationalOp()->getText();
+        if (opSt == "<") {
+            op = IRInstruction::SetLT;
+        } else if (opSt == ">") {
+            op = IRInstruction::SetGT;
+        } else if (opSt == "<=") {
+            op = IRInstruction::SetLE;
+        } else {
+            op = IRInstruction::SetGE;
+        }
+        auto res = dynamic_cast<IRValue *>(IRBinaryOperator::create(op, lVal, rVal,
+                                                                    std::to_string(currentIRFunc->getCount()),
+                                                                    currentIRBasicBlock));
+        currentIRFunc->addCount();
+        if (context->trueBlock) {
+            new IRBranchInst(context->trueBlock, context->falseBlock, res, currentIRBasicBlock);
+        } else {
+            return res;
+        }
+    } else {
+        context->additiveExpression(0)->trueBlock = context->trueBlock;
+        context->additiveExpression(0)->falseBlock = context->falseBlock;
+        return visit(context->additiveExpression(0));
+    }
+    return {};
 }
 
 std::any IRGenerator::visitEqualityExpression(CACTParser::EqualityExpressionContext *context) {
-    return visitChildren(context);
+    if (context->equalityOp()) {
+        auto lVal = std::any_cast<IRValue *>(visit(context->relationalExpression(0)));
+        auto rVal = std::any_cast<IRValue *>(visit(context->relationalExpression(1)));
+        IRInstruction::BinaryOps op = (context->equalityOp()->getText() == "==") ? IRInstruction::SetEQ
+                                                                                 : IRInstruction::SetNE;
+        auto res = dynamic_cast<IRValue *>(IRBinaryOperator::create(op, lVal, rVal,
+                                                                    std::to_string(currentIRFunc->getCount()),
+                                                                    currentIRBasicBlock));
+        currentIRFunc->addCount();
+        new IRBranchInst(context->trueBlock, context->falseBlock, res, currentIRBasicBlock);
+    } else {
+        context->relationalExpression(0)->trueBlock = context->trueBlock;
+        context->relationalExpression(0)->falseBlock = context->falseBlock;
+        return visit(context->relationalExpression(0));
+    }
+    return {};
 }
 
 std::any IRGenerator::visitLogicalAndExpression(CACTParser::LogicalAndExpressionContext *context) {
-    return visitChildren(context);
+    auto len = context->equalityExpression().size();
+    for (int i = 0; i < len - 1; ++i) {
+        context->equalityExpression(i)->trueBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()),
+                                                                     currentIRFunc);
+        currentIRFunc->addCount();
+        context->equalityExpression(i)->falseBlock = context->falseBlock;
+        if (i) {
+            currentIRBasicBlock = context->equalityExpression(i - 1)->trueBlock;
+        }
+        visit(context->equalityExpression(i));
+    }
+    context->equalityExpression().back()->trueBlock = context->trueBlock;
+    context->equalityExpression().back()->falseBlock = context->falseBlock;
+    if (len > 1) {
+        currentIRBasicBlock = context->equalityExpression(len - 2)->trueBlock;
+    }
+    visit(context->equalityExpression().back());
+    return {};
 }
 
 std::any IRGenerator::visitLogicalOrExpression(CACTParser::LogicalOrExpressionContext *context) {
-    return visitChildren(context);
+    auto len = context->logicalAndExpression().size();
+    for (int i = 0; i < len - 1; ++i) {
+        context->logicalAndExpression(i)->trueBlock = context->trueBlock;
+        context->logicalAndExpression(i)->falseBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()),
+                                                                        currentIRFunc);
+        currentIRFunc->addCount();
+        if (i) {
+            currentIRBasicBlock = context->logicalAndExpression(i - 1)->falseBlock;
+        }
+        visit(context->logicalAndExpression(i));
+    }
+    context->logicalAndExpression().back()->trueBlock = context->trueBlock;
+    context->logicalAndExpression().back()->falseBlock = context->falseBlock;
+    if (len > 1) {
+        currentIRBasicBlock = context->logicalAndExpression(len - 2)->falseBlock;
+    }
+    visit(context->logicalAndExpression().back());
+    return {};
 }
 
 std::any IRGenerator::visitExpression(CACTParser::ExpressionContext *context) {
     IRValue *ret = nullptr;
     if (context->additiveExpression()) {  // 加法
+        context->additiveExpression()->trueBlock = context->trueBlock;
+        context->additiveExpression()->falseBlock = context->falseBlock;
         ret = std::any_cast<IRValue *>(visit(context->additiveExpression()));
     } else {  // 布尔常量
         if (context->BooleanConstant()->getText() == "true") {
             ret = dynamic_cast<IRValue *>(IRConstantBool::get(true));
+            new IRBranchInst(context->trueBlock, nullptr, nullptr, currentIRBasicBlock);
         } else {
             ret = dynamic_cast<IRValue *>(IRConstantBool::get(false));
+            new IRBranchInst(context->falseBlock, nullptr, nullptr, currentIRBasicBlock);
         }
     }
     return ret;
@@ -154,6 +258,8 @@ std::any IRGenerator::visitConstantExpression(CACTParser::ConstantExpressionCont
 }
 
 std::any IRGenerator::visitCondition(CACTParser::ConditionContext *context) {
+    context->logicalOrExpression()->trueBlock = context->trueBlock;
+    context->logicalOrExpression()->falseBlock = context->falseBlock;
     return visitChildren(context);
 }
 
@@ -214,8 +320,14 @@ std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
     auto symbol = currentBlock->lookUpSymbol(context->Identifier()->getText());
     auto varPtr = symbol->getIRValue();
     if (symbol->getSymbolType() != SymbolType::CONST) {
-        auto size =
-                dynamic_cast<IRSequentialType *>(varPtr->getType())->getElementType()->getPrimitiveSize();
+        unsigned size;
+        if (symbol->getSymbolType() == SymbolType::VAR) {
+            size = dynamic_cast<IRPointerType *>(varPtr->getType())->getElementType()->getPrimitiveSize();
+        } else {
+            size = dynamic_cast<IRArrayType *>(
+                    dynamic_cast<IRPointerType *>(varPtr->getType())->getElementType()
+            )->getElementType()->getPrimitiveSize();
+        }
         if (!context->expression().empty()) {  // 左值是数组
             auto arraySize = symbol->getArraySize();
             for (int i = 0; i < context->expression().size(); ++i) {
@@ -279,6 +391,11 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
         visit(context->statement(1));
     }
 
+    nextBlock->setParent(currentIRFunc);
+    currentIRFunc->addBasicBlock(nextBlock);
+    nextBlock->setName(std::to_string(currentIRFunc->getCount()));
+    currentIRFunc->addCount();
+    currentIRBasicBlock = nextBlock;
 
     currentBlock = currentBlock->getParentBlock();
     return {};
