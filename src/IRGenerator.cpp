@@ -383,6 +383,7 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
     currentIRFunc->addCount();
     currentIRBasicBlock = trueBlock;
     visit(context->statement(0));
+    new IRBranchInst(nextBlock, nullptr, nullptr, trueBlock);
 
     //! visit false statement
     if (context->Else()) {
@@ -392,6 +393,7 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
         currentIRFunc->addCount();
         currentIRBasicBlock = falseBlock;
         visit(context->statement(1));
+        new IRBranchInst(nextBlock, nullptr, nullptr, falseBlock);
     }
 
     nextBlock->setParent(currentIRFunc);
