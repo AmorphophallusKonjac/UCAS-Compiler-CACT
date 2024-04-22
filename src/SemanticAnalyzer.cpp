@@ -897,7 +897,7 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
 
     /******构建函数,设置basicblock
      * parent,设置irCurrentFunc的basicblocklist,setIRValue中构建IRargs的母函数******/
-    currentFunc->setIRValue(ir);
+    currentFunc->setIRValue(ir, IRFunction::Declared);
     irfirstbasicblock->setParent(dynamic_cast<IRFunction *>(currentFunc->getIRValue()));
     dynamic_cast<IRFunction *>(currentFunc->getIRValue())->addBasicBlock(irfirstbasicblock);
 
@@ -1016,9 +1016,9 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
                 context->Identifier()->getText(), context->Identifier()->getSymbol()->getLine(),
                 basicType, param_array, dimension);
 
-        unsigned arraysize;  // 记录这个paramarray有多大
-        arraysize = std::accumulate(param_array.begin(), param_array.end(), 1, std::multiplies());
-        irType = new IRArrayType(irElType, arraysize);
+        //unsigned arraysize;  // 记录这个paramarray有多大
+        //arraysize = std::accumulate(param_array.begin(), param_array.end(), 1, std::multiplies());
+        irType = new IRPointerType(irElType);
 
         // 变量设置IRValue
         // dynamic_cast<VarArraySymbolInfo*>(symbolInfo)->setIRValue(IRValue::InstructionVal,

@@ -1,4 +1,5 @@
 #include "symbolTable.h"
+#include "IR/IRArgument.h"
 #include "IR/IRBasicBlock.h"
 #include "IR/IRDerivedTypes.h"
 #include "IR/IRModule.h"
@@ -165,7 +166,7 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, 
 }
 
 
-void FuncSymbolInfo::setIRValue(IRModule* irModule){
+void FuncSymbolInfo::setIRValue(IRModule* irModule, IRFunction::FuncTy functy){
 
     /******通过这个类自己的属性Result来构建IR需要的Result******/
     const IRType *IRResult;
@@ -188,7 +189,7 @@ void FuncSymbolInfo::setIRValue(IRModule* irModule){
     }
 
     irValue = new IRFunction(new IRFunctionType(const_cast<IRType *>(IRResult), IRParams), IRGlobalValue::InternalLinkage, 
-                            this->getName(), irModule);
+                            this->getName(), irModule, functy);
     /******将已经分配出的参数个数算进去******/
 
     /******arg与函数的双向奔赴******/
@@ -499,18 +500,50 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
 
     return newFunc;
 }
-void GlobalBlock::initIOFunction() {
+void GlobalBlock::initIOFunction(IRModule* irmodule) {
     // 建立I/O函数的符号表
     // TODO: build I/O函数的IRFunction
+    IRType* irType;
+    IRArgument* irarg;
     this->addNewFunc("print_int", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::INT);
+    irType = const_cast<IRType *>(IRType::getPrimitiveType(IRType::IntTyID));
+    irarg = new IRArgument(irType, "0");
+    this->lookUpFunc("print_int")->getIRArgs().push_back(irarg);
+    this->lookUpFunc("print_int")->getIRParams().push_back(irType);
+    this->lookUpFunc("print_int")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("print_float", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::FLOAT);
+    irType = const_cast<IRType *>(IRType::getPrimitiveType(IRType::FloatTyID));
+    irarg = new IRArgument(irType, "0");
+    this->lookUpFunc("print_float")->getIRArgs().push_back(irarg);
+    this->lookUpFunc("print_float")->getIRParams().push_back(irType);
+    this->lookUpFunc("print_float")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("print_double", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::DOUBLE);
+    irType = const_cast<IRType *>(IRType::getPrimitiveType(IRType::DoubleTyID));
+    irarg = new IRArgument(irType, "0");
+    this->lookUpFunc("print_double")->getIRArgs().push_back(irarg);
+    this->lookUpFunc("print_double")->getIRParams().push_back(irType);
+    this->lookUpFunc("print_double")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("print_bool", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::BOOL);
+    irType = const_cast<IRType *>(IRType::getPrimitiveType(IRType::BoolTyID));
+    irarg = new IRArgument(irType, "0");
+    this->lookUpFunc("print_bool")->getIRArgs().push_back(irarg);
+    this->lookUpFunc("print_bool")->getIRParams().push_back(irType);
+    this->lookUpFunc("print_bool")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("get_int", 0, DataType::INT);
+    this->lookUpFunc("get_int")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("get_float", 0, DataType::FLOAT);
+    this->lookUpFunc("get_float")->setIRValue(irmodule, IRFunction::UnDeclared);
+
     this->addNewFunc("get_double", 0, DataType::DOUBLE);
+    this->lookUpFunc("get_double")->setIRValue(irmodule, IRFunction::UnDeclared);
+
 }

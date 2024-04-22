@@ -56,6 +56,7 @@ public:
 class IRPointerType : public IRSequentialType {
 public:
     explicit IRPointerType(IRType *ElType);
+    IRType* getArrayEleType() const { return dynamic_cast<IRArrayType*>(getElementType())->getElementType(); };
 
 };
 #endif//COMPILER_IRDERIVEDTYPES_H

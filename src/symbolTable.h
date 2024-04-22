@@ -15,6 +15,7 @@
 #include "IR/IRValue.h"
 #include "IR/IRType.h"
 #include "IR/IRModule.h"
+#include "IR/IRFunction.h"
 #include "utils/CACT.h"
 #include "utils/ErrorHandler.h"
 
@@ -238,6 +239,7 @@ public:
 
 class BlockInfo;//为了funcsymbolinfo的定义
 class GlobalBlock;
+class IRFunction;
 
 
 class FuncSymbolInfo : public SymbolInfo{
@@ -268,7 +270,7 @@ public:
     SymbolInfo *addParamArray(const std::string &name, int line, DataType dataType, const std::vector<int> arraySize,
                               int dimension);
 
-    void setIRValue(IRModule* irModule);
+    void setIRValue(IRModule* irModule, IRFunction::FuncTy functy);
     std::vector<SymbolInfo *> &getparamList() { return paramList; }
     std::vector<IRType *> &getIRParams(){ return IRParams; };
     std::vector<IRArgument *> &getIRArgs() { return IRArgs; };
@@ -384,7 +386,7 @@ public:
     addNewVarArray(const std::string &name, int line, DataType dataType, const std::vector<int> arraySize,
                    int dimension) override;
 
-    void initIOFunction();
+    void initIOFunction(IRModule* irmodule);
 
     GlobalBlock();
 

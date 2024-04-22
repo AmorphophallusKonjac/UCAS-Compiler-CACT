@@ -118,7 +118,12 @@ void IRType::print(std::ostream &OS) const {
                 %1 = alloca [2 x [2 x double]] = */
             case IRType::PointerTyID:
                 //OS << dynamic_cast<const IRPointerType*>(this)->getElementType()->getName();
-                dynamic_cast<const IRPointerType*>(this)->getElementType()->print(OS);
+                /******如果是ElType是arraytype，那么打印的时候不要把数组模样的打出来******/
+                if(dynamic_cast<const IRPointerType*>(this)->getElementType()->getPrimitiveID() == ArrayTyID){
+                    dynamic_cast<const IRPointerType*>(this)->getElementType()->print(OS);
+                }else{
+                    dynamic_cast<const IRPointerType*>(this)->getElementType()->print(OS);
+                }
                 // 回退一个字符
                 OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
                 OS << "*";//指针加一个*
@@ -164,13 +169,17 @@ void IRSequentialType::IRpointerPrintAlign(std::ostream &OS) {
             case IRType::DoubleTyID:    
                 alignSize = 8*alignSize;
                 break;
-                
+            case IRType::PointerTyID:
+                alignSize = 8*alignSize;
         }
 
         OS << ", align " << std::to_string(alignSize);
         alignSize = 1;
     }else{//是数组
-        alignSize = dynamic_cast<IRArrayType*>(this->getElementType())->getNumElements() * alignSize;   //乘一层
+        if(dynamic_cast<IRArrayType*>(this->getElementType())){
+            alignSize = dynamic_cast<IRArrayType*>(this->getElementType())->getNumElements() * alignSize;   //arrayType
+        }
+
         dynamic_cast<IRSequentialType*>(this->getElementType())->IRpointerPrintAlign(OS);                  //往下递归
     }
 

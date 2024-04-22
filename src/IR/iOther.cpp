@@ -4,7 +4,7 @@
 #include "IRFunction.h"
 
 IRCallInst::IRCallInst(IRValue *F, const std::vector<IRValue *> &Par, const std::string &Name, IRBasicBlock *parent)
-    : IRInstruction(dynamic_cast<IRFunctionType *>(F)->getReturnType(),
+    : IRInstruction(dynamic_cast<IRFunction *>(F)->getFunctionType()->getReturnType(),
                     IRInstruction::Call, Name, parent) {
     Operands.reserve(1 + Par.size());
     Operands.emplace_back(F, this);

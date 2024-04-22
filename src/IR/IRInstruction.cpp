@@ -124,13 +124,14 @@ bool IRInstruction::isCommutative(unsigned int op) {
 **/
 void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) const {
     this->printPrefixName(OS);//打印instructionName
-    OS << " = " << std::endl;
+    OS << " = " ;
     if (this->getType()->isFloatingPoint() && AskFloat) {
-        OS << "f" << std::endl;//打印f
+        OS << "f" ;//打印f
     }
-    OS << this->getOpcodeName() << " " << std::endl;//打印add
+    OS << this->getOpcodeName() << " " ;//打印add
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
+    OS << " ";
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
 }
 
@@ -256,10 +257,11 @@ void IRInstruction::print(std::ostream &OS) const {
         case Load:
             //instruction begin
             this->printPrefixName(OS);
-            OS << this->getOpcodeName() << " " << std::endl;//打印load
+            OS << " = " << this->getOpcodeName() << " " ;//打印load
             this->getType()->print(OS);                     //打印type
 
             dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->getType()->print(OS);
+            dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->printPrefixName(OS);
             break;
         case Store:
             //instruction begin
@@ -284,7 +286,7 @@ void IRInstruction::print(std::ostream &OS) const {
             //这里只可能是这三种情况，globalvarible不可能，因为它是指针
 
             // /******这里必然是IRPointerType******/
-            OS << "  " ;
+            OS << ", " ;
             operand2 = dynamic_cast<IRStoreInst *>(const_cast<IRInstruction *>(this))->getPointerOperand();
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
@@ -325,11 +327,9 @@ void IRInstruction::print(std::ostream &OS) const {
         case Call:
             //instruction begin
             this->printPrefixName(OS);//打印instructionName
-            OS << " = " << std::endl;
-            OS << this->getOpcodeName() << " " << std::endl;//打印call
+            OS << " = " << this->getOpcodeName() << " " ;//打印call
 
-            dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this))->getCalledFunction()->print(OS);
-            //打印出对应的call的函数
+            dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this))->getCalledFunction()->Funcprint(OS);
             break;
         case Shl:
             //instruction begin

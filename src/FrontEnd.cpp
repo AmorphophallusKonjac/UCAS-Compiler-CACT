@@ -4,7 +4,7 @@
 FrontEnd::FrontEnd(std::ifstream *stream, IRModule *ir)
         : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens), ir(ir), root(parser.compilationUnit()),
           analyzer(&globalBlock, ir, root), generator(&globalBlock, ir, root) {
-    globalBlock.initIOFunction();
+    globalBlock.initIOFunction(ir);
 }
 
 void FrontEnd::analyze() {
