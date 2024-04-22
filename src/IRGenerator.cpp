@@ -24,6 +24,7 @@ std::any IRGenerator::visitPrimaryExpression(CACTParser::PrimaryExpressionContex
         if (context->lValue()->loadable) {
             ret = dynamic_cast<IRValue *>(new IRLoadInst(
                     ret, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
+            currentIRFunc->addCount();
         }
         if (context->trueBlock) {
             new IRBranchInst(context->trueBlock, context->falseBlock, ret, currentIRBasicBlock);
@@ -312,6 +313,8 @@ std::any IRGenerator::visitExpressionStatement(CACTParser::ExpressionStatementCo
         auto *expVal = std::any_cast<IRValue *>(visit(context->expression()));
         auto *ptr = std::any_cast<IRValue *>(visit(context->lValue()));
         new IRStoreInst(expVal, ptr, currentIRBasicBlock);
+    } else {
+        visit(context->expression());
     }
     return {};
 }
@@ -324,7 +327,7 @@ std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
         if (symbol->getSymbolType() == SymbolType::VAR) {
             size = dynamic_cast<IRPointerType *>(varPtr->getType())->getElementType()->getPrimitiveSize();
         } else {
-            size = dynamic_cast<IRArrayType *>(
+            size = dynamic_cast<IRSequentialType *>(
                     dynamic_cast<IRPointerType *>(varPtr->getType())->getElementType()
             )->getElementType()->getPrimitiveSize();
         }

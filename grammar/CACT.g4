@@ -214,7 +214,7 @@ blockItem
 //一个blockItem要么是一个语句，要么是一个声明
 
 expressionStatement
-    : expression? ';'
+    : expression? ';' // 函数调用
     | lValue Assign expression ';'
     ;
 //表达式语句
