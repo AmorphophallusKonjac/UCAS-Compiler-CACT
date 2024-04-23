@@ -128,7 +128,7 @@ void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) co
     if (this->getType()->isFloatingPoint() && AskFloat) {
         OS << "f" ;//打印f
     }
-    OS << this->getOpcodeName() << " " ;//打印add
+    OS << this->getOpcodeName() << "  " ;//打印add
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
     OS << " ";
@@ -143,9 +143,10 @@ void IRInstruction::SetCCIRInstPrint(std::ostream &OS) const {
     } else {
         OS << "icmp " ;//打印icmp
     }
-    OS << this->getOpcodeName() << " " ;//打印set
+    OS << this->getOpcodeName() << "  " ;//打印set
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
+    OS << " ";
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
 }
 void IRInstruction::printPrefixName(std::ostream &OS) const {
@@ -168,22 +169,25 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Br:
             //instruction begin
-            OS << this->getOpcodeName() << " " ;//打印ret
+            OS << this->getOpcodeName() << "  " ;//打印ret
 
             /******根据irbranch是不是有条件跳转来进行相对应的具体标号打印******/
             const IRBranchInst *irbranch;
             irbranch = dynamic_cast<const IRBranchInst *>(this);
             if (irbranch->isConditional()) {//有条件判断
                 //打印一个IRvalue
-                irbranch->Operands[2].get()->print(OS);
+                irbranch->Operands[2].get()->printPrefixName(OS);
                 //打印两个label跳转标号
                 OS << ", " ;
-                OS << "label " << irbranch->Operands[0].get()->getName() ;
-                OS << ", " ;
-                OS << "label " << irbranch->Operands[1].get()->getName() << std::endl;
+                OS << "label " ;
+                irbranch->Operands[0].get()->printPrefixName(OS);
+                OS << ", label " ;
+                irbranch->Operands[1].get()->printPrefixName(OS);
             } else {
-                OS << "label " << irbranch->Operands[0].get()->getName() << std::endl;
+                OS << "label " ;
+                irbranch->Operands[0].get()->printPrefixName(OS);
             }
+            OS << std::endl;
             break;
 
         // Standard binary operators...
@@ -257,8 +261,10 @@ void IRInstruction::print(std::ostream &OS) const {
         case Load:
             //instruction begin
             this->printPrefixName(OS);
-            OS << " = " << this->getOpcodeName() << " " ;//打印load
+            OS << " = " << this->getOpcodeName() << "  " ;//打印load
             this->getType()->print(OS);                     //打印type
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
+            OS << ", " ;
 
             dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->getType()->print(OS);
             dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->printPrefixName(OS);

@@ -18,6 +18,7 @@ public:
     static IRConstant *getAllOnesValue(const IRType *Ty);
 
     void print(std::ostream &OS) const override;
+    void printPrefixName(std::ostream &OS) const override { print(OS); } ;
 };
 
 class IRConstantBool : public IRConstant {
