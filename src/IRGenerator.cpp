@@ -245,10 +245,12 @@ std::any IRGenerator::visitExpression(CACTParser::ExpressionContext *context) {
     } else {  // 布尔常量
         if (context->BooleanConstant()->getText() == "true") {
             ret = dynamic_cast<IRValue *>(IRConstantBool::get(true));
-            new IRBranchInst(context->trueBlock, nullptr, nullptr, currentIRBasicBlock);
+            if (context->trueBlock)
+                new IRBranchInst(context->trueBlock, nullptr, nullptr, currentIRBasicBlock);
         } else {
             ret = dynamic_cast<IRValue *>(IRConstantBool::get(false));
-            new IRBranchInst(context->falseBlock, nullptr, nullptr, currentIRBasicBlock);
+            if (context->trueBlock)
+                new IRBranchInst(context->falseBlock, nullptr, nullptr, currentIRBasicBlock);
         }
     }
     return ret;

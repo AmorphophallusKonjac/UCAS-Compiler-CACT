@@ -3,7 +3,8 @@
 #include "iTerminators.h"
 
 IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue *cond, IRBasicBlock *parent)
-    : IRTerminatorInst(IRInstruction::Br, parent) {
+        : IRTerminatorInst(IRInstruction::Br, parent) {
+    assert(IfTrue != nullptr && "error label");
     Operands.reserve(IfFalse ? 3 : 1);
     Operands.emplace_back(IfTrue, this);
     if (IfFalse) {
@@ -11,8 +12,9 @@ IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue 
         Operands.emplace_back(cond, this);
     }
 }
+
 IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *parent)
-    : IRTerminatorInst(IRInstruction::Br, parent) {
+        : IRTerminatorInst(IRInstruction::Br, parent) {
     Operands.reserve(1);
     Operands.emplace_back(IfTrue, this);
 }
