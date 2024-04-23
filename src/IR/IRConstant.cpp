@@ -19,9 +19,7 @@ std::map<int, IRConstantInt *> IRConstantInt::constantMap;
 std::map<float, IRConstantFloat *> IRConstantFloat::constantMap;
 std::map<double, IRConstantDouble *> IRConstantDouble::constantMap;
 
-void IRConstant::print(std::ostream &OS) const {
-    this->getType()->print(OS);
-
+void IRConstant::printPrefixName(std::ostream &OS) const {
     /******根据IRConstant中的type类型来打印出它的value值******/
     switch (this->getType()->getPrimitiveID()) {
         case IRType::IntTyID:
@@ -46,6 +44,11 @@ void IRConstant::print(std::ostream &OS) const {
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
             OS << "]";
     }
+}
+void IRConstant::print(std::ostream &OS) const {
+    this->getType()->print(OS);
+    this->printPrefixName(OS);
+
 }
 
 IRConstant *IRConstant::getNullValue(const IRType *Ty) {

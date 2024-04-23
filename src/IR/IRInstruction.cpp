@@ -131,7 +131,7 @@ void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) co
     OS << this->getOpcodeName() << "  " ;//打印add
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
-    OS << " ";
+    OS << ", ";
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
 }
 
