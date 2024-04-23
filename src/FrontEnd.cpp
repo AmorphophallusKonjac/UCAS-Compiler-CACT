@@ -37,8 +37,8 @@ void FrontEnd::print() {
     }
 
     /**替换cact**/
-    std::string strCact = "cact";
-    std::string strIr = "ir";
+    std::string strCact = ".cact";
+    std::string strIr = ".ir";
     size_t pos2 = strsrc.find(strCact);
     if (pos2 != std::string::npos) {
         strsrc.replace(pos2, strCact.length(), strIr);  // 替换子串
@@ -52,5 +52,7 @@ void FrontEnd::print() {
     std::ofstream outputFile(strsrc);
 
     ir->print(outputFile);
+
+    outputFile.close();
 
 }
