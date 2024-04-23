@@ -42,12 +42,13 @@ void IRBasicBlock::print(std::ostream &OS) const {
     this->printPrefixName(OS);
 
     /******通过这个uses边去遍历它的user,查明是哪些块使用了它******/
-    OS << "                                                ; preds =" << std::endl;
+    OS << "                                                ; preds =" ;
     for (auto iruseptr: this->getUses()) {
-        OS << " " << std::endl;//获得使用这个块的终止语句的父块
+        OS << " " ;//获得使用这个块的终止语句的父块
         dynamic_cast<IRTerminatorInst *>(iruseptr->getUser())->getParent()->printPrefixName(OS);
-        OS << "," << std::endl;//获得使用这个块的终止语句的父块
+        OS << "," ;//获得使用这个块的终止语句的父块
     }
+    OS << std::endl;
 
     for (auto inst: this->InstList) {
         OS << "    ";

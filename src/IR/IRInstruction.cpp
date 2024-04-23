@@ -137,13 +137,13 @@ void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) co
 
 void IRInstruction::SetCCIRInstPrint(std::ostream &OS) const {
     this->printPrefixName(OS);//打印instructionName
-    OS << " = " << std::endl;
+    OS << " = " ;
     if (this->getType()->isFloatingPoint()) {
-        OS << "fcmp " << std::endl;//打印fcmp
+        OS << "fcmp " ;//打印fcmp
     } else {
-        OS << "icmp " << std::endl;//打印icmp
+        OS << "icmp " ;//打印icmp
     }
-    OS << this->getOpcodeName() << " " << std::endl;//打印set
+    OS << this->getOpcodeName() << " " ;//打印set
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
@@ -168,7 +168,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Br:
             //instruction begin
-            OS << this->getOpcodeName() << " " << std::endl;//打印ret
+            OS << this->getOpcodeName() << " " ;//打印ret
 
             /******根据irbranch是不是有条件跳转来进行相对应的具体标号打印******/
             const IRBranchInst *irbranch;
@@ -177,9 +177,9 @@ void IRInstruction::print(std::ostream &OS) const {
                 //打印一个IRvalue
                 irbranch->Operands[2].get()->print(OS);
                 //打印两个label跳转标号
-                OS << ", " << std::endl;
-                OS << "label " << irbranch->Operands[0].get()->getName() << std::endl;
-                OS << ", " << std::endl;
+                OS << ", " ;
+                OS << "label " << irbranch->Operands[0].get()->getName() ;
+                OS << ", " ;
                 OS << "label " << irbranch->Operands[1].get()->getName() << std::endl;
             } else {
                 OS << "label " << irbranch->Operands[0].get()->getName() << std::endl;
