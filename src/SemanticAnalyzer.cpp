@@ -646,7 +646,9 @@ std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementC
     }
 
     currentBlock = context->thisblockinfo;  // 更新currentBlock
-    this->visit(context->blockItemList());
+    if (context->blockItemList()) {
+        this->visit(context->blockItemList());
+    }
 
     currentBlock = context->thisblockinfo->getParentBlock();  // currentBlock回溯
     return {};
