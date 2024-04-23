@@ -143,8 +143,8 @@ constantExpression
     ;
 
 condition
-    locals [IRBasicBlock *trueBlock,
-            IRBasicBlock *falseBlock]
+    locals [IRBasicBlock *trueBlock = nullptr,
+            IRBasicBlock *falseBlock = nullptr]
     : logicalOrExpression
     ;
 
