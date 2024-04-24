@@ -338,6 +338,8 @@ std::any IRGenerator::visitLValue(CACTParser::LValueContext *context) {
             )->getElementType()->getPrimitiveSize();
         }
         if (!context->expression().empty()) {  // 左值是数组
+            varPtr = new IRLoadInst(varPtr, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock);
+            currentIRFunc->addCount();
             auto arraySize = symbol->getArraySize();
             for (int i = 0; i < context->expression().size(); ++i) {
                 auto idxSize = dynamic_cast<IRValue *>(IRConstantInt::get(std::accumulate(

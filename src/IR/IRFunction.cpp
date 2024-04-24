@@ -8,8 +8,9 @@
 void IRFunction::setParent(IRModule *parent) {
     Parent = parent;
 }
-void IRFunction::printPrefixName(std::ostream &OS) const{
-    OS << "@" <<this->getName() << " ";
+
+void IRFunction::printPrefixName(std::ostream &OS) const {
+    OS << "@" << this->getName();
 }
 
 void IRFunction::Funcprint(std::ostream &OS) const {
@@ -17,17 +18,18 @@ void IRFunction::Funcprint(std::ostream &OS) const {
     this->printPrefixName(OS);
 
     /******打印arg******/
-    OS << "(" ;
-    for(auto arg: ArgumentList){
+    OS << "(";
+    for (auto arg: ArgumentList) {
         arg->print(OS);
         OS << ", ";
     }
     // 如果参数列表不空回退2个字符
-    if(!ArgumentList.empty())
+    if (!ArgumentList.empty())
         OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
     OS << ")";
 
 }
+
 void IRFunction::print(std::ostream &OS) const {
     // TODO
 
@@ -35,12 +37,12 @@ void IRFunction::print(std::ostream &OS) const {
     OS << "; Function" << std::endl;
 
     /******打印function本身******/
-    OS << "define " ;
+    OS << "define ";
     this->Funcprint(OS);
 
     /******打印basciblock******/
-    OS << "{" << std::endl;
-    for(auto basicblock:BasicBlocks){
+    OS << " {" << std::endl;
+    for (auto basicblock: BasicBlocks) {
         basicblock->print(OS);
     }
     OS << "}" << std::endl;
@@ -48,8 +50,9 @@ void IRFunction::print(std::ostream &OS) const {
 }
 
 //这里无法传一个primitiveType的Ty进来，因为在进来之前必须对IRFunctionType给一系列参数进行初始化
-IRFunction::IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, const std::string &N, IRModule *M, IRFunction::FuncTy fty)
-    : IRGlobalValue(Ty, IRValue::FunctionVal, Linkage, N){
+IRFunction::IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, const std::string &N, IRModule *M,
+                       IRFunction::FuncTy fty)
+        : IRGlobalValue(Ty, IRValue::FunctionVal, Linkage, N) {
     Parent = M;
     fTy = fty;
     /*for (unsigned i = 0, e = args.size(); i < e; ++i) {
@@ -63,9 +66,11 @@ IRFunction::IRFunction(IRFunctionType *Ty, IRGlobalValue::LinkageTypes Linkage, 
 void IRFunction::addArgument(IRArgument *arg) {
     ArgumentList.push_back(arg);
 }
+
 IRFunctionType *IRFunction::getFunctionType() const {
     return dynamic_cast<IRFunctionType *>(getOriginType());
 }
+
 /*const IRType *IRFunction::getReturnType() const {
     return getFunctionType()->getReturnType();
 }*/

@@ -13,8 +13,9 @@
 #include "iOther.h"
 #include "iPHINdoe.h"
 #include "iTerminators.h"
+
 IRInstruction::IRInstruction(IRType *Ty, unsigned int iType, const std::string &Name, IRBasicBlock *parent)
-    : IRUser(Ty, InstructionVal, Name) {
+        : IRUser(Ty, InstructionVal, Name) {
     Parent = parent;
     this->iType = iType;
 
@@ -35,7 +36,7 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
         case Br:
             return "br";
 
-        // Standard binary operators...
+            // Standard binary operators...
         case Add:
             return "add";
         case Sub:
@@ -47,7 +48,7 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
         case Rem:
             return "rem";
 
-        // Logical operators...
+            // Logical operators...
         case And:
             return "and";
         case Or:
@@ -55,7 +56,7 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
         case Xor:
             return "xor";
 
-        // SetCC operators...
+            // SetCC operators...
         case SetLE:
             return "setle";
         case SetGE:
@@ -69,7 +70,7 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
         case SetNE:
             return "setne";
 
-        // Memory instructions...
+            // Memory instructions...
         case Alloca:
             return "alloca";
         case Load:
@@ -79,7 +80,7 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
         case Memcpy:
             return "memcpy";
 
-        // Other instructions...
+            // Other instructions...
         case PHI:
             return "phi";
         case Call:
@@ -117,6 +118,7 @@ bool IRInstruction::isCommutative(unsigned int op) {
             return false;
     }
 }
+
 /**
 这里一直有一个严重的问题想要说明一下：对于一个全局变量而言，它的print方法实际上是对于它的声明时来进行使用的，basicBlock同理;
 因此在这里进行打印的时候，我对于这两个类一集其他相似情况的类我从来都不会调用它们的print方法而是单独打印
@@ -124,11 +126,11 @@ bool IRInstruction::isCommutative(unsigned int op) {
 **/
 void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) const {
     this->printPrefixName(OS);//打印instructionName
-    OS << " = " ;
+    OS << " = ";
     if (this->getType()->isFloatingPoint() && AskFloat) {
-        OS << "f" ;//打印f
+        OS << "f";//打印f
     }
-    OS << this->getOpcodeName() << "  " ;//打印add
+    OS << this->getOpcodeName() << " ";//打印add
     this->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
     OS << ", ";
@@ -137,21 +139,23 @@ void IRInstruction::BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) co
 
 void IRInstruction::SetCCIRInstPrint(std::ostream &OS) const {
     this->printPrefixName(OS);//打印instructionName
-    OS << " = " ;
+    OS << " = ";
     if (this->getType()->isFloatingPoint()) {
-        OS << "fcmp " ;//打印fcmp
+        OS << "fcmp ";//打印fcmp
     } else {
-        OS << "icmp " ;//打印icmp
+        OS << "icmp ";//打印icmp
     }
-    OS << this->getOpcodeName() << "  " ;//打印set
+    OS << this->getOpcodeName() << " ";//打印set
     this->getOperand(0)->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
     OS << " ";
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
 }
+
 void IRInstruction::printPrefixName(std::ostream &OS) const {
     OS << "%" << this->getName();
 }
+
 void IRInstruction::print(std::ostream &OS) const {
 
     IRValue *operand;
@@ -162,17 +166,19 @@ void IRInstruction::print(std::ostream &OS) const {
         // Terminators
         case Ret:
             //instruction begin
-            OS << this->getOpcodeName() << " " ;//打印ret
+            OS << this->getOpcodeName() << " ";//打印ret
 
             //打印返回值
-            if(!this->Operands.empty()){
+            if (!this->Operands.empty()) {
                 this->Operands[0].get()->getType()->print(OS);
                 this->Operands[0].get()->printPrefixName(OS);
+            } else {
+                OS << "void" << std::endl;
             }
             break;
         case Br:
             //instruction begin
-            OS << this->getOpcodeName() << "  " ;//打印ret
+            OS << this->getOpcodeName() << " ";//打印ret
 
             /******根据irbranch是不是有条件跳转来进行相对应的具体标号打印******/
             const IRBranchInst *irbranch;
@@ -181,19 +187,19 @@ void IRInstruction::print(std::ostream &OS) const {
                 //打印一个IRvalue
                 irbranch->Operands[2].get()->printPrefixName(OS);
                 //打印两个label跳转标号
-                OS << ", " ;
-                OS << "label " ;
+                OS << ", ";
+                OS << "label ";
                 irbranch->Operands[0].get()->printPrefixName(OS);
-                OS << ", label " ;
+                OS << ", label ";
                 irbranch->Operands[1].get()->printPrefixName(OS);
             } else {
-                OS << "label " ;
+                OS << "label ";
                 irbranch->Operands[0].get()->printPrefixName(OS);
             }
             OS << std::endl;
             break;
 
-        // Standard binary operators...
+            // Standard binary operators...
         case Add:
             BinaryLogicalIRInstPrint(OS, true);
             break;
@@ -209,7 +215,7 @@ void IRInstruction::print(std::ostream &OS) const {
             BinaryLogicalIRInstPrint(OS, false);
             break;
 
-        // Logical operators...
+            // Logical operators...
         case And:
             BinaryLogicalIRInstPrint(OS, false);
             break;
@@ -219,7 +225,7 @@ void IRInstruction::print(std::ostream &OS) const {
             BinaryLogicalIRInstPrint(OS, false);
             break;
 
-        // SetCC operators...
+            // SetCC operators...
         case SetLE:
             SetCCIRInstPrint(OS);
             break;
@@ -239,18 +245,18 @@ void IRInstruction::print(std::ostream &OS) const {
             SetCCIRInstPrint(OS);
             break;
 
-        // Memory instructions...
+            // Memory instructions...
         case Alloca:
             //instruction begin
             this->printPrefixName(OS);
             OS << " = ";
-            OS << this->getOpcodeName() << "  " ;//打印alloc
+            OS << this->getOpcodeName() << " ";//打印alloc
 
-            IRSequentialType * allocType;
+            IRSequentialType *allocType;
             allocType = dynamic_cast<IRSequentialType *>(this->getType());
-            if(allocType->getPrimitiveID() == IRType::PointerTyID){
+            if (allocType->getPrimitiveID() == IRType::PointerTyID) {
                 allocType->getElementType()->print(OS);
-            }else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
+            } else if (allocType->getPrimitiveID() == IRType::ArrayTyID) {
                 allocType->print(OS);
             }
             // 回退一个字符
@@ -264,17 +270,17 @@ void IRInstruction::print(std::ostream &OS) const {
         case Load:
             //instruction begin
             this->printPrefixName(OS);
-            OS << " = " << this->getOpcodeName() << "  " ;//打印load
+            OS << " = " << this->getOpcodeName() << " ";//打印load
             this->getType()->print(OS);                     //打印type
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
-            OS << ", " ;
+            OS << ", ";
 
             dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->getType()->print(OS);
             dynamic_cast<IRLoadInst *>(const_cast<IRInstruction *>(this))->getPointerOperand()->printPrefixName(OS);
             break;
         case Store:
             //instruction begin
-            OS << this->getOpcodeName() << "  " ;//打印store
+            OS << this->getOpcodeName() << " ";//打印store
 
             operand1 = this->getOperand(0);
             /******如果是一个Constant，那么可以直接调用打印方法******/
@@ -295,28 +301,28 @@ void IRInstruction::print(std::ostream &OS) const {
             //这里只可能是这三种情况，globalvarible不可能，因为它是指针
 
             // /******这里必然是IRPointerType******/
-            OS << ", " ;
+            OS << ", ";
             operand2 = dynamic_cast<IRStoreInst *>(const_cast<IRInstruction *>(this))->getPointerOperand();
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
             break;
         case Memcpy:
-        //instruction begin
-            OS << this->getOpcodeName() << "  " ;//打印store
+            //instruction begin
+            OS << this->getOpcodeName() << " ";//打印store
 
             operand1 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getSrcPointerOperand();
             operand1->getType()->print(OS);
             operand1->printPrefixName(OS);
 
             // /******这里必然是IRPointerType******/
-            OS << "  " ;
+            OS << " ";
             operand2 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getDestPointerOperand();
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
             break;
 
 
-        // Other instructions...
+            // Other instructions...
         case PHI:
             //instruction begin
             this->printPrefixName(OS);//打印instructionName
@@ -335,8 +341,12 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Call:
             //instruction begin
-            this->printPrefixName(OS);//打印instructionName
-            OS << " = " << this->getOpcodeName() << " " ;//打印call
+            if (dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this))->getCalledFunction()->getFunctionType()->getReturnType() !=
+                IRType::VoidTy) {
+                this->printPrefixName(OS);//打印instructionName
+                OS << " = ";//打印call
+            }
+            OS << this->getOpcodeName() << " ";//打印call
 
             dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this))->getCalledFunction()->Funcprint(OS);
             break;
@@ -387,7 +397,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
 
         default:
-            throw "<Invalid operator> ";
+            throw std::runtime_error("<Invalid operator> ");
     }
     OS << std::endl;
     // TODO
