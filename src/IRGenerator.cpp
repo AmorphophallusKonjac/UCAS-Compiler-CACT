@@ -444,7 +444,32 @@ std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementCont
 }
 
 std::any IRGenerator::visitJumpStatement(CACTParser::JumpStatementContext *context) {
-    return visitChildren(context);
+    if (context->Return()) {
+        IRValue *val = nullptr;
+        if (context->expression()) {
+            val = std::any_cast<IRValue *>(visit(context->expression()));
+        }
+        new IRReturnInst(val, currentIRBasicBlock);
+    } else {
+        tree::ParseTree *whileContex = context->parent;
+        CACTParser::IterationStatementContext *whilePtr = nullptr;
+        for (; whileContex; whileContex->parent) {
+            if (whilePtr = dynamic_cast<CACTParser::IterationStatementContext *>(whileContex)) {
+                break;
+            }
+        }
+        if (whilePtr == nullptr) {
+            ErrorHandler::printErrorContext(context, "is not in while");
+            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) +
+                                     ":" + std::to_string(__LINE__));
+        }
+        if (context->Break()) {
+            new IRBranchInst(whilePtr->nextBlock, nullptr, nullptr, currentIRBasicBlock);
+        } else { // continue
+            new IRBranchInst(whilePtr->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+        }
+    }
+    return {};
 }
 
 std::any IRGenerator::visitTranslationUnit(CACTParser::TranslationUnitContext *context) {
