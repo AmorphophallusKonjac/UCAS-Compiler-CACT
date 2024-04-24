@@ -233,7 +233,10 @@ selectionStatement
 //暂且不考虑else if
 
 iterationStatement
-    locals [BlockInfo * thisblockinfo]
+    locals [BlockInfo * thisblockinfo,
+            IRBasicBlock *beginBlock = nullptr,
+            IRBasicBlock *bodyBlock = nullptr,
+            IRBasicBlock *nextBlock = nullptr]
     : While LeftParen condition RightParen statement
     ;
 //暂且不考虑for循环

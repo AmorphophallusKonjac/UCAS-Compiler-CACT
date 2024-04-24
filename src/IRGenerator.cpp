@@ -389,7 +389,7 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
     currentIRFunc->addCount();
     currentIRBasicBlock = trueBlock;
     visit(context->statement(0));
-    new IRBranchInst(nextBlock, nullptr, nullptr, trueBlock);
+    new IRBranchInst(nextBlock, nullptr, nullptr, currentIRBasicBlock);
 
     //! visit false statement
     if (context->Else()) {
@@ -399,7 +399,7 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
         currentIRFunc->addCount();
         currentIRBasicBlock = falseBlock;
         visit(context->statement(1));
-        new IRBranchInst(nextBlock, nullptr, nullptr, falseBlock);
+        new IRBranchInst(nextBlock, nullptr, nullptr, currentIRBasicBlock);
     }
 
     nextBlock->setParent(currentIRFunc);
@@ -414,9 +414,33 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
 
 std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementContext *context) {
     currentBlock = context->thisblockinfo;
-    visitChildren(context);
+    context->beginBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+    currentIRFunc->addCount();
+    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+    currentIRBasicBlock = context->beginBlock;
+    context->bodyBlock = new IRBasicBlock();
+    context->nextBlock = new IRBasicBlock();
+
+    context->condition()->trueBlock = context->bodyBlock;
+    context->condition()->falseBlock = context->nextBlock;
+    visit(context->condition());
+
+    context->bodyBlock->setParent(currentIRFunc);
+    context->bodyBlock->setName(std::to_string(currentIRFunc->getCount()));
+    currentIRFunc->addCount();
+    currentIRFunc->addBasicBlock(context->bodyBlock);
+    currentIRBasicBlock = context->bodyBlock;
+    visit(context->statement());
+    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+
+    context->nextBlock->setParent(currentIRFunc);
+    context->nextBlock->setName(std::to_string(currentIRFunc->getCount()));
+    currentIRFunc->addCount();
+    currentIRFunc->addBasicBlock(context->nextBlock);
+    currentIRBasicBlock = context->nextBlock;
+
     currentBlock = currentBlock->getParentBlock();
-    return visitChildren(context);
+    return {};
 }
 
 std::any IRGenerator::visitJumpStatement(CACTParser::JumpStatementContext *context) {

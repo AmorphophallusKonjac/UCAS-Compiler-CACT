@@ -17,5 +17,17 @@ int main() {
         x = 2;
     }
     y = 2;
+
+    int i = 0;
+    i = i + 10;
+    while (i > 1) {
+        if (!a && b || c) {
+            x = 10;
+        }
+        else {
+            y = 11;
+        }
+        z = 12;
+    }
     return 0;
 }
