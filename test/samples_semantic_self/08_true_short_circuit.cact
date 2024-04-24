@@ -26,8 +26,10 @@ int main() {
         }
         else {
             y = 11;
+            return 100;
         }
         z = 12;
+        return 1000;
     }
     return 0;
 }
