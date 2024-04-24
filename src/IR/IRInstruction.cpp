@@ -162,11 +162,13 @@ void IRInstruction::print(std::ostream &OS) const {
         // Terminators
         case Ret:
             //instruction begin
-            OS << this->getOpcodeName() << " " << std::endl;//打印ret
+            OS << this->getOpcodeName() << " " ;//打印ret
 
             //打印返回值
-            if(this->Operands[0] != nullptr)
-                this->Operands[0].get()->print(OS);//打印一个IRconstant
+            if(!this->Operands.empty()){
+                this->Operands[0].get()->getType()->print(OS);
+                this->Operands[0].get()->printPrefixName(OS);
+            }
             break;
         case Br:
             //instruction begin
