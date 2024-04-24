@@ -60,10 +60,14 @@ std::any IRGenerator::visitUnaryExpression(CACTParser::UnaryExpressionContext *c
             currentIRFunc->addCount();
             return ret;
         } else {  // "!"
-            auto ret = dynamic_cast<IRValue *>(IRBinaryOperator::createNot(
-                    val, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
-            currentIRFunc->addCount();
-            return ret;
+            if (context->unaryExpression()->trueBlock) {
+                return val;
+            } else {
+                auto ret = dynamic_cast<IRValue *>(IRBinaryOperator::createNot(
+                        val, std::to_string(currentIRFunc->getCount()), currentIRBasicBlock));
+                currentIRFunc->addCount();
+                return ret;
+            }
         }
     } else {  // function
 
