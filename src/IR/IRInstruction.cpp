@@ -144,7 +144,7 @@ void IRInstruction::SetCCIRInstPrint(std::ostream &OS) const {
         OS << "icmp " ;//打印icmp
     }
     OS << this->getOpcodeName() << "  " ;//打印set
-    this->getType()->print(OS);                     //打印type
+    this->getOperand(0)->getType()->print(OS);                     //打印type
     this->getOperand(0)->printPrefixName(OS);       //打印第一个操作数
     OS << " ";
     this->getOperand(1)->printPrefixName(OS);       //打印第二个操作数
@@ -165,7 +165,8 @@ void IRInstruction::print(std::ostream &OS) const {
             OS << this->getOpcodeName() << " " << std::endl;//打印ret
 
             //打印返回值
-            this->Operands[0].get()->print(OS);//打印一个IRconstant
+            if(this->Operands[0] != nullptr)
+                this->Operands[0].get()->print(OS);//打印一个IRconstant
             break;
         case Br:
             //instruction begin
