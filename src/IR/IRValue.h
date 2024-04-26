@@ -66,7 +66,7 @@ public:
     /******知道这个IRvalue是哪一个子类******/
     inline ValueTy getValueType() const { return vTy; }
 
-    //    void replaceAllUsesWith(IRValue *V);
+    void replaceAllUsesWith(IRValue *V);
 
     /******对IRValue的Uses进行操作******/
     /**

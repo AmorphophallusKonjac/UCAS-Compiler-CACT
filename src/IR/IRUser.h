@@ -28,6 +28,8 @@ public:
      /******获得操作数个数******/
     inline unsigned getNumOperands() const { return Operands.size(); }
 
+     void replaceUsesOfWith(IRValue *From, IRValue *To);
+
     static inline bool classof(const IRUser *) { return true; }
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::GlobalVariableVal ||

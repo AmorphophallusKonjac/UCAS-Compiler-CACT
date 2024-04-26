@@ -10,6 +10,13 @@ IRValue::IRValue(IRType *Ty, IRValue::ValueTy vty, std::string name) : name(std:
     vTy = vty;
 }
 
+void IRValue::replaceAllUsesWith(IRValue *V) {
+    while (!Uses.empty()) {
+        IRUse *U = Uses.back();
+        U->set(V);
+    }
+}
+
 IRUse::IRUse(IRValue *v, IRUser *user) : val(v), user(user) {
     if (val)
         val->addUse(*this);
@@ -24,6 +31,7 @@ IRUse::~IRUse() {
     if (val)
         val->killUse(*this);
 }
+
 void IRUse::set(IRValue *Val) {
     if (val)
         val->killUse(*this);
