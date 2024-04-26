@@ -2,12 +2,14 @@
 #define COMPILER_IRINSTRUCTION_H
 
 #pragma once
+
 #include "IRUser.h"
 #include "IRBasicBlock.h"
 
 class IRInstruction : public IRUser {
 private:
     IRBasicBlock *Parent;
+
     void setParent(IRBasicBlock *P);
 
 protected:
@@ -33,14 +35,17 @@ public:
     virtual bool mayWriteToMemory() const { return false; }
 
     unsigned getOpcode() const { return iType; }
+
     virtual const char *getOpcodeName() const {
         return getOpcodeName(getOpcode());
     }
+
     static const char *getOpcodeName(unsigned OpCode);
 
     inline bool isTerminator() const {// Instance of TerminatorInst?
         return iType >= TermOpsBegin && iType < TermOpsEnd;
     }
+
     inline bool isBinaryOp() const {
         return iType >= BinaryOpsBegin && iType < BinaryOpsEnd;
     }
@@ -52,6 +57,7 @@ public:
      * @return bool
      */
     bool isAssociative() const { return isAssociative(getOpcode(), getType()); }
+
     static bool isAssociative(unsigned op, const IRType *Ty);
 
     /**
@@ -61,43 +67,53 @@ public:
      * @return
      */
     bool isCommutative() const { return isCommutative(getOpcode()); }
+
     static bool isCommutative(unsigned op);
 
     void BinaryLogicalIRInstPrint(std::ostream &OS, bool AskFloat) const;
+
     void SetCCIRInstPrint(std::ostream &OS) const;
+
     void printPrefixName(std::ostream &OS) const override;
+
     void print(std::ostream &OS) const override;
 
     static inline bool classof(const IRInstruction *I) { return true; }
+
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::InstructionVal;
     }
+
     enum TermOps {// These terminate basic blocks
-        #define FIRST_TERM_INST(N) TermOpsBegin = N,
-        #define HANDLE_TERM_INST(N, OPC, CLASS) OPC = N,
-        #define LAST_TERM_INST(N) TermOpsEnd = N + 1,
-        #include "IR/Instruction.def"
+#define FIRST_TERM_INST(N) TermOpsBegin = N,
+#define HANDLE_TERM_INST(N, OPC, CLASS) OPC = N,
+#define LAST_TERM_INST(N) TermOpsEnd = N + 1,
+
+#include "IR/Instruction.def"
     };
 
     enum BinaryOps {
-        #define FIRST_BINARY_INST(N) BinaryOpsBegin = N,
-        #define HANDLE_BINARY_INST(N, OPC, CLASS) OPC = N,
-        #define LAST_BINARY_INST(N) BinaryOpsEnd = N + 1,
-        #include "IR/Instruction.def"
+#define FIRST_BINARY_INST(N) BinaryOpsBegin = N,
+#define HANDLE_BINARY_INST(N, OPC, CLASS) OPC = N,
+#define LAST_BINARY_INST(N) BinaryOpsEnd = N + 1,
+
+#include "IR/Instruction.def"
     };
 
     enum MemoryOps {
-        #define FIRST_MEMORY_INST(N) MemoryOpsBegin = N,
-        #define HANDLE_MEMORY_INST(N, OPC, CLASS) OPC = N,
-        #define LAST_MEMORY_INST(N) MemoryOpsEnd = N + 1,
-        #include "IR/Instruction.def"
+#define FIRST_MEMORY_INST(N) MemoryOpsBegin = N,
+#define HANDLE_MEMORY_INST(N, OPC, CLASS) OPC = N,
+#define LAST_MEMORY_INST(N) MemoryOpsEnd = N + 1,
+
+#include "IR/Instruction.def"
     };
 
     enum OtherOps {
-        #define FIRST_OTHER_INST(N) OtherOpsBegin = N,
-        #define HANDLE_OTHER_INST(N, OPC, CLASS) OPC = N,
-        #define LAST_OTHER_INST(N) OtherOpsEnd = N + 1,
-        #include "IR/Instruction.def"
+#define FIRST_OTHER_INST(N) OtherOpsBegin = N,
+#define HANDLE_OTHER_INST(N, OPC, CLASS) OPC = N,
+#define LAST_OTHER_INST(N) OtherOpsEnd = N + 1,
+
+#include "IR/Instruction.def"
     };
 };
 

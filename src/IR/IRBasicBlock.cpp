@@ -9,7 +9,11 @@
 #include <iostream>
 
 void IRBasicBlock::addInstruction(IRInstruction *inst) {
-    InstList.push_back(inst);
+    if (!hasTerminator()) {
+        InstList.push_back(inst);
+    } else {
+        inst->dropAllReferences();
+    }
 }
 
 void IRBasicBlock::setParent(IRFunction *parent) {
@@ -34,7 +38,7 @@ IRTerminatorInst *IRBasicBlock::getTerminator() {
 }
 
 void IRBasicBlock::printPrefixName(std::ostream &OS) const {
-    OS << "%" << this->getName() ;
+    OS << "%" << this->getName();
 }
 
 void IRBasicBlock::print(std::ostream &OS) const {
@@ -42,11 +46,11 @@ void IRBasicBlock::print(std::ostream &OS) const {
     this->printPrefixName(OS);
 
     /******通过这个uses边去遍历它的user,查明是哪些块使用了它******/
-    OS << ":                                               ; preds =" ;
+    OS << ":                                               ; preds =";
     for (auto iruseptr: this->getUses()) {
-        OS << " " ;//获得使用这个块的终止语句的父块
+        OS << " ";//获得使用这个块的终止语句的父块
         dynamic_cast<IRTerminatorInst *>(iruseptr->getUser())->getParent()->printPrefixName(OS);
-        OS << "," ;//获得使用这个块的终止语句的父块
+        OS << ",";//获得使用这个块的终止语句的父块
     }
     OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
     OS << std::endl;
@@ -56,4 +60,11 @@ void IRBasicBlock::print(std::ostream &OS) const {
         inst->print(OS);
     }
     // TODO
+}
+
+bool IRBasicBlock::hasTerminator() {
+    if (!InstList.empty() && getTerminator()) {
+        return true;
+    }
+    return false;
 }

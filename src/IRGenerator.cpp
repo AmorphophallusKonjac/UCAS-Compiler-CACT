@@ -486,7 +486,11 @@ std::any IRGenerator::visitFunctionDefinition(CACTParser::FunctionDefinitionCont
     currentFunc = globalBlock->lookUpFunc(context->Identifier()->getText());
     currentIRFunc = dynamic_cast<IRFunction *>(currentFunc->getIRValue());
     currentIRBasicBlock = currentIRFunc->getEntryBlock();
-    return visitChildren(context);
+    visitChildren(context);
+    if (currentIRFunc->getFunctionType()->getReturnType() == IRType::VoidTy) {
+        new IRReturnInst(nullptr, currentIRBasicBlock);
+    }
+    return {};
 }
 
 std::any IRGenerator::visitFunctionFParams(CACTParser::FunctionFParamsContext *context) {

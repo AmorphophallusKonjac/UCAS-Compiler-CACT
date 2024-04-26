@@ -20,17 +20,23 @@ public:
         assert(i < Operands.size() && "getOperand() out of range!");
         return Operands[i];
     }
+
     inline void setOperand(unsigned i, IRValue *Val) {
         assert(i < Operands.size() && "setOperand() out of range!");
         Operands[i] = Val;
     }
 
-     /******获得操作数个数******/
+    /******获得操作数个数******/
     inline unsigned getNumOperands() const { return Operands.size(); }
 
-     void replaceUsesOfWith(IRValue *From, IRValue *To);
+    void dropAllReferences() {
+        Operands.clear();
+    }
+
+    void replaceUsesOfWith(IRValue *From, IRValue *To);
 
     static inline bool classof(const IRUser *) { return true; }
+
     static inline bool classof(const IRValue *V) {
         return V->getValueType() == IRValue::GlobalVariableVal ||
                V->getValueType() == IRValue::ConstantVal ||

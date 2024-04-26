@@ -11,6 +11,9 @@ IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *IfFalse, IRValue 
         Operands.emplace_back(IfFalse, this);
         Operands.emplace_back(cond, this);
     }
+    if (parent && parent->getTerminator() != this) {
+        dropAllReferences();
+    }
 }
 
 IRBranchInst::IRBranchInst(IRBasicBlock *IfTrue, IRBasicBlock *parent)
