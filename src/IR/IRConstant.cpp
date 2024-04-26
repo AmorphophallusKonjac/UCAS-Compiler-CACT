@@ -46,9 +46,11 @@ void IRConstant::printPrefixName(std::ostream &OS) const {
     }
 }
 void IRConstant::print(std::ostream &OS) const {
+    static int print_cnt = 0;
     this->getType()->print(OS);
     this->printPrefixName(OS);
-
+    print_cnt++;
+    //OS << print_cnt << std::endl;
 }
 
 IRConstant *IRConstant::getNullValue(const IRType *Ty) {

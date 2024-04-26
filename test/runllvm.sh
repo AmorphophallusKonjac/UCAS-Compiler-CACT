@@ -2,8 +2,8 @@
 #set -x
 
 root_folder="."
-regex_folder="\./samples_semantic.*"
-regex_file="\./[0-9][0-9]_true.*\.cact"
+regex_folder="\./samples.*"
+regex_file="\./.*\.cact"
 
 CXX="clang++"
 CLANGFLAGS="-x c++ -S" 
