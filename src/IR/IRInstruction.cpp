@@ -173,7 +173,7 @@ void IRInstruction::print(std::ostream &OS) const {
                 this->Operands[0].get()->getType()->print(OS);
                 this->Operands[0].get()->printPrefixName(OS);
             } else {
-                OS << "void" << std::endl;
+                OS << "void";
             }
             break;
         case Br:
@@ -196,7 +196,6 @@ void IRInstruction::print(std::ostream &OS) const {
                 OS << "label ";
                 irbranch->Operands[0].get()->printPrefixName(OS);
             }
-            OS << std::endl;
             break;
 
             // Standard binary operators...
@@ -327,17 +326,17 @@ void IRInstruction::print(std::ostream &OS) const {
         case PHI:
             //instruction begin
             this->printPrefixName(OS);//打印instructionName
-            OS << " = " << std::endl;
-            OS << this->getOpcodeName() << " " << std::endl;//打印phi
+            OS << " = ";
+            OS << this->getOpcodeName() << " ";//打印phi
 
             const IRPHINode *irphinode;
             irphinode = dynamic_cast<const IRPHINode *>(this);
             for (unsigned i = 0; i < irphinode->getNumIncomingValues(); i++) {
-                OS << "[" << std::endl;
+                OS << "[";
                 irphinode->getIncomingValue(i)->printPrefixName(OS);//打印赋值
-                OS << ", " << std::endl;
+                OS << ", ";
                 irphinode->getIncomingBlock(i)->printPrefixName(OS);//打印basicblock
-                OS << "] " << std::endl;
+                OS << "] ";
             }
             break;
         case Call:
@@ -354,8 +353,8 @@ void IRInstruction::print(std::ostream &OS) const {
         case Shl:
             //instruction begin
             this->printPrefixName(OS);//打印instructionName
-            OS << " = " << std::endl;
-            OS << this->getOpcodeName() << " " << std::endl;//打印shl
+            OS << " = ";
+            OS << this->getOpcodeName() << " ";//打印shl
             this->getType()->print(OS);                     //打印type
 
             //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
@@ -376,8 +375,8 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Shr:
             this->printPrefixName(OS);//打印instructionName
-            OS << " = " << std::endl;
-            OS << this->getOpcodeName() << " " << std::endl;//打印shl
+            OS << " = ";
+            OS << this->getOpcodeName() << " ";//打印shl
             this->getType()->print(OS);                     //打印type
 
             //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType

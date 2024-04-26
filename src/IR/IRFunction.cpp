@@ -44,6 +44,9 @@ void IRFunction::print(std::ostream &OS) const {
     OS << " {" << std::endl;
     for (auto basicblock: BasicBlocks) {
         basicblock->print(OS);
+        if (basicblock != BasicBlocks.back()) {
+            OS << std::endl;
+        }
     }
     OS << "}" << std::endl;
 
