@@ -18,7 +18,9 @@ public:
     static IRConstant *getAllOnesValue(const IRType *Ty);
 
     void print(std::ostream &OS) const override;
-    void printPrefixName(std::ostream &OS) const override ;
+    void printPrefixName(std::ostream &OS) const override;
+    bool jugdeZero(IRConstant* irconst) const;
+    void zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const;
 };
 
 class IRConstantBool : public IRConstant {
@@ -106,6 +108,7 @@ public:
 
 class IRConstantArray : public IRConstant {
     IRArrayType *arrayTy;
+    unsigned zeroNum;
 
 public:
     /******构造******/

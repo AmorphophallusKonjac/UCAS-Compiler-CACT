@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <vector>
 
 IRConstantBool::IRConstantBool(bool V) : IRConstant(IRType::BoolTy) {
     Val = V;
@@ -18,6 +19,31 @@ IRConstantDouble *IRConstantDouble::Null = new IRConstantDouble(0);
 std::map<int, IRConstantInt *> IRConstantInt::constantMap;
 std::map<float, IRConstantFloat *> IRConstantFloat::constantMap;
 std::map<double, IRConstantDouble *> IRConstantDouble::constantMap;
+
+bool IRConstant::jugdeZero(IRConstant* irconst) const {
+    /******根据IRConstant中的type类型来打印出它的value值******/
+    switch (irconst->getType()->getPrimitiveID()) {
+        case IRType::IntTyID:
+            return dynamic_cast<const IRConstantInt *>(irconst)->getRawValue() == 0;
+        case IRType::FloatTyID:
+            return dynamic_cast<const IRConstantFloat *>(irconst)->getRawValue() == 0;
+        case IRType::DoubleTyID:
+            return dynamic_cast<const IRConstantDouble *>(irconst)->getRawValue() == 0;
+        case IRType::BoolTyID:
+            return dynamic_cast<const IRConstantBool *>(irconst)->getRawValue() == false;
+    }
+}
+
+void IRConstant::zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const {
+    if(zeroArray.size() >= 10)
+        OS << "zeroinitializer(" << zeroArray.size() << "), ";
+    else if(!zeroArray.empty()){
+        for (auto zeroconst : zeroArray) {
+            zeroconst->print(OS);
+            OS << ", ";
+        }
+    }
+}
 
 void IRConstant::printPrefixName(std::ostream &OS) const {
     /******根据IRConstant中的type类型来打印出它的value值******/
@@ -36,15 +62,30 @@ void IRConstant::printPrefixName(std::ostream &OS) const {
             break;
         case IRType::ArrayTyID:
             OS << "[";
+            std::vector<IRConstant*> zeroArray;
             for(auto iruse: dynamic_cast<const IRConstantArray *>(this)->getValues()){
-                dynamic_cast<IRConstant*>(iruse.get())->print(OS);
-                OS << ", ";
+                /***遇到0先压进vector不处理***/
+                if(jugdeZero(dynamic_cast<IRConstant*>(iruse.get()))){
+                    zeroArray.push_back(dynamic_cast<IRConstant*>(iruse.get()));
+                }
+                /***没有0了则进行处理***/
+                else{
+                    zeroProcess(zeroArray,OS);
+                    zeroArray.clear();//清空vector
+
+                    dynamic_cast<IRConstant*>(iruse.get())->print(OS);
+                    OS << ", ";
+                }
             }
+            zeroProcess(zeroArray,OS);
+            zeroArray.clear();//清空vector
+
             // 回退2个字符
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
             OS << "]";
     }
 }
+
 void IRConstant::print(std::ostream &OS) const {
     static int print_cnt = 0;
     this->getType()->print(OS);

@@ -930,7 +930,7 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     this->visit(context->compoundStatement());  // 进入函数体
     context->thisblockinfo =
             context->compoundStatement()->thisblockinfo;  // 接收compoundstatement创建的新的blockinfo
-    if (context->thisblockinfo->getReturnSign() == false) {
+    if (context->thisblockinfo->getReturnSign() == false && currentFunc->getDataType()!=DataType::VOID) {//保证不是void类型，void可以不返回
         ErrorHandler::printErrorContext(
                 context,
                 "not all path for return");  // 每个函数退出的时候检查是否可以满足所有路径都有返回
