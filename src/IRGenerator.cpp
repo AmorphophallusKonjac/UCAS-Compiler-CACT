@@ -455,7 +455,7 @@ std::any IRGenerator::visitJumpStatement(CACTParser::JumpStatementContext *conte
     } else {
         tree::ParseTree *whileContex = context->parent;
         CACTParser::IterationStatementContext *whilePtr = nullptr;
-        for (; whileContex; whileContex->parent) {
+        for (; whileContex; whileContex = whileContex->parent) {
             if (whilePtr = dynamic_cast<CACTParser::IterationStatementContext *>(whileContex)) {
                 break;
             }

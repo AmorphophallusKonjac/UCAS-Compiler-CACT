@@ -41,4 +41,9 @@ add_test(
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/semantic_test.sh
 )
 
+add_test(
+        NAME code_gen
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/code_gen.sh
+)
+
 set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
