@@ -39,10 +39,10 @@ void matrix_stencil(int d1, int d2){
 int main(){
     int x, y, z, s, i, j;
     float f;
-    x = get_int();
-    y = get_int();
-    z = get_int();
-    s = get_int();
+    //x = get_int();
+    //y = get_int();
+    //z = get_int();
+    //s = get_int();
 
     matrix_multiply(x, y, z);
     matrix_stencil(x, y);
@@ -50,8 +50,8 @@ int main(){
     i = 0;
     while( i < s ){
         f = C[ J[i] ][ K[i] ];
-        print_float( f );
-        print_double( E[ J[i] ][ K[i] ] );
+        //print_float( f );
+        //print_double( E[ J[i] ][ K[i] ] );
         i = i + 1;
     }
 

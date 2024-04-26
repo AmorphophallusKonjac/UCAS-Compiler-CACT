@@ -49,10 +49,10 @@ int lenLongestFibSubseq(int arrSize){
 
 int main(){
     int s, r;
-    s = get_int();
+    //s = get_int();
 
     r = lenLongestFibSubseq(s);
-    print_int(r);
+    //print_int(r);
 
     return 0;
 }

@@ -129,10 +129,10 @@ void simplified_tim_sort(int nums[], int tail){
 
 int main(){
     int i = 0, tail;
-    tail = get_int();
+    //tail = get_int();
     simplified_tim_sort(array, tail);
     while( i <= tail ) {
-        print_int(array[i]);
+        //print_int(array[i]);
         i = i + 1;
     }
     return 0;
