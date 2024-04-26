@@ -205,6 +205,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Sub:
             BinaryLogicalIRInstPrint(OS, true);
+            break;
         case Mul:
             BinaryLogicalIRInstPrint(OS, true);
             break;
