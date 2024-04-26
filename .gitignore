@@ -31,3 +31,4 @@ test/runllvm.sh
 test/*/ll
 test/*/s
 IRgen
+test/samples_codegen_llvmtest
