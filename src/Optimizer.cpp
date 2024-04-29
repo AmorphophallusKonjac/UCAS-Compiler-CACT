@@ -1,5 +1,6 @@
 #include "Optimizer.h"
 #include "Pass/RenamePass.h"
+#include "Pass/CutDeadBlockPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -17,5 +18,6 @@ void Optimizer::addPass(Pass *pass) {
 }
 
 void Optimizer::build() {
-    addPass(new RenamePass("RenamePass"));
+//    addPass(new RenamePass("RenamePass"));
+    addPass(new CutDeadBlockPass("CuntDeadBlockPass"));
 }
