@@ -6,7 +6,8 @@ regex_folder="\./samples.*"
 regex_file="\./.*\.cact"
 
 CXX="clang++"
-CLANGFLAGS="-x c++ -S" 
+#CLANGFLAGS="-x c++ -S" 
+CLANGFLAGS="-x c++ -Xclang -disable-O0-optnone -O0 -emit-llvm -S" 
 
 find "$root_folder" -maxdepth 1 -type d -regex "$regex_folder"| while read -r folder; do
     echo "$folder"  # 在这里可以执行你想要的操作
