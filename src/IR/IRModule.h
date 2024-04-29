@@ -32,6 +32,10 @@ public:
 
     IRFunction *getMainFunction();
 
+    const std::vector<IRFunction *> &getFuncList() const;
+
+    const std::vector<IRGlobalVariable *> &getVarList() const;
+
     /******print方法******/
     void print(std::ostream &OS);
 };

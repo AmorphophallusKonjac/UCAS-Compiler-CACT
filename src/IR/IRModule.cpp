@@ -44,3 +44,11 @@ IRFunction *IRModule::getFunction(const std::string& name) {
 IRFunction *IRModule::getMainFunction() {
     return getFunction("main");
 }
+
+const std::vector<IRFunction *> &IRModule::getFuncList() const {
+    return funcList;
+}
+
+const std::vector<IRGlobalVariable *> &IRModule::getVarList() const {
+    return varList;
+}

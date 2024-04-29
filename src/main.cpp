@@ -3,6 +3,7 @@
 
 #include "IR/IRModule.h"
 #include "FrontEnd.h"
+#include "Optimizer.h"
 
 using namespace antlr4;
 
@@ -30,8 +31,14 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
-    frontEnd.print();
+    Optimizer opt(&ir);
 
+    // 在 build 方法中 new 自己定义的 pass 并添加进 opt
+    opt.build();
+
+    opt.run();
+
+    frontEnd.print();
 
     return 0;
 }
