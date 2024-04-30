@@ -4,13 +4,14 @@
 void FunctionPass::run(IRModule &M) {
     auto funcList = M.getFuncList();
     for (auto func: funcList) {
-        runOnFunction(*func);
+        if (func->getFuntTy() == IRFunction::Declared)
+            runOnFunction(*func);
     }
 }
 
 void BasicBlockPass::runOnFunction(IRFunction &F) {
     auto BBList = F.getBasicBlockList();
-    for (auto BB : BBList) {
+    for (auto BB: BBList) {
         runOnBasicBlock(*BB);
     }
 }
@@ -20,7 +21,7 @@ void Pass::addToOpt(Optimizer &opt) {
 }
 
 Pass::Pass(std::string name)
-    : name(name) {
+        : name(name) {
 
 }
 

@@ -1,6 +1,7 @@
 #ifndef COMPILER_MEMTOREGPASS_H
 #define COMPILER_MEMTOREGPASS_H
 
+#include <stack>
 #include "Pass.h"
 #include "IR/iMemory.h"
 #include "utils/DominatorTree.h"
@@ -30,6 +31,8 @@ private:
 
     static bool isAncestor(DominatorTree *pTree, DominatorTree *pTree1);
 
+    static void renamePass(DominatorTree *pTree, IRAllocaInst *pInst, std::vector<IRInstruction *> *pVector,
+                           std::stack<IRValue *> *pStack);
 };
 
 

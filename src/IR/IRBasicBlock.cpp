@@ -68,3 +68,8 @@ bool IRBasicBlock::hasTerminator() {
     }
     return false;
 }
+
+void IRBasicBlock::addInstructionToFront(IRInstruction *inst) {
+    inst->setParent(this);
+    InstList.insert(InstList.begin(), inst);
+}

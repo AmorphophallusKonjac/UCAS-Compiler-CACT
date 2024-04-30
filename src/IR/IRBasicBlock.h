@@ -1,6 +1,5 @@
 #ifndef COMPILER_IRBASICBLOCK_H
 #define COMPILER_IRBASICBLOCK_H
-#pragma once
 
 #include "IRFunction.h"
 #include "IRInstruction.h"
@@ -32,6 +31,7 @@ public:
 
     /******IRBasicBlock获得指令列表******/
     bool hasTerminator();
+
     IRTerminatorInst *getTerminator();//获得终止指令
     std::vector<IRInstruction *> &getInstList() { return InstList; }
 
@@ -42,8 +42,9 @@ public:
 
     /******向InstList中添加instruction******/
     void addInstruction(IRInstruction *inst);
+    void addInstructionToFront(IRInstruction *inst);
 
-    DominatorTree &getNode() {return node;}
+    DominatorTree &getNode() { return node; }
 
     /******classof方法，判断从父类下来的子类是不是对应的IRBasicBlock类******/
     static inline bool classof(const IRBasicBlock *BB) { return true; }

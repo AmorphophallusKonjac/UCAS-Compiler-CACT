@@ -3,15 +3,27 @@
 
 
 #include "IRInstruction.h"
+
 class IRBasicBlock;
 
 class IRPHINode : public IRInstruction {
-    IRPHINode(const IRPHINode &PN);
+private:
+    IRPHINode(const IRPHINode &PN) : IRInstruction(PN.getType(), IRInstruction::PHI) {
+        unsigned num = PN.getNumIncomingValues();
+        for (int i = 0; i < num; ++i) {
+            addIncoming(PN.getIncomingValue(i), getIncomingBlock(i));
+        }
+    }
 
+    IRAllocaInst *var;
 public:
-    IRPHINode(IRType *Ty, const std::string &Name = "",
-              IRBasicBlock *InsertBefore = nullptr)
-        : IRInstruction(Ty, IRInstruction::PHI, Name, InsertBefore) {
+    IRAllocaInst *getVar() const {
+        return var;
+    }
+
+    explicit IRPHINode(IRType *Ty, IRAllocaInst *var, const std::string &Name = "",
+                       IRBasicBlock *InsertBefore = nullptr)
+            : IRInstruction(Ty, IRInstruction::PHI, Name, InsertBefore), var(var) {
     }
 
     unsigned getNumIncomingValues() const { return Operands.size() / 2; }
@@ -21,12 +33,18 @@ public:
         assert(i * 2 < Operands.size() && "Invalid value number!");
         return Operands[i * 2];
     }
+
     void setIncomingValue(unsigned i, IRValue *V) {
         assert(i * 2 < Operands.size() && "Invalid value number!");
         Operands[i * 2] = V;
     }
+
     static inline unsigned getOperandNumForIncomingValue(unsigned i) {
         return i * 2;
+    }
+
+    IRInstruction *clone() const override {
+        return new IRPHINode(*this);
     }
 
     /******奇数index是对应的basicblock******/
@@ -35,10 +53,12 @@ public:
         assert(i * 2 + 1 < Operands.size() && "Invalid value number!");
         return (IRBasicBlock *) Operands[i * 2 + 1].get();
     }
+
     void setIncomingBlock(unsigned i, IRBasicBlock *BB) {
         assert(i * 2 + 1 < Operands.size() && "Invalid value number!");
         Operands[i * 2 + 1] = (IRValue *) BB;
     }
+
     static unsigned getOperandNumForIncomingBlock(unsigned i) {
         return i * 2 + 1;
     }
@@ -61,6 +81,7 @@ public:
             if (getIncomingBlock(i) == BB) return i;
         return -1;
     }
+
     IRValue *getIncomingValueForBlock(const IRBasicBlock *BB) const {
         return getIncomingValue(getBasicBlockIndex(BB));
     }
@@ -68,6 +89,7 @@ public:
 
     /// Methods for support type inquiry through isa, cast, and dyn_cast:
     static inline bool classof(const IRPHINode *) { return true; }
+
     static inline bool classof(const IRInstruction *I) {
         return I->getOpcode() == IRInstruction::PHI;
     }

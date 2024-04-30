@@ -10,14 +10,14 @@ class IRInstruction : public IRUser {
 private:
     IRBasicBlock *Parent;
 
-    void setParent(IRBasicBlock *P);
-
 protected:
+
     unsigned iType;// InstructionType: The opcode of the instruction
     IRInstruction(IRType *Ty, unsigned iType, const std::string &Name = "",
                   IRBasicBlock *parent = nullptr);
 
 public:
+
     /**
      * clone - clone the same instruction like this, except following
      * the instruction has no name
@@ -27,6 +27,8 @@ public:
     virtual IRInstruction *clone() const = 0;
 
     inline IRBasicBlock *getParent() { return Parent; }
+
+    void setParent(IRBasicBlock *P);
 
     /**
      * mayWriteToMemory - Return true if this instruction may modify memory.
