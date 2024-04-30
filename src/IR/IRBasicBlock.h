@@ -44,7 +44,7 @@ public:
     void addInstruction(IRInstruction *inst);
     void addInstructionToFront(IRInstruction *inst);
 
-    DominatorTree &getNode() { return node; }
+    DominatorTree *getNode() { return &node; }
 
     /******classof方法，判断从父类下来的子类是不是对应的IRBasicBlock类******/
     static inline bool classof(const IRBasicBlock *BB) { return true; }

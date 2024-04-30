@@ -16,7 +16,7 @@ MemToRegPass::MemToRegPass(std::string name) : FunctionPass(std::move(name)) {
 
 void MemToRegPass::runOnFunction(IRFunction &F) {
     std::vector<IRAllocaInst *> Allocs;
-    DominatorTree &root = getDominatorTree(&F);
+    DominatorTree *root = getDominatorTree(&F);
     auto entryBB = F.getEntryBlock();
     while (true) {
         Allocs.clear();
@@ -30,7 +30,7 @@ void MemToRegPass::runOnFunction(IRFunction &F) {
         }
         if (Allocs.empty())
             break;
-        mem2reg(Allocs, &root, F.getBasicBlockList());
+        mem2reg(Allocs, root, F.getBasicBlockList());
     }
 }
 
@@ -38,16 +38,16 @@ bool MemToRegPass::isAllocaPromotable(IRAllocaInst *AI) {
     return AI->getAllocatedType()->isPrimitiveType();
 }
 
-DominatorTree &MemToRegPass::getDominatorTree(IRFunction *F) {
+DominatorTree *MemToRegPass::getDominatorTree(IRFunction *F) {
     auto root = F->getEntryBlock()->getNode();
     std::vector<DominatorTree *> vertex;
-    dfs(nullptr, &root, vertex);
+    dfs(nullptr, root, vertex);
     for (unsigned i = vertex.size() - 1; i > 0; i = i - 1) {
         auto node = vertex[i];
         auto parent = node->parent;
         auto s = parent;
         for (auto use: node->basicBlock->getUses()) {
-            auto v = &dynamic_cast<IRTerminatorInst *>(use->getUser())->getParent()->getNode();
+            auto v = dynamic_cast<IRTerminatorInst *>(use->getUser())->getParent()->getNode();
             DominatorTree *newS;
             if (v->dfnum <= node->dfnum) {
                 newS = v;
@@ -78,24 +78,21 @@ DominatorTree &MemToRegPass::getDominatorTree(IRFunction *F) {
             n->idom->children.push_back(n);
         }
     }
-    computeDominanceFrontier(&F->getEntryBlock()->getNode());
+    computeDominanceFrontier(F->getEntryBlock()->getNode());
     return F->getEntryBlock()->getNode();
 }
 
 void MemToRegPass::dfs(DominatorTree *p, DominatorTree *n, std::vector<DominatorTree *> &vertex) {
     assert(n && "wtf");
     if (n->dfnum == 0) {
-        if (p)
-            n->dfnum = p->dfnum + 1;
-        else
-            n->dfnum = 1;
         vertex.push_back(n);
+        n->dfnum = vertex.size();
         n->parent = p;
         auto BB = n->basicBlock;
         assert(BB->hasTerminator() && "BB has no terminator");
         auto terminator = BB->getTerminator();
         for (unsigned i = 0, e = terminator->getNumSuccessors(); i != e; ++i) {
-            dfs(n, &terminator->getSuccessor(i)->getNode(), vertex);
+            dfs(n, terminator->getSuccessor(i)->getNode(), vertex);
         }
     }
 }
@@ -144,17 +141,17 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
                 //! 对于变量的store其pointer一定是allca指令
                 if (!dynamic_cast<IRAllocaInst *>(storeInst->getPointerOperand())) continue;
 
-                if (auto inst = lastStore[storeInst->getPointerOperand()]) {
-                    bin.push_back(dynamic_cast<IRInstruction *>(inst));
+                if (auto lasInst = lastStore[storeInst->getPointerOperand()]) {
+                    bin.push_back(dynamic_cast<IRInstruction *>(lasInst));
                 }
                 lastStore[storeInst->getPointerOperand()] = storeInst;
             }
         }
         for (auto trash: bin) {
+            trash->dropAllReferences();
             instList.erase(std::find(instList.begin(), instList.end(), trash));
         }
     }
-
     /*!
      * 开始对每个变量开始优化
      */
@@ -169,10 +166,10 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
             auto useInst = dynamic_cast<IRInstruction *>(use->getUser());
             auto block = useInst->getParent();
             if (IRLoadInst::classof(useInst)) {
-                userNode.insert(&block->getNode());
+                userNode.insert(block->getNode());
             } else if (IRStoreInst::classof(useInst)) {
-                defineNode.insert(&block->getNode());
-                block->getNode().orig.insert(alloc);
+                defineNode.insert(block->getNode());
+                block->getNode()->orig.insert(alloc);
             } else {
                 assert(0 && "wtf");
             }
@@ -200,7 +197,6 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
                     bin.push_back(useInst);
                 }
             }
-
         } else {
             /*!
              * 对于其他，按正常ssa转换方法进行优化，插入phi节点
@@ -230,9 +226,11 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
         }
         for (auto trash: bin) {
             auto &list = trash->getParent()->getInstList();
+            trash->dropAllReferences();
             list.erase(std::find(list.begin(), list.end(), trash));
         }
         auto &list = alloc->getParent()->getInstList();
+        dynamic_cast<IRInstruction *>(alloc)->dropAllReferences();
         list.erase(std::find(list.begin(), list.end(), alloc));
     }
 
@@ -243,7 +241,7 @@ void MemToRegPass::computeDominanceFrontier(DominatorTree *node) {
     S.clear();
     auto succList = node->basicBlock->getTerminator();
     for (unsigned i = 0, e = succList->getNumSuccessors(); i != e; ++i) {
-        auto succ = &succList->getSuccessor(i)->getNode();
+        auto succ = succList->getSuccessor(i)->getNode();
         if (succ->idom != node) {
             S.insert(succ);
         }
@@ -283,6 +281,11 @@ void MemToRegPass::renamePass(DominatorTree *node, IRAllocaInst *alloc, std::vec
                 ++cnt;
                 valueStack->push(inst->getOperand(0));
                 bin->push_back(inst);
+            }
+        } else if (IRPHINode::classof(inst)) {
+            if (dynamic_cast<IRPHINode *>(inst)->getVar() == alloc) {
+                ++cnt;
+                valueStack->push(dynamic_cast<IRValue *>(inst));
             }
         }
     }

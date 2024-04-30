@@ -17,7 +17,7 @@ public:
 private:
     static bool isAllocaPromotable(IRAllocaInst *AI);
 
-    static DominatorTree &getDominatorTree(IRFunction *F);
+    static DominatorTree *getDominatorTree(IRFunction *F);
 
     static void dfs(DominatorTree *p, DominatorTree *n, std::vector<DominatorTree *> &vertex);
 

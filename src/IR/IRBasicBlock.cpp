@@ -48,6 +48,9 @@ void IRBasicBlock::print(std::ostream &OS) const {
     /******通过这个uses边去遍历它的user,查明是哪些块使用了它******/
     OS << ":                                               ; preds =";
     for (auto iruseptr: this->getUses()) {
+        if (dynamic_cast<IRPHINode *>(iruseptr->getUser())) {
+            continue;
+        }
         OS << " ";//获得使用这个块的终止语句的父块
         dynamic_cast<IRTerminatorInst *>(iruseptr->getUser())->getParent()->printPrefixName(OS);
         OS << ",";//获得使用这个块的终止语句的父块
