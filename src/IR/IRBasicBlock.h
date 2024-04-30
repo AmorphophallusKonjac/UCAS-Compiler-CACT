@@ -5,15 +5,19 @@
 #include "IRFunction.h"
 #include "IRInstruction.h"
 #include "IRValue.h"
+#include "utils/DominatorTree.h"
 
 class IRTerminatorInst;
 
+class DominatorTree;
 
 class IRBasicBlock : public IRValue {
 private:
     std::vector<IRInstruction *> InstList;
 
     IRFunction *parent;
+
+    DominatorTree node;
 
 public:
     explicit IRBasicBlock(const std::string &Name = "", IRFunction *Parent = nullptr);
@@ -38,6 +42,8 @@ public:
 
     /******向InstList中添加instruction******/
     void addInstruction(IRInstruction *inst);
+
+    DominatorTree &getNode() {return node;}
 
     /******classof方法，判断从父类下来的子类是不是对应的IRBasicBlock类******/
     static inline bool classof(const IRBasicBlock *BB) { return true; }
