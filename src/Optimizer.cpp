@@ -19,7 +19,8 @@ void Optimizer::addPass(Pass *pass) {
 }
 
 void Optimizer::build() {
-//    addPass(new CutDeadBlockPass("CuntDeadBlockPass"));
+    addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
     addPass(new MemToRegPass("Mem2Reg"));
+//    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
     addPass(new RenamePass("RenamePass"));
 }

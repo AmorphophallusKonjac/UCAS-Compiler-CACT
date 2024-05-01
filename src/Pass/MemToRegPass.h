@@ -17,19 +17,7 @@ public:
 private:
     static bool isAllocaPromotable(IRAllocaInst *AI);
 
-    static DominatorTree *getDominatorTree(IRFunction *F);
-
-    static void dfs(DominatorTree *p, DominatorTree *n, std::vector<DominatorTree *> &vertex);
-
-    static void link(DominatorTree *p, DominatorTree *n);
-
-    static DominatorTree *ancestorWithLowestSemi(DominatorTree *v);
-
     static void mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, std::vector<IRBasicBlock *> &BBList);
-
-    static void computeDominanceFrontier(DominatorTree *node);
-
-    static bool isAncestor(DominatorTree *pTree, DominatorTree *pTree1);
 
     static void renamePass(DominatorTree *pTree, IRAllocaInst *pInst, std::vector<IRInstruction *> *pVector,
                            std::stack<IRValue *> *pStack);
