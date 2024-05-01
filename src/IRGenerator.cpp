@@ -505,6 +505,9 @@ std::any IRGenerator::visitFunctionDefinition(CACTParser::FunctionDefinitionCont
     visitChildren(context);
     if (currentIRFunc->getFunctionType()->getReturnType() == IRType::VoidTy) {
         new IRReturnInst(nullptr, currentIRBasicBlock);
+    } else if (currentIRBasicBlock->getInstList().empty()) {
+        std::vector<IRBasicBlock *> &BBList = currentIRFunc->getBasicBlockList();
+        BBList.erase(BBList.end() - 1, BBList.end());
     }
     return {};
 }
