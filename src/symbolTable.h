@@ -42,15 +42,11 @@ public:
     int getline() { return line; };
 
     void setOp(IROperand *op);
-
     IROperand *getOp();
 
     virtual DataType getDataType() = 0;
-
     virtual int getArrayLength() = 0;
-
     virtual std::vector<int> getArraySize() = 0;
-
     virtual SymbolType getSymbolType() = 0;
     //datatype:VOID,BOOL,INT,FLOAT,DOUBLE
     //arraysize:针对数组而言
@@ -133,6 +129,9 @@ private:
     DataType dataType;
     int global = 0;//代表是否是全局变量
 
+protected:
+    IRValue* irinitializer;
+
 public:
     DataType getDataType() { return dataType; }
 
@@ -141,6 +140,9 @@ public:
     virtual int getArrayLength() = 0;
     virtual std::vector<int> getArraySize() = 0;
     virtual SymbolType getSymbolType() = 0;
+
+    void setirInitailizer(IRValue* irinitializer) { irinitializer = irinitializer; };
+    IRValue* getirInitailizer() { return irinitializer; };
 
     ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global);
 
@@ -223,7 +225,7 @@ public:
     SymbolType getSymbolType() { return SymbolType::VAR_ARRAY; }
 
     void setIRValue(IRValue* irvalue) { irValue = irValue; };
-    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount=0, IRBasicBlock* parent=nullptr, IRValue* IRinitializer=nullptr, IRModule* irmodule=nullptr, const std::string& FuncName = "");
+    void setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount=0, IRBasicBlock* parent=nullptr, IRValue* IRinitializer=nullptr, IRModule* irmodule=nullptr);
 
     VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                        const std::vector<int> arraySize, int dimension);

@@ -348,7 +348,23 @@ void IRInstruction::print(std::ostream &OS) const {
             }
             OS << this->getOpcodeName() << " ";//打印call
 
-            dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this))->getCalledFunction()->Funcprint(OS);
+            IRCallInst* ircall;
+            IRFunction* irfunc;
+            ircall = dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this));
+            irfunc = ircall->getCalledFunction();
+            irfunc->getFunctionType()->print(OS);
+            irfunc->printPrefixName(OS);
+
+            /******打印arg******/
+            OS << "(";
+            for (unsigned i = 1; i < ircall->Operands.size(); i++) {
+                ircall->getOperand(i)->printPrefixName(OS);
+                OS << ", ";
+            }
+            // 如果参数列表不空回退2个字符
+            if (ircall->Operands.size() > 1)
+                OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
+            OS << ")";
             break;
         case Shl:
             //instruction begin

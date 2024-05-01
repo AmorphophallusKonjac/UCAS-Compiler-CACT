@@ -67,31 +67,25 @@ void ConstSymbolInfo::setIRValue(){
 
 void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer, IRModule* irmodule){
 
-    IRValue* irinitailizer;
-
     /******对一个var而言,所有显式和非显式的初始化全部都在外面做好之后压到initvaluearray里面******/
     if(!initValueArray.empty()){
-        irinitailizer = initValueArray[0];
+        irinitializer = initValueArray[0];
     }else{
-        irinitailizer = IRinitializer;
+        irinitializer = IRinitializer;
     }
-    assert(irinitailizer);
+    assert(irinitializer);
 
     switch (vTy) {
         case IRValue::GlobalVariableVal :
             irValue = new IRGlobalVariable  
-                (irinitailizer->getType(), false, IRGlobalValue::InternalLinkage,
-                 dynamic_cast<IRConstant*>(irinitailizer), 
+                (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
+                 dynamic_cast<IRConstant*>(irinitializer), 
                  this->getName(), irmodule);
             break;
 
         case IRValue::InstructionVal :
             irValue = new IRAllocaInst 
-                (irinitailizer->getType(), nullptr, this->getName()+std::to_string(SymbolCount), parent);
-            /******如果有initailizer的话就有store指令*****/
-            if(irinitailizer){
-                new IRStoreInst(irinitailizer,irValue,parent);
-            }
+                (irinitializer->getType(), nullptr, this->getName()+std::to_string(SymbolCount), parent);
             break;
     }
 }
@@ -100,67 +94,53 @@ void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBas
 /******constArray我添加到irmodule的globalvariablelist中去******/
 void ConstArraySymbolInfo::setIRValue(IRModule* irmodule, unsigned SymbolCount, const std::string& FuncName){
 
-    IRConstant* irinitailizer;
     if(!initValueArray.empty()){
-        irinitailizer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
+        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
     }
-    assert(irinitailizer);
+    assert(irinitializer);
             
     if(!FuncName.empty()){//如果不是空串，则是函数内的constArray
         irValue = new IRGlobalVariable
-        (irinitailizer->getType(), true, IRGlobalValue::ExternalLinkage,
-        irinitailizer,
+        (irinitializer->getType(), true, IRGlobalValue::ExternalLinkage,
+        dynamic_cast<IRConstant*>(irinitializer),
         this->getName()+std::to_string(SymbolCount)+"_"+FuncName, irmodule);
     }else{
         irValue = new IRGlobalVariable
-        (irinitailizer->getType(), true, IRGlobalValue::InternalLinkage,
-        irinitailizer,
+        (irinitializer->getType(), true, IRGlobalValue::InternalLinkage,
+        dynamic_cast<IRConstant*>(irinitializer),
         this->getName(), irmodule);
     }
 }
 
 /******VarArray:如果是globalVar,那么new一个globalVar就行；如果不是，那么就new一个instruction和一个globalVar，然后memcpy;******/
 /******注意，如果是后者，那么new的globalVar在第一次******/
-void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer, IRModule* irmodule, const std::string& FuncName){
+void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer, IRModule* irmodule){
 
     /******两种可能性
     1.有initial，那么就可以直接从initValueArray中取;
     2.没有，那么就传进来一个已经写在funcsymbol里面的arg来作为参数init******/
     
-    IRValue* irinitailizer;
     if(!initValueArray.empty()){
-        irinitailizer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
+        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
     }else{
-        irinitailizer = IRinitializer;
+        irinitializer = IRinitializer;
     }
-    assert(irinitailizer);
+    assert(irinitializer);
+
     // IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
     // IRArrayType(IRType *ElType, unsigned NumEl)
     switch (vTy) {
         case IRValue::GlobalVariableVal : //数组类型
             irValue = new IRGlobalVariable
-                (irinitailizer->getType(), false, IRGlobalValue::InternalLinkage,
-                 dynamic_cast<IRConstant*>(irinitailizer),
+                (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
+                 dynamic_cast<IRConstant*>(irinitializer),
                 this->getName(),irmodule);
             break;
 
         case IRValue::InstructionVal :
             irValue = new IRAllocaInst 
-                (irinitailizer->getType(), irinitailizer,
+                (irinitializer->getType(), irinitializer,
                 this->getName()+std::to_string(SymbolCount), parent);
-
-            /******如果有initailizer的话就有store或memcpy指令*****/
-            /******注意这里根据传进来的参数IRinit来判断是否是Fparam;如果是，那么IRinit应该有值******/
-            if(IRinitializer){
-                new IRStoreInst(irinitailizer,irValue,parent);
-            }else{
-                IRValue* srcGlobalVar;
-                srcGlobalVar = new IRGlobalVariable
-                (irinitailizer->getType(), false, IRGlobalValue::AppendingLinkage,  //这里linkage的意思暂且定为是说附加到某个VarArray上，不是真正的global
-                 dynamic_cast<IRConstant*>(irinitailizer),
-                "__"+this->getName()+std::to_string(SymbolCount)+"_"+"global"+"_"+FuncName,irmodule);
-                new IRMemcpyInst(srcGlobalVar,irValue,parent);
-            }
             break;
     }
 }

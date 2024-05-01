@@ -606,8 +606,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
             irCurrentFunc = dynamic_cast<IRFunction *>(currentFunc->getIRValue());
             dynamic_cast<VarArraySymbolInfo *>(currentSymbol)
                     ->setIRValue(IRValue::InstructionVal, irCurrentFunc->getCount(),
-                                 irCurrentFunc->getBasicBlockList()[0], nullptr, ir,
-                                 currentFunc->getName());
+                                 irCurrentFunc->getBasicBlockList()[0], nullptr, ir);
             irCurrentFunc->addCount();
         } else  // vararray externaldeclaration
             dynamic_cast<VarArraySymbolInfo *>(currentSymbol)
@@ -921,6 +920,7 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
                     dynamic_cast<IRFunction *>(currentFunc->getIRValue())->getCount(),
                     irfirstbasicblock, arg);
         }
+        new IRStoreInst(dynamic_cast<ConstVarArraySymbolInfo *>(symbol)->getirInitailizer(), symbol->getIRValue(), irfirstbasicblock);
 
         dynamic_cast<IRFunction *>(currentFunc->getIRValue())->addCount();
     }

@@ -1,5 +1,6 @@
 #include "IRGenerator.h"
 
+#include "IR/IRArgument.h"
 #include "IR/IRConstant.h"
 #include "IR/iMemory.h"
 #include "IR/iOperators.h"
@@ -291,6 +292,21 @@ std::any IRGenerator::visitVariableDeclaration(CACTParser::VariableDeclarationCo
 }
 
 std::any IRGenerator::visitVariableDefinition(CACTParser::VariableDefinitionContext *context) {
+    size_t dimension = context->arraySize.size();
+    std::string name = context->Identifier()->getText();
+    auto symbol = currentBlock->lookUpSymbol(name);
+    if (currentBlock != globalBlock){
+        if (dimension == 0) {
+            new IRStoreInst(dynamic_cast<VarSymbolInfo *>(symbol)->getirInitailizer(), dynamic_cast<VarSymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+        } else {
+            IRValue* srcGlobalVar;
+            srcGlobalVar = new IRGlobalVariable
+            (dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()->getType(), false, IRGlobalValue::AppendingLinkage,  //这里linkage的意思暂且定为是说附加到某个VarArray上，不是真正的global
+             dynamic_cast<IRConstant*>(dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()),
+            "__"+symbol->getName()+std::to_string(currentIRFunc->getCount())+"_"+"global"+"_"+currentFunc->getName(),ir);
+            new IRMemcpyInst(srcGlobalVar, dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+        }
+    }
     return visitChildren(context);
 }
 
