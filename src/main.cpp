@@ -34,9 +34,9 @@ int main(int argc, const char *argv[]) {
     Optimizer opt(&ir);
 
     // 在 build 方法中 new 自己定义的 pass 并添加进 opt
-    //opt.build();
+    opt.build();
 
-    //opt.run();
+    opt.run();
 
     frontEnd.print();
 

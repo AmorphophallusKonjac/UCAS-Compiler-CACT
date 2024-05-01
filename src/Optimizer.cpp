@@ -23,6 +23,6 @@ void Optimizer::build() {
     addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
     addPass(new MemToRegPass("Mem2Reg"));
 //    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
-    addPass(new AlgebraicPass("AlgebraicPass"));
-    addPass(new RenamePass("RenamePass"));
+    //addPass(new AlgebraicPass("AlgebraicPass"));
+    //addPass(new RenamePass("RenamePass"));
 }
