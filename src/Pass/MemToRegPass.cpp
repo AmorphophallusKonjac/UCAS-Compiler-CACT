@@ -3,6 +3,7 @@
 #include "utils/DominatorTree.h"
 #include "IR/iTerminators.h"
 #include "IR/iPHINdoe.h"
+#include "IR/IRConstant.h"
 
 #include <utility>
 #include <map>
@@ -147,6 +148,7 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
              */
             std::stack<IRValue *> valueStack;
             while (!valueStack.empty()) valueStack.pop();
+            valueStack.push(dynamic_cast<IRValue *>(IRConstant::getNullValue(alloc->getAllocatedType())));
             renamePass(root, alloc, &bin, &valueStack);
         }
         for (auto trash: bin) {
