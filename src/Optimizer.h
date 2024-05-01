@@ -1,6 +1,6 @@
 #ifndef COMPILER_OPTIMIZER_H
 #define COMPILER_OPTIMIZER_H
-
+#pragma once
 #include <vector>
 #include "Pass/Pass.h"
 

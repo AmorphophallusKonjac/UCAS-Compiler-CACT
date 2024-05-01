@@ -376,15 +376,15 @@ void IRInstruction::print(std::ostream &OS) const {
             //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
             for (unsigned i = 0; i < 2; i++) {
                 operand = this->getOperand(i);
-                switch (operand1->getValueType()) {
+                switch (operand->getValueType()) {
                     case IRValue::ConstantVal:
-                        operand1->print(OS);
+                        operand->print(OS);
                         break;
                     case IRValue::ArgumentVal:
-                        operand1->printPrefixName(OS);//打印本名
+                        operand->printPrefixName(OS);//打印本名
                         break;
                     case IRValue::InstructionVal:
-                        operand1->printPrefixName(OS);
+                        operand->printPrefixName(OS);
                         break;
                 }
             }
@@ -398,15 +398,15 @@ void IRInstruction::print(std::ostream &OS) const {
             //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
             for (unsigned i = 0; i < 2; i++) {
                 operand = this->getOperand(i);
-                switch (operand1->getValueType()) {
+                switch (operand->getValueType()) {
                     case IRValue::ConstantVal:
-                        operand1->print(OS);
+                        operand->print(OS);
                         break;
                     case IRValue::ArgumentVal:
-                        operand1->printPrefixName(OS);//打印本名
+                        operand->printPrefixName(OS);//打印本名
                         break;
                     case IRValue::InstructionVal:
-                        operand1->printPrefixName(OS);
+                        operand->printPrefixName(OS);
                         break;
                 }
             }

@@ -1,6 +1,6 @@
 #ifndef COMPILER_PASS_H
 #define COMPILER_PASS_H
-
+#pragma once
 #include "IR/IRModule.h"
 #include "Optimizer.h"
 

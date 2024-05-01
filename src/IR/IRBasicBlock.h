@@ -1,6 +1,6 @@
 #ifndef COMPILER_IRBASICBLOCK_H
 #define COMPILER_IRBASICBLOCK_H
-
+#pragma once
 #include "IRFunction.h"
 #include "IRInstruction.h"
 #include "IRValue.h"

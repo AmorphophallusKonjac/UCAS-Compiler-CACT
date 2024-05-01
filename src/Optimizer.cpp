@@ -2,6 +2,7 @@
 #include "Pass/RenamePass.h"
 #include "Pass/CutDeadBlockPass.h"
 #include "Pass/MemToRegPass.h"
+#include "Pass/AlgebraicPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -22,5 +23,6 @@ void Optimizer::build() {
     addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
     addPass(new MemToRegPass("Mem2Reg"));
 //    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
+    addPass(new AlgebraicPass("AlgebraicPass"));
     addPass(new RenamePass("RenamePass"));
 }
