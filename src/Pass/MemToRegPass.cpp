@@ -36,7 +36,9 @@ void MemToRegPass::runOnFunction(IRFunction &F) {
 }
 
 bool MemToRegPass::isAllocaPromotable(IRAllocaInst *AI) {
-    return AI->getAllocatedType()->isPrimitiveType();
+    return AI->getAllocatedType()->isPrimitiveType() ||
+           AI->getAllocatedType()->getPrimitiveID() == IRType::PointerTyID &&
+           dynamic_cast<IRPointerType *>(const_cast<IRType *>(AI->getAllocatedType()))->getElementType()->isPrimitiveType();
 }
 
 void
