@@ -4,6 +4,7 @@
 #include "Pass/MemToRegPass.h"
 #include "Pass/AlgebraicPass.h"
 #include "Pass/ConstantPass.h"
+#include "Pass/LocalSubExpPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -24,6 +25,7 @@ void Optimizer::build() {
     addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
     addPass(new MemToRegPass("Mem2Reg"));
 //    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
+    addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new ConstantPass("ConstantPass"));
     addPass(new AlgebraicPass("AlgebraicPass"));
     addPass(new RenamePass("RenamePass"));
