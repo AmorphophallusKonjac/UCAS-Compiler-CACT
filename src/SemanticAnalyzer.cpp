@@ -717,6 +717,9 @@ std::any SemanticAnalyzer::visitExpressionStatement(
         }
         return {};
     } else {
+        if (context->expression()) {
+            visit(context->expression());
+        }
         return {};
     }
 }
@@ -730,12 +733,12 @@ std::any SemanticAnalyzer::visitLValue(CACTParser::LValueContext *context) {
     }
     if (context->expression().empty()) {  // var || const
         if (symbol->getSymbolType() != SymbolType::VAR &&
-            symbol->getSymbolType() != SymbolType::CONST) {
-            ErrorHandler::printErrorContext(context, "is not variable or constant");
-            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" +
-                                     std::to_string(__LINE__));
+            symbol->getSymbolType() != SymbolType::CONST) { // array
+            return ReturnValue(symbol->getDataType(), symbol->getArraySize().size(), symbol->getArraySize(),
+                               symbol->getSymbolType());
+        } else {
+            return ReturnValue(symbol->getDataType(), 0, std::vector<int>(), symbol->getSymbolType());
         }
-        return ReturnValue(symbol->getDataType(), 0, std::vector<int>(), symbol->getSymbolType());
     } else {  // array element
         if (symbol->getSymbolType() != SymbolType::VAR_ARRAY &&
             symbol->getSymbolType() != SymbolType::CONST_ARRAY) {
@@ -920,7 +923,8 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
                     dynamic_cast<IRFunction *>(currentFunc->getIRValue())->getCount(),
                     irfirstbasicblock, arg);
         }
-        new IRStoreInst(dynamic_cast<ConstVarArraySymbolInfo *>(symbol)->getirInitailizer(), symbol->getIRValue(), irfirstbasicblock);
+        new IRStoreInst(dynamic_cast<ConstVarArraySymbolInfo *>(symbol)->getirInitailizer(), symbol->getIRValue(),
+                        irfirstbasicblock);
 
         dynamic_cast<IRFunction *>(currentFunc->getIRValue())->addCount();
     }
@@ -930,7 +934,8 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     this->visit(context->compoundStatement());  // 进入函数体
     context->thisblockinfo =
             context->compoundStatement()->thisblockinfo;  // 接收compoundstatement创建的新的blockinfo
-    if (context->thisblockinfo->getReturnSign() == false && currentFunc->getDataType()!=DataType::VOID) {//保证不是void类型，void可以不返回
+    if (context->thisblockinfo->getReturnSign() == false &&
+        currentFunc->getDataType() != DataType::VOID) {//保证不是void类型，void可以不返回
         ErrorHandler::printErrorContext(
                 context,
                 "not all path for return");  // 每个函数退出的时候检查是否可以满足所有路径都有返回

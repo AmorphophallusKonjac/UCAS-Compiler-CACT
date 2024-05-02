@@ -1,0 +1,17 @@
+int test(int a[], int b) {
+    a[0] = 1;
+    a[1] = 2;
+    b = 100;
+    return 0;
+}
+
+int work(int c[], int d) {
+    test(c, d);
+    return 0;
+}
+
+int main() {
+    int nums[10];
+    work(nums, 0);
+    return 0;
+}
