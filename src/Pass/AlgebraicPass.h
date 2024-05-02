@@ -8,7 +8,6 @@ public:
     explicit AlgebraicPass(std::string name = "");
 
     void runOnBasicBlock(IRBasicBlock &BB) override;
-    void mul2shift(IRInstruction* irinst, IRBasicBlock &BB);
 };
 
 

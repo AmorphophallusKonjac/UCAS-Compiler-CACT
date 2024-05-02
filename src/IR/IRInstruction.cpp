@@ -387,7 +387,9 @@ void IRInstruction::print(std::ostream &OS) const {
                         operand->printPrefixName(OS);
                         break;
                 }
+                OS << ", ";
             }
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
             break;
         case Shr:
             this->printPrefixName(OS);//打印instructionName
@@ -409,7 +411,9 @@ void IRInstruction::print(std::ostream &OS) const {
                         operand->printPrefixName(OS);
                         break;
                 }
+                OS << ", ";
             }
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
             break;
 
         default:
