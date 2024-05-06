@@ -234,8 +234,9 @@ selectionStatement
 
 iterationStatement
     locals [BlockInfo * thisblockinfo,
-            IRBasicBlock *beginBlock = nullptr,
+            IRBasicBlock *preheader = nullptr,
             IRBasicBlock *bodyBlock = nullptr,
+            IRBasicBlock *latch = nullptr,
             IRBasicBlock *nextBlock = nullptr]
     : While LeftParen condition RightParen statement
     ;

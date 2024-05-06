@@ -295,16 +295,20 @@ std::any IRGenerator::visitVariableDefinition(CACTParser::VariableDefinitionCont
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
     auto symbol = currentBlock->lookUpSymbol(name);
-    if (currentBlock != globalBlock){
+    if (currentBlock != globalBlock) {
         if (dimension == 0) {
-            new IRStoreInst(dynamic_cast<VarSymbolInfo *>(symbol)->getirInitailizer(), dynamic_cast<VarSymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+            new IRStoreInst(dynamic_cast<VarSymbolInfo *>(symbol)->getirInitailizer(),
+                            dynamic_cast<VarSymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
         } else {
-            IRValue* srcGlobalVar;
+            IRValue *srcGlobalVar;
             srcGlobalVar = new IRGlobalVariable
-            (dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()->getType(), false, IRGlobalValue::AppendingLinkage,  //这里linkage的意思暂且定为是说附加到某个VarArray上，不是真正的global
-             dynamic_cast<IRConstant*>(dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()),
-            "__"+symbol->getName()+std::to_string(currentIRFunc->getCount())+"_"+"global"+"_"+currentFunc->getName(),ir);
-            new IRMemcpyInst(srcGlobalVar, dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+                    (dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()->getType(), false,
+                     IRGlobalValue::AppendingLinkage,  //这里linkage的意思暂且定为是说附加到某个VarArray上，不是真正的global
+                     dynamic_cast<IRConstant *>(dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()),
+                     "__" + symbol->getName() + std::to_string(currentIRFunc->getCount()) + "_" + "global" + "_" +
+                     currentFunc->getName(), ir);
+            new IRMemcpyInst(srcGlobalVar, dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(),
+                             currentIRBasicBlock);
         }
     }
     return visitChildren(context);
@@ -433,30 +437,62 @@ std::any IRGenerator::visitSelectionStatement(CACTParser::SelectionStatementCont
 
 std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementContext *context) {
     currentBlock = context->thisblockinfo;
-    context->beginBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
-    currentIRFunc->addCount();
-    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
-    currentIRBasicBlock = context->beginBlock;
-    context->bodyBlock = new IRBasicBlock();
-    context->nextBlock = new IRBasicBlock();
 
-    context->condition()->trueBlock = context->bodyBlock;
+    context->preheader = new IRBasicBlock();
+    context->nextBlock = new IRBasicBlock();
+    context->condition()->trueBlock = context->preheader;
     context->condition()->falseBlock = context->nextBlock;
     visit(context->condition());
 
-    context->bodyBlock->setParent(currentIRFunc);
-    context->bodyBlock->setName(std::to_string(currentIRFunc->getCount()));
+    context->preheader->setParent(currentIRFunc);
+    context->preheader->setName(std::to_string(currentIRFunc->getCount()));
     currentIRFunc->addCount();
-    currentIRFunc->addBasicBlock(context->bodyBlock);
+    currentIRFunc->addBasicBlock(context->preheader);
+    context->bodyBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+    currentIRFunc->addCount();
+    new IRBranchInst(context->bodyBlock, nullptr, nullptr, context->preheader);
     currentIRBasicBlock = context->bodyBlock;
     visit(context->statement());
-    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+    context->latch = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+    currentIRFunc->addCount();
+    new IRBranchInst(context->latch, nullptr, nullptr, currentIRBasicBlock);
+
+    context->condition()->trueBlock = context->bodyBlock;
+    context->condition()->falseBlock = context->nextBlock;
+    currentIRBasicBlock = context->latch;
+    visit(context->condition());
 
     context->nextBlock->setParent(currentIRFunc);
     context->nextBlock->setName(std::to_string(currentIRFunc->getCount()));
     currentIRFunc->addCount();
     currentIRFunc->addBasicBlock(context->nextBlock);
     currentIRBasicBlock = context->nextBlock;
+
+//    context->bodyBlock = new IRBasicBlock();
+//    context->nextBlock = new IRBasicBlock();
+//
+//    context->beginBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+//    currentIRFunc->addCount();
+//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+//    currentIRBasicBlock = context->beginBlock;
+//
+//    context->condition()->trueBlock = context->bodyBlock;
+//    context->condition()->falseBlock = context->nextBlock;
+//    visit(context->condition());
+//
+//    context->bodyBlock->setParent(currentIRFunc);
+//    context->bodyBlock->setName(std::to_string(currentIRFunc->getCount()));
+//    currentIRFunc->addCount();
+//    currentIRFunc->addBasicBlock(context->bodyBlock);
+//    currentIRBasicBlock = context->bodyBlock;
+//    visit(context->statement());
+//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+//
+//    context->nextBlock->setParent(currentIRFunc);
+//    context->nextBlock->setName(std::to_string(currentIRFunc->getCount()));
+//    currentIRFunc->addCount();
+//    currentIRFunc->addBasicBlock(context->nextBlock);
+//    currentIRBasicBlock = context->nextBlock;
 
     currentBlock = currentBlock->getParentBlock();
     return {};
@@ -485,7 +521,7 @@ std::any IRGenerator::visitJumpStatement(CACTParser::JumpStatementContext *conte
         if (context->Break()) {
             new IRBranchInst(whilePtr->nextBlock, nullptr, nullptr, currentIRBasicBlock);
         } else { // continue
-            new IRBranchInst(whilePtr->beginBlock, nullptr, nullptr, currentIRBasicBlock);
+            new IRBranchInst(whilePtr->latch, nullptr, nullptr, currentIRBasicBlock);
         }
     }
     return {};
