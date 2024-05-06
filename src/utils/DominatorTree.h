@@ -18,6 +18,8 @@ public:
 
     static DominatorTree *getDominatorTree(IRFunction *F);
 
+    static bool isAncestor(DominatorTree *p, DominatorTree *ch);
+
     int dfnum = 0;
     DominatorTree *parent = nullptr;
     DominatorTree *semi = nullptr; // 本节点在支配树上的父亲
@@ -31,6 +33,7 @@ public:
     std::set<IRAllocaInst *> orig; // 在本节点定义的所有变量的集合
     std::set<IRAllocaInst *> phi; // 在本节点需要有phi的集合
 private:
+
     static void dfs(DominatorTree *p, DominatorTree *n, std::vector<DominatorTree *> &vertex);
 
     static void link(DominatorTree *p, DominatorTree *n);
@@ -39,7 +42,7 @@ private:
 
     static void computeDominanceFrontier(DominatorTree *node);
 
-    static bool isAncestor(DominatorTree *pTree, DominatorTree *pTree1);
+    static void resetNode(DominatorTree *n);
 };
 
 

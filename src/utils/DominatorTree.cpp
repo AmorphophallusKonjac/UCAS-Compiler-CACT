@@ -8,6 +8,10 @@ DominatorTree::DominatorTree(IRBasicBlock *BB) : basicBlock(BB), bucket(), child
 }
 
 DominatorTree *DominatorTree::getDominatorTree(IRFunction *F) {
+    auto BBList = F->getBasicBlockList();
+    for (auto BB : BBList) {
+        resetNode(BB->getNode());
+    }
     auto root = F->getEntryBlock()->getNode();
     std::vector<DominatorTree *> vertex;
     dfs(nullptr, root, vertex);
@@ -110,4 +114,14 @@ bool DominatorTree::isAncestor(DominatorTree *p, DominatorTree *ch) {
         }
     }
     return false;
+}
+
+void DominatorTree::resetNode(DominatorTree *n) {
+    n->dfnum = 0;
+    n->idom = n->semi = n->samedom = n->ancestor = n->parent = nullptr;
+    n->bucket.clear();
+    n->children.clear();
+    n->DF.clear();
+    n->orig.clear();
+    n->phi.clear();
 }
