@@ -24,6 +24,8 @@ class IRFunction;
 
 class IRGlobalVariable;
 
+class TemporaryVariable;
+
 class IRValue {
 public:
     enum ValueTy {
@@ -41,6 +43,7 @@ private:
     std::string name;
     IRType *ty;
     ValueTy vTy;
+    TemporaryVariable *tempVar;
 
 public:
     //void operator=(const IRValue &) = delete;
@@ -89,6 +92,10 @@ public:
     std::vector<IRUse *> getUses() const {
         return Uses;
     }
+
+    void setTempVar(TemporaryVariable *tempVar);
+
+    TemporaryVariable *getTempVar();
 };
 
 #endif//COMPILER_IRVALUE_H

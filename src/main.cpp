@@ -4,6 +4,7 @@
 #include "IR/IRModule.h"
 #include "FrontEnd.h"
 #include "Optimizer.h"
+#include "Interpreter/Interpreter.h"
 
 using namespace antlr4;
 
@@ -31,6 +32,10 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
+    Interpreter ip(&ir);
+
+    int ret = ip.interpret();
+
     Optimizer opt(&ir);
 
     // 在 build 方法中 new 自己定义的 pass 并添加进 opt
@@ -40,5 +45,6 @@ int main(int argc, const char *argv[]) {
 
     frontEnd.print();
 
+//    return ret;
     return 0;
 }

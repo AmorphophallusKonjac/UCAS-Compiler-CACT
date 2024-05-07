@@ -42,7 +42,7 @@ bool judge(unsigned iType, std::any const1, std::any const2){
         case IRInstruction::BinaryOps::Or:
             return std::any_cast<bool>(const1)||std::any_cast<bool>(const2);
         case IRInstruction::BinaryOps::And:
-            return std::any_cast<bool>(const1)&&std::any_cast<bool>(const2); 
+            return std::any_cast<bool>(const1)&&std::any_cast<bool>(const2);
     }
 }
 

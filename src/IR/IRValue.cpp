@@ -8,6 +8,7 @@
 IRValue::IRValue(IRType *Ty, IRValue::ValueTy vty, std::string name) : name(std::move(name)) {
     ty = Ty;
     vTy = vty;
+    tempVar = nullptr;
 }
 
 void IRValue::replaceAllUsesWith(IRValue *V) {
@@ -15,6 +16,14 @@ void IRValue::replaceAllUsesWith(IRValue *V) {
         IRUse *U = Uses.back();
         U->set(V);
     }
+}
+
+void IRValue::setTempVar(TemporaryVariable *tempVar) {
+    IRValue::tempVar = tempVar;
+}
+
+TemporaryVariable *IRValue::getTempVar(){
+    return tempVar;
 }
 
 IRUse::IRUse(IRValue *v, IRUser *user) : val(v), user(user) {

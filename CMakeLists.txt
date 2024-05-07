@@ -23,7 +23,11 @@ add_custom_target(
 )
 
 add_definitions(-w -g)
-add_library(antlr STATIC ${ANTLR_LIB_FILES})
+add_library(antlr STATIC ${ANTLR_LIB_FILES}
+        src/Interpreter/Interpreter.cpp
+        src/Interpreter/Interpreter.h
+        src/Interpreter/TemporaryVariable.cpp
+        src/Interpreter/TemporaryVariable.h)
 add_executable(compiler ${SOURCE_FILES})
 add_dependencies(compiler gen_files_form_g4)
 find_package(Threads REQUIRED)
