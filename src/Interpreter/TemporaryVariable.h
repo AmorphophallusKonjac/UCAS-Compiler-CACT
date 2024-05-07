@@ -224,7 +224,7 @@ public:
     }
 
     TemporaryVariable operator && (const TemporaryVariable& other) {
-        if(type == Int && other.type == Int){
+        if(type == Bool && other.type == Bool){
             return {std::any_cast<bool>(value) && std::any_cast<bool>(other.value), Bool};
         }
         else{
@@ -234,7 +234,7 @@ public:
     }
 
     TemporaryVariable operator || (const TemporaryVariable& other) {
-        if(type == Int && other.type == Int){
+        if(type == Bool && other.type == Bool){
             return {std::any_cast<bool>(value) || std::any_cast<bool>(other.value), Bool};
         }
         else{
@@ -244,7 +244,7 @@ public:
     }
 
     TemporaryVariable operator ^ (const TemporaryVariable& other) {
-        if(type == Int && other.type == Int){
+        if(type == Bool && other.type == Bool){
             return {std::any_cast<bool>(value) ^ std::any_cast<bool>(other.value), Bool};
         }
         else{

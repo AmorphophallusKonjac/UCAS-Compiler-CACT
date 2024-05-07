@@ -52,6 +52,7 @@ InterpretBasicBlock:
 
         printf("Operand Number = %d\n", operandNum);
         for(int i = 0; i < operandNum; ++i){
+            printf("Operand %d: ", i);
             change_Operand_To_TemporaryVariable(inst->getOperand(i))->print();
         }
         switch (opcode) {
@@ -66,6 +67,7 @@ InterpretBasicBlock:
             case IRInstruction::Br : {
                 if(operandNum == 1) {
                     auto dest = inst->getOperand(0);
+                    dest->getValueType();
                     currentBlock = dynamic_cast<IRBasicBlock*>(dest);
                 }
                 else{
@@ -73,9 +75,9 @@ InterpretBasicBlock:
                         printf("Undefined Branch Inst With Operand Number = %d\n");
                     }
 
-                    auto cond = inst->getOperand(0);
-                    auto dest0 = inst->getOperand(1);
-                    auto dest1 = inst->getOperand(2);
+                    auto destTrue = inst->getOperand(0);
+                    auto destFalse = inst->getOperand(1);
+                    auto cond = inst->getOperand(2);
                     auto tempVarCond = change_Operand_To_TemporaryVariable(cond);
 
                     if(tempVarCond->getType() != TemporaryVariable::Bool){
@@ -84,10 +86,10 @@ InterpretBasicBlock:
                     }
 
                     if(std::any_cast<bool>(tempVarCond->getValue())){
-                        currentBlock = dynamic_cast<IRBasicBlock*>(dest1);
+                        currentBlock = dynamic_cast<IRBasicBlock*>(destTrue);
                     }
                     else{
-                        currentBlock = dynamic_cast<IRBasicBlock*>(dest0);
+                        currentBlock = dynamic_cast<IRBasicBlock*>(destFalse);
                     }
                 }
                 goto InterpretBasicBlock;
@@ -166,47 +168,81 @@ InterpretBasicBlock:
             }
 
             case IRInstruction::SetLE : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 <= *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::SetGE : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 >= *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::SetLT : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 < *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::SetGT : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 > *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::SetEQ : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 == *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::SetNE : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 != *tempVar1;
+                Stack.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(Stack.back());
                 break;
             }
 
             case IRInstruction::Alloca : {
-
+                auto tempVar = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                Stack.push_back(tempVar);
+                inst->setTempVar(Stack.back());
+                tempVar->print();
                 break;
             }
 
             case IRInstruction::Load : {
-
+                auto tempVar = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                Stack.push_back(tempVar);
+                inst->setTempVar(Stack.back());
+                tempVar->print();
                 break;
             }
 
             case IRInstruction::Store : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                tempVar1->setValue(tempVar0->getValue());
+                tempVar1->setType(tempVar0->getType());
+                tempVar1->print();
                 break;
             }
 
@@ -252,8 +288,7 @@ TemporaryVariable* Interpreter::change_Operand_To_TemporaryVariable(IRValue *irV
     auto valueType = irValue -> getValueType();
     if (valueType == IRValue::ArgumentVal || valueType == IRValue::InstructionVal
         || valueType == IRValue::GlobalVariableVal) {
-        auto tempVarPointer = irValue->getTempVar();
-        return new TemporaryVariable{tempVarPointer->getValue(), tempVarPointer->getType()};
+        return irValue->getTempVar();
     }
     else if(valueType == IRValue::ConstantVal) {
         return change_ConstantVal_to_TemporaryVariable(irValue);
