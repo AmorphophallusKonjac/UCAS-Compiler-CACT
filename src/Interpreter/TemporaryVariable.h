@@ -16,6 +16,7 @@
 class TemporaryVariable {
 
 private:
+
     std::any value;
 
 public:
@@ -31,21 +32,29 @@ public:
 
 private:
     tempVarType type;
+    tempVarType elementType;
 
 public:
 
-    TemporaryVariable(std::any value, tempVarType type);
+    TemporaryVariable(std::any value, tempVarType type, tempVarType elementType = Void);
 
-    const std::any &getValue() const;
+    void setType(tempVarType type);
 
     tempVarType getType() const;
 
     void setValue(const std::any &value);
 
-    void setType(tempVarType type);
+    const std::any &getValue() const;
+
+    void setElementType(tempVarType elementType);
+
+    tempVarType getElementType() const;
 
     static std::string getTypeString(tempVarType ty);
+
     void print();
+
+    static unsigned long getTypeSize(tempVarType ty);
 
     TemporaryVariable operator + (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
@@ -58,7 +67,8 @@ public:
             return {std::any_cast<double>(value) + std::any_cast<double>(other.value), Double};
         }
         else if(type == Pointer && other.type == Int){
-            return {std::any_cast<unsigned long>(value) + std::any_cast<int>(other.value), Pointer};
+            auto offset = std::any_cast<int>(other.value) / getTypeSize(getElementType());
+            return {std::any_cast<unsigned long>(value) + offset, Pointer};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");

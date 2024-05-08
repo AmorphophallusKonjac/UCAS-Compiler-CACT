@@ -21,8 +21,9 @@ void TemporaryVariable::setType(TemporaryVariable::tempVarType type) {
     TemporaryVariable::type = type;
 }
 
-TemporaryVariable::TemporaryVariable(std::any value, TemporaryVariable::tempVarType type) : value(std::move(value)),
-                                                                                                   type(type) {}
+TemporaryVariable::TemporaryVariable(std::any value, TemporaryVariable::tempVarType type,
+                                     TemporaryVariable::tempVarType elementType) :
+                                     value(std::move(value)), type(type), elementType(elementType){}
 
 std::string TemporaryVariable::getTypeString(tempVarType ty) {
     switch (ty) {
@@ -75,5 +76,24 @@ void TemporaryVariable::print() {
             printf("NULL\n");
         }
     }
+}
+
+unsigned long TemporaryVariable::getTypeSize(TemporaryVariable::tempVarType ty) {
+    switch (ty) {
+        case Bool :     return 4;
+        case Int :      return 4;
+        case Float :    return 4;
+        case Double :   return 8;
+        case Pointer:   return 8;
+        default :       return 0;
+    }
+}
+
+TemporaryVariable::tempVarType TemporaryVariable::getElementType() const {
+    return elementType;
+}
+
+void TemporaryVariable::setElementType(TemporaryVariable::tempVarType elementType) {
+    TemporaryVariable::elementType = elementType;
 }
 

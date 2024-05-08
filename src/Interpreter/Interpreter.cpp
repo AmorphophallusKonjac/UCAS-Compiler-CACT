@@ -24,39 +24,14 @@ int Interpreter::interpret() {
 
 
 void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector) {
-    auto varVectorSize = varVector.size();
     for(auto var : varVector){
-        auto allocType = dynamic_cast<IRSequentialType*>(var->getType());
-
-        if(allocType->getPrimitiveID() == IRType::PointerTyID){
-            auto varType = getTempVarType(allocType->getElementType());
-
-            auto operandNum = var->getNumOperands();
-            printf("%d\n", operandNum);
-            std::any initVal;
-            if(operandNum == 1){    // 全局变量有初始值
-                auto operand = var->getOperand(0);
-                initVal = change_ConstantVal_to_TemporaryVariable(operand)->getValue();
-            }
-            else{
-                printf("Undefined Global Variable with Operand Num = %d", operandNum);
-            }
-            GlobalVar.push_back(new TemporaryVariable(initVal, varType));
-            auto pointer = new TemporaryVariable(GlobalVar.size()-1, TemporaryVariable::Pointer);
-            TempVarVector.push_back(pointer);
-            var->setTempVar(TempVarVector.back());
-
-            printf("Init Global Variable:");
-            std::cout << var->getName() << std::endl;
-            GlobalVar.back()->print();
-            pointer->print();
-            puts("");
-
-        }
-
-        else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
-            printf("Global variable ValueTy = ArrayTyID");
-        }
+        auto initializer = var->getInitializer();
+        auto varType = getTempVarType(var->getType());
+        auto tempVar = change_ConstantVal_to_TemporaryVariable(initializer);
+        GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+        TempVarVector.push_back(new TemporaryVariable(GlobalVar.size()-1, TemporaryVariable::Pointer, varType));
+        var->setTempVar(TempVarVector.back());
+        tempVar->print();
     }
 }
 
@@ -302,7 +277,12 @@ InterpretBasicBlock:
                     pointer->print();
                 }
                 else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
-
+                    auto tempVarType = getTempVarType(allocType->getType());
+                    auto tempVar = change_ConstantVal_to_TemporaryVariable(inst);
+                    GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+                    TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, tempVarType));
+                    inst->setTempVar(TempVarVector.back());
+                    tempVar->print();
                 }
                 break;
             }
@@ -454,12 +434,28 @@ TemporaryVariable::tempVarType Interpreter::getTempVarType(IRType* ty){
             return TemporaryVariable::tempVarType::Pointer;
         }
         default: {
-            printf("Cannot change IRType to tempVarType");
+            printf("Cannot change IRType to tempVarType\n");
         }
     }
 }
 
 TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue *irValue) {
+    if(irValue->getType()->getPrimitiveID() == IRType::ArrayTyID){
+        auto arrayType = dynamic_cast<IRConstantArray*>(irValue);
+        auto elementList = arrayType->getValues();
+        auto arraySize = elementList.size();
+        printf("%d\n",arraySize);
+        TemporaryVariable::tempVarType elementTy;
+        for(const auto& element : elementList){
+            auto val = element.get();
+            auto elementType = getTempVarType(val->getType());
+            elementTy = elementType;
+            auto tempVar = change_ConstantVal_to_TemporaryVariable(val);
+            GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+        }
+        return new TemporaryVariable(GlobalVar.size() - arraySize, TemporaryVariable::Pointer, elementTy);
+    }
+
     auto ty = getTempVarType(irValue->getType());
     switch (ty) {
         case TemporaryVariable::Int : {
@@ -495,10 +491,6 @@ TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
 
 std::any Interpreter::get_initial_value(TemporaryVariable::tempVarType ty) {
     switch (ty) {
-        case TemporaryVariable::Func :
-            return nullptr;
-        case TemporaryVariable::Void :
-            return nullptr;
         case TemporaryVariable::Int :
             return (int)0;
         case TemporaryVariable::Float :
@@ -509,6 +501,9 @@ std::any Interpreter::get_initial_value(TemporaryVariable::tempVarType ty) {
             return false;
         case TemporaryVariable::Pointer :
             return (unsigned long)0;
+        default : {
+            return nullptr;
+        }
     }
 }
 
