@@ -16,8 +16,6 @@ private:
 
     static std::vector<TemporaryVariable*> TempVarVector;
 
-    static std::vector<TemporaryVariable*> GlobalVar;
-
     static std::vector<TemporaryVariable*> Stack;
 
     static TemporaryVariable* interpretFunction(IRFunction *func);

@@ -6,7 +6,6 @@
 #include "IR/IRConstant.h"
 
 std::vector<TemporaryVariable*> Interpreter::TempVarVector;
-std::vector<TemporaryVariable*> Interpreter::GlobalVar;
 std::vector<TemporaryVariable*> Interpreter::Stack;
 
 Interpreter::Interpreter(IRModule *ir) : ir(ir) {
@@ -28,8 +27,8 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector
         auto initializer = var->getInitializer();
         auto varType = getTempVarType(var->getType());
         auto tempVar = change_ConstantVal_to_TemporaryVariable(initializer);
-        GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
-        TempVarVector.push_back(new TemporaryVariable(GlobalVar.size()-1, TemporaryVariable::Pointer, varType));
+        Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+        TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, varType));
         var->setTempVar(TempVarVector.back());
         tempVar->print();
     }
@@ -279,7 +278,7 @@ InterpretBasicBlock:
                 else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
                     auto tempVarType = getTempVarType(allocType->getType());
                     auto tempVar = change_ConstantVal_to_TemporaryVariable(inst);
-                    GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+                    Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
                     TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, tempVarType));
                     inst->setTempVar(TempVarVector.back());
                     tempVar->print();
@@ -295,12 +294,7 @@ InterpretBasicBlock:
                 }
                 auto offset = std::any_cast<unsigned long>(tempVar->getValue());
                 TemporaryVariable* loadVar;
-                if(operand->getValueType() == IRValue::GlobalVariableVal){
-                    loadVar = GlobalVar[offset];
-                }
-                else{
-                    loadVar = Stack[offset];
-                }
+                loadVar = Stack[offset];
                 TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType()));
                 inst->setTempVar(TempVarVector.back());
                 loadVar->print();
@@ -316,16 +310,9 @@ InterpretBasicBlock:
                     printf("Error: Store destination is not Pointer type!");
                 }
                 auto offset = std::any_cast<unsigned long>(tempVar1->getValue());
-                if(operand1->getValueType() == IRValue::GlobalVariableVal){
-                    GlobalVar[offset]->setValue(tempVar0->getValue());
-                    GlobalVar[offset]->setType(tempVar0->getType());
-                    GlobalVar[offset]->print();
-                }
-                else{
-                    Stack[offset]->setValue(tempVar0->getValue());
-                    Stack[offset]->setType(tempVar0->getType());
-                    Stack[offset]->print();
-                }
+                Stack[offset]->setValue(tempVar0->getValue());
+                Stack[offset]->setType(tempVar0->getType());
+                Stack[offset]->print();
                 break;
             }
 
@@ -451,9 +438,9 @@ TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
             auto elementType = getTempVarType(val->getType());
             elementTy = elementType;
             auto tempVar = change_ConstantVal_to_TemporaryVariable(val);
-            GlobalVar.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+            Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
         }
-        return new TemporaryVariable(GlobalVar.size() - arraySize, TemporaryVariable::Pointer, elementTy);
+        return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementTy);
     }
 
     auto ty = getTempVarType(irValue->getType());
