@@ -14,10 +14,11 @@ class Interpreter {
 private:
     IRModule *ir;
 
-    static std::vector<TemporaryVariable*> Stack;
+    static std::vector<TemporaryVariable*> TempVarVector;
     static std::vector<TemporaryVariable*> GlobalVar;
+    static std::vector<TemporaryVariable*> Stack;
     static TemporaryVariable* interpretFunction(IRFunction *func);
-    static void funcArgPushStack(const std::vector<IRArgument *>& argVector);
+    static void funcArgPushTempVarVector(const std::vector<IRArgument *>& argVector);
     static void initGlobalVar(const std::vector<IRGlobalVariable *>& varVector);
     static TemporaryVariable* change_Operand_To_TemporaryVariable(IRValue* irValue);
     static TemporaryVariable* change_ConstantVal_to_TemporaryVariable(IRValue *irValue);
@@ -27,6 +28,7 @@ public:
     explicit Interpreter(IRModule *ir);
     int interpret();
 
+    static std::any get_initial_value(TemporaryVariable::tempVarType type);
 };
 
 

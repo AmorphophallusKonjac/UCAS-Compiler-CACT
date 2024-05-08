@@ -58,7 +58,7 @@ public:
             return {std::any_cast<double>(value) + std::any_cast<double>(other.value), Double};
         }
         else if(type == Pointer && other.type == Int){
-            return {std::any_cast<uint64_t>(value) + std::any_cast<int>(other.value), Pointer};
+            return {std::any_cast<unsigned long>(value) + std::any_cast<int>(other.value), Pointer};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -77,7 +77,7 @@ public:
             return {std::any_cast<double>(value) - std::any_cast<double>(other.value), Double};
         }
         else if(type == Pointer && other.type == Int){
-            return {std::any_cast<uint64_t>(value) - std::any_cast<int>(other.value), Pointer};
+            return {std::any_cast<unsigned long>(value) - std::any_cast<int>(other.value), Pointer};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -129,13 +129,13 @@ public:
 
     TemporaryVariable operator < (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) < std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) < std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) < std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) < std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) < std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) < std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -145,13 +145,13 @@ public:
 
     TemporaryVariable operator <= (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) <= std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) <= std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) <= std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) <= std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) <= std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) <= std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -161,13 +161,13 @@ public:
 
     TemporaryVariable operator > (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) > std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) > std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) > std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) > std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) > std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) > std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -177,13 +177,13 @@ public:
 
     TemporaryVariable operator >= (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) >= std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) >= std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) >= std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) >= std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) >= std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) >= std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -193,13 +193,13 @@ public:
 
     TemporaryVariable operator == (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) == std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) == std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) == std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) == std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) == std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) == std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -209,13 +209,13 @@ public:
 
     TemporaryVariable operator != (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) != std::any_cast<int>(other.value), Bool};
+            return {bool(std::any_cast<int>(value) != std::any_cast<int>(other.value)), Bool};
         }
         else if(type == Float && other.type == Float){
-            return {std::any_cast<float>(value) != std::any_cast<float>(other.value), Bool};
+            return {bool(std::any_cast<float>(value) != std::any_cast<float>(other.value)), Bool};
         }
         else if(type == Double && other.type == Double){
-            return {std::any_cast<double>(value) != std::any_cast<double>(other.value), Bool};
+            return {bool(std::any_cast<double>(value) != std::any_cast<double>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -225,7 +225,7 @@ public:
 
     TemporaryVariable operator && (const TemporaryVariable& other) {
         if(type == Bool && other.type == Bool){
-            return {std::any_cast<bool>(value) && std::any_cast<bool>(other.value), Bool};
+            return {bool(std::any_cast<bool>(value) && std::any_cast<bool>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -235,7 +235,7 @@ public:
 
     TemporaryVariable operator || (const TemporaryVariable& other) {
         if(type == Bool && other.type == Bool){
-            return {std::any_cast<bool>(value) || std::any_cast<bool>(other.value), Bool};
+            return {bool(std::any_cast<bool>(value) || std::any_cast<bool>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
@@ -245,7 +245,7 @@ public:
 
     TemporaryVariable operator ^ (const TemporaryVariable& other) {
         if(type == Bool && other.type == Bool){
-            return {std::any_cast<bool>(value) ^ std::any_cast<bool>(other.value), Bool};
+            return {bool(std::any_cast<bool>(value) ^ std::any_cast<bool>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");

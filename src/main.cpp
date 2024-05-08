@@ -45,6 +45,5 @@ int main(int argc, const char *argv[]) {
 
     frontEnd.print();
 
-//    return ret;
-    return 0;
+    return ret;
 }

@@ -68,7 +68,7 @@ void TemporaryVariable::print() {
             break;
         }
         case Pointer:{
-            printf("%lx\n", std::any_cast<uint64_t>(getValue()));
+            printf("%lu\n", std::any_cast<unsigned long>(getValue()));
             break;
         }
         default:{
