@@ -16,6 +16,8 @@ int Interpreter::interpret() {
     auto mainFunc = ir -> getMainFunction();
     auto varList = ir -> getVarList();
     initGlobalVar(varList);
+    TempVarVector.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入临时变量栈
+    Stack.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入栈
     TemporaryVariable* ret = interpretFunction(mainFunc);
     return std::any_cast<int>(ret->getValue());
 }
@@ -25,10 +27,21 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector
     auto varVectorSize = varVector.size();
     for(auto var : varVector){
         auto allocType = dynamic_cast<IRSequentialType*>(var->getType());
+
         if(allocType->getPrimitiveID() == IRType::PointerTyID){
-            auto tempVarType = getTempVarType(allocType->getElementType());
-            auto initialValue = get_initial_value(tempVarType);
-            GlobalVar.push_back(new TemporaryVariable(initialValue,tempVarType));
+            auto varType = getTempVarType(allocType->getElementType());
+
+            auto operandNum = var->getNumOperands();
+            printf("%d\n", operandNum);
+            std::any initVal;
+            if(operandNum == 1){    // 全局变量有初始值
+                auto operand = var->getOperand(0);
+                initVal = change_ConstantVal_to_TemporaryVariable(operand)->getValue();
+            }
+            else{
+                printf("Undefined Global Variable with Operand Num = %d", operandNum);
+            }
+            GlobalVar.push_back(new TemporaryVariable(initVal, varType));
             auto pointer = new TemporaryVariable(GlobalVar.size()-1, TemporaryVariable::Pointer);
             TempVarVector.push_back(pointer);
             var->setTempVar(TempVarVector.back());
@@ -40,19 +53,27 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector
             puts("");
 
         }
+
         else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
-            printf("Error!");
+            printf("Global variable ValueTy = ArrayTyID");
         }
     }
 }
 
+void Interpreter::initFuncArg(const std::vector<IRArgument *>& argVector) {
+    auto argNum = argVector.size();
+    auto stackSize = Stack.size();
+    for(int i = 0; i < argNum; ++i){
+        argVector[i]->setTempVar(Stack[stackSize - argNum + i]);
+    }
+}
+
 TemporaryVariable* Interpreter::interpretFunction(IRFunction *func) {
-    TempVarVector.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入临时变量栈
-    Stack.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入栈
-    auto funcArg = func->getArgumentList(); // 获取函数参数
-    funcArgPushTempVarVector(funcArg);  // 把函数参数压栈
+    auto argList = func->getArgumentList(); // 函数参数列表
+    initFuncArg(argList);   // 初始化参数列表
     auto entryBlock = func -> getEntryBlock();
     auto currentBlock = entryBlock;
+    IRBasicBlock* lastBlock = nullptr;
 
 InterpretBasicBlock:
     auto instList = currentBlock -> getInstList();
@@ -82,13 +103,23 @@ InterpretBasicBlock:
                 }
                 Stack.pop_back();   // 弹出函数标识符
 
-                auto operand = inst->getOperand(0);
-                return change_Operand_To_TemporaryVariable(operand);
+                if(operandNum == 0){
+                    return new TemporaryVariable(nullptr, TemporaryVariable::Void);
+                }
+                else if(operandNum == 1) {
+                    auto operand = inst->getOperand(0);
+                    auto ret = change_Operand_To_TemporaryVariable(operand);
+                    return new TemporaryVariable(ret->getValue(), ret->getType());
+                }
+                break;
             }
             case IRInstruction::Br : {
                 if(operandNum == 1) {
                     auto dest = inst->getOperand(0);
-                    dest->getValueType();
+                    if(dest->getValueType() != IRValue::BasicBlockVal){
+                        printf("Branch Operand is not BasicBlockVal valueType\n");
+                    }
+                    lastBlock = currentBlock;
                     currentBlock = dynamic_cast<IRBasicBlock*>(dest);
                 }
                 else{
@@ -107,9 +138,11 @@ InterpretBasicBlock:
                     }
 
                     if(std::any_cast<bool>(tempVarCond->getValue())){
+                        lastBlock = currentBlock;
                         currentBlock = dynamic_cast<IRBasicBlock*>(destTrue);
                     }
                     else{
+                        lastBlock = currentBlock;
                         currentBlock = dynamic_cast<IRBasicBlock*>(destFalse);
                     }
                 }
@@ -327,19 +360,53 @@ InterpretBasicBlock:
             }
 
             case IRInstruction::Call : {
-                auto dest = inst->getOperand(0);
-                dest->getValueType();
-                currentBlock = dynamic_cast<IRBasicBlock*>(dest);
+                auto operand0 = inst->getOperand(0);
+
+                auto funcName = operand0->getName();
+
+                if(operand0->getValueType() != IRValue::FunctionVal){
+                    printf("Call Operand0 is not FunctionVal valueType\n");
+                }
+
+                TempVarVector.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入临时变量栈
+                Stack.push_back(new TemporaryVariable(0,TemporaryVariable::Func));   // 把函数标识符放入栈
+
+                for(int i = 1; i < operandNum; ++i){    // 把参数放入栈里
+                    auto operand_i = inst->getOperand(i);
+                    auto arg_i = change_Operand_To_TemporaryVariable(operand_i);
+                    Stack.push_back(new TemporaryVariable(arg_i->getValue(), arg_i->getType()));
+                }
+
+                TemporaryVariable* ret = nullptr;
+                if(isBuildInFunction(funcName)) {   // 内置函数
+                    ret = runBuildInFunction(funcName);
+                }
+                else{
+                    auto callFunc = dynamic_cast<IRFunction*>(operand0);    // 函数指针
+                    ret = interpretFunction(callFunc);
+                }
+                TempVarVector.push_back(new TemporaryVariable{ret->getValue(), ret->getType()});
+                inst->setTempVar(TempVarVector.back());
                 break;
             }
 
             case IRInstruction::Shl : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 << *tempVar1;
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(TempVarVector.back());
+                result.print();
                 break;
             }
 
             case IRInstruction::Shr : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                TemporaryVariable result = *tempVar0 >> *tempVar1;
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                inst->setTempVar(TempVarVector.back());
+                result.print();
                 break;
             }
 
@@ -347,12 +414,6 @@ InterpretBasicBlock:
                 printf("Undefined Operator: %s\n", inst->getOpcodeName());
             }
         }
-    }
-}
-
-void Interpreter::funcArgPushTempVarVector(const std::vector<IRArgument *>& argVector) {
-    for(auto arg : argVector){
-
     }
 }
 
@@ -421,6 +482,9 @@ TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
             auto val = constBool->getRawValue();
             return new TemporaryVariable{(bool)val, TemporaryVariable::Bool};
         }
+        case TemporaryVariable::Void : {
+            return new TemporaryVariable{nullptr, TemporaryVariable::Void};
+        }
         default : {
             printf("Cannot change type:");
             std::cout << TemporaryVariable::getTypeString(ty);
@@ -446,4 +510,85 @@ std::any Interpreter::get_initial_value(TemporaryVariable::tempVarType ty) {
         case TemporaryVariable::Pointer :
             return (unsigned long)0;
     }
+}
+
+bool Interpreter::isBuildInFunction(const std::string& funcName) {
+    if(funcName == "print_int")     return true;
+    if(funcName == "print_float")   return true;
+    if(funcName == "print_double")  return true;
+    if(funcName == "print_bool")    return true;
+    if(funcName == "get_int")       return true;
+    if(funcName == "get_float")     return true;
+    if(funcName == "get_double")    return true;
+    return false;
+}
+
+TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) {
+    TemporaryVariable* ret;
+
+    if(funcName == "print_int"){
+        if(Stack.back()->getType() != TemporaryVariable::Int){
+            printf("print_int Error: variable type = ");
+            std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
+        }
+        auto val = std::any_cast<int>(Stack.back()->getValue());
+        printf("print_int: %d\n", val);
+        ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+    }
+
+    if(funcName == "print_float"){
+        if(Stack.back()->getType() != TemporaryVariable::Float){
+            printf("print_float Error: variable type = ");
+            std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
+        }
+        auto val = std::any_cast<float>(Stack.back()->getValue());
+        printf("print_float: %f\n", val);
+        ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+    }
+
+    if(funcName == "print_double"){
+        if(Stack.back()->getType() != TemporaryVariable::Double){
+            printf("print_double Error: variable type = ");
+            std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
+        }
+        auto val = std::any_cast<double>(Stack.back()->getValue());
+        printf("print_double: %lf\n", val);
+        ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+    }
+
+    if(funcName == "print_bool"){
+        if(Stack.back()->getType() != TemporaryVariable::Bool){
+            printf("print_bool Error: variable type = ");
+            std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
+        }
+        int val = std::any_cast<bool>(Stack.back()->getValue());
+        printf("print_bool: %d\n", val);
+        ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+    }
+
+    if(funcName == "get_int"){
+        int val;
+        printf("get_int: ");
+        std::cin >> val;
+        ret = new TemporaryVariable(val, TemporaryVariable::Int);
+    }
+
+    if(funcName == "get_float"){
+        float val;
+        printf("get_float: ");
+        std::cin >> val;
+        ret = new TemporaryVariable(val, TemporaryVariable::Float);
+    }
+
+    if(funcName == "get_double"){
+        double val;
+        printf("get_double: ");
+        std::cin >> val;
+        ret = new TemporaryVariable(val, TemporaryVariable::Double);
+    }
+    while(Stack.back()->getType() != TemporaryVariable::Func){
+        Stack.pop_back();
+    }
+    Stack.pop_back();
+    return ret;
 }
