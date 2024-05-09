@@ -100,7 +100,7 @@ void mul2shift(std::vector<IRInstruction*>::iterator &inst, IRBasicBlock &BB){
     /*如果出现移位数为0的情况，那么可以选择直接用原来的IRinstruction*/
     if(dynamic_cast<IRConstantInt*>(irinstArray[0]->getOperand(1))->getRawValue() == 0){
         irinitinst = irinstArray[0]->getOperand(0);
-        irinstArray.erase(irinstArray.begin());
+        //irinstArray.erase(irinstArray.begin());
     }else{
         irinitinst = irinstArray[0];
     }
