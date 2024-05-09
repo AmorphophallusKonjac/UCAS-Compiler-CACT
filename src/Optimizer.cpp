@@ -28,5 +28,5 @@ void Optimizer::build() {
 //    addPass(new LocalSubExpPass("LocalSubExpPass"));
 //    addPass(new ConstantPass("ConstantPass"));
 //    addPass(new AlgebraicPass("AlgebraicPass"));
-//    addPass(new RenamePass("RenamePass"));
+    addPass(new RenamePass("RenamePass"));
 }

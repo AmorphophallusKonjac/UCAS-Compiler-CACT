@@ -42,7 +42,7 @@ add_test(
 
 add_test(
         NAME semantic_test
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/semantic_test.sh
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/semantic_interpret_test.sh
 )
 
 add_test(
