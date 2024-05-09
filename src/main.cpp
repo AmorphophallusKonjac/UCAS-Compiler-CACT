@@ -43,7 +43,7 @@ int main(int argc, const char *argv[]) {
 
     if(argc > 2) {
         std::string interpret(argv[2]);
-        if (interpret == "1") {
+        if (interpret == "-i") {
 
             Interpreter ip(&ir);
 
