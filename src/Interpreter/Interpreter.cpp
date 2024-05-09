@@ -56,11 +56,11 @@ InterpretBasicBlock:
     for(auto inst : instList){
         auto opcode = inst->getOpcode();
 
-//        printf("\nInst Name: %s,", inst->getOpcodeName());
+        printf("\nInst Name: %s,", inst->getOpcodeName());
 
         auto operandNum = inst->getNumOperands();
 
-//        printf("Operand Number = %d\n", operandNum);
+        printf("Operand Number = %d\n", operandNum);
 //        for(int i = 0; i < operandNum; ++i){
 //            printf("Operand ");
 //            std::cout << inst->getOperand(i)->getName() << ": ";

@@ -218,6 +218,9 @@ public:
         else if(type == Double && other.type == Double){
             return {bool(std::any_cast<double>(value) == std::any_cast<double>(other.value)), Bool};
         }
+        else if(type == Bool && other.type == Bool){
+            return {bool(std::any_cast<bool>(value) == std::any_cast<bool>(other.value)), Bool};
+        }
         else{
             printf("Undefined Temporary Variable Operation: ");
             std::cout << getTypeString(type) << "==" << getTypeString(other.type) << std::endl;
@@ -233,6 +236,9 @@ public:
         }
         else if(type == Double && other.type == Double){
             return {bool(std::any_cast<double>(value) != std::any_cast<double>(other.value)), Bool};
+        }
+        else if(type == Bool && other.type == Bool){
+            return {bool(std::any_cast<bool>(value) != std::any_cast<bool>(other.value)), Bool};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
