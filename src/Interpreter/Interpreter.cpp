@@ -31,7 +31,7 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector
                                               tempVar->getElementType(), tempVar->getArraySize()));
         TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, varType));
         var->setTempVar(TempVarVector.back());
-        tempVar->print();
+//        tempVar->print();
     }
 }
 
@@ -56,11 +56,11 @@ InterpretBasicBlock:
     for(auto inst : instList){
         auto opcode = inst->getOpcode();
 
-        printf("\nInst Name: %s,", inst->getOpcodeName());
+//        printf("\nInst Name: %s,", inst->getOpcodeName());
 
         auto operandNum = inst->getNumOperands();
 
-        printf("Operand Number = %d\n", operandNum);
+//        printf("Operand Number = %d\n", operandNum);
 //        for(int i = 0; i < operandNum; ++i){
 //            printf("Operand ");
 //            std::cout << inst->getOperand(i)->getName() << ": ";
@@ -132,7 +132,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -143,7 +143,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -154,7 +154,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -165,7 +165,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -176,7 +176,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -187,7 +187,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -198,7 +198,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -209,7 +209,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -220,7 +220,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -231,7 +231,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -242,7 +242,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -253,7 +253,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -264,7 +264,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -275,7 +275,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -288,7 +288,7 @@ InterpretBasicBlock:
                                                       tempVar->getElementType(), tempVar->getArraySize()));
                 TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, varType));
                 inst->setTempVar(TempVarVector.back());
-                tempVar->print();
+//                tempVar->print();
                 break;
             }
 
@@ -304,7 +304,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType(),
                                                               loadVar->getElementType(), loadVar->getArraySize()));
                 inst->setTempVar(TempVarVector.back());
-                loadVar->print();
+//                loadVar->print();
                 break;
             }
 
@@ -321,7 +321,7 @@ InterpretBasicBlock:
                 Stack[offset]->setType(tempVar0->getType());
                 Stack[offset]->setElementType(tempVar0->getElementType());
                 Stack[offset]->setArraySize(tempVar0->getArraySize());
-                Stack[offset]->print();
+//                Stack[offset]->print();
                 break;
             }
 
@@ -389,7 +389,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 
@@ -400,7 +400,7 @@ InterpretBasicBlock:
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
-                result.print();
+//                result.print();
                 break;
             }
 

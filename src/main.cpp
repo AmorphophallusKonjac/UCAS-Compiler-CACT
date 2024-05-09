@@ -36,6 +36,8 @@ int main(int argc, const char *argv[]) {
 
     int ret = ip.interpret();
 
+    printf("ret = %d\n", ret);
+
     Optimizer opt(&ir);
 
     // 在 build 方法中 new 自己定义的 pass 并添加进 opt
@@ -45,5 +47,5 @@ int main(int argc, const char *argv[]) {
 
     frontEnd.print();
 
-    return ret;
+    return 0;
 }
