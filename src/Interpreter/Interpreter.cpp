@@ -319,6 +319,8 @@ InterpretBasicBlock:
                 auto offset = std::any_cast<unsigned long>(tempVar1->getValue());
                 Stack[offset]->setValue(tempVar0->getValue());
                 Stack[offset]->setType(tempVar0->getType());
+                Stack[offset]->setElementType(tempVar0->getElementType());
+                Stack[offset]->setArraySize(tempVar0->getArraySize());
                 Stack[offset]->print();
                 break;
             }
@@ -513,9 +515,9 @@ TemporaryVariable* Interpreter::allocaOnStack(IRValue* irValue, TemporaryVariabl
         for(int i = 0; i < arraySize; ++i){
             Stack.push_back(new TemporaryVariable(get_initial_value(elementType), elementType));
         }
-        return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementType, arraySize);
+        return new TemporaryVariable(Stack.size() - arraySize, varType, elementType, arraySize);
     }
-    else {
+    else{
         return new TemporaryVariable(get_initial_value(varType), varType);
     }
 }
