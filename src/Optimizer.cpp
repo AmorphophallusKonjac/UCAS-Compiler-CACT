@@ -23,7 +23,7 @@ void Optimizer::addPass(Pass *pass) {
 
 void Optimizer::build() {
 //    addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
-//    addPass(new MemToRegPass("Mem2Reg"));
+    addPass(new MemToRegPass("Mem2Reg"));
 //    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
 //    addPass(new LocalSubExpPass("LocalSubExpPass"));
 //    addPass(new ConstantPass("ConstantPass"));

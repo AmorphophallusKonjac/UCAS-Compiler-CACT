@@ -48,7 +48,7 @@ TemporaryVariable* Interpreter::interpretFunction(IRFunction *func) {
     initFuncArg(argList);   // 初始化参数列表
     auto entryBlock = func -> getEntryBlock();
     auto currentBlock = entryBlock;
-    IRBasicBlock* lastBlock = nullptr;
+    IRBasicBlock* lastBlock = currentBlock;
 
 InterpretBasicBlock:
     auto instList = currentBlock -> getInstList();
@@ -56,12 +56,16 @@ InterpretBasicBlock:
     for(auto inst : instList){
         auto opcode = inst->getOpcode();
 
-        printf("\nInst Name: %s,", inst->getOpcodeName());
+//        printf("\nInst Name: %s,", inst->getOpcodeName());
 
         auto operandNum = inst->getNumOperands();
 
-        printf("Operand Number = %d\n", operandNum);
+//        printf("Operand Number = %d\n", operandNum);
 //        for(int i = 0; i < operandNum; ++i){
+//            if(inst->getOpcode() == IRInstruction::Br && (i==0 || i==1))
+//                continue;
+//            if(inst->getOpcode() == IRInstruction::PHI && (i % 2 == 1))
+//                continue;
 //            printf("Operand ");
 //            std::cout << inst->getOperand(i)->getName() << ": ";
 //            change_Operand_To_TemporaryVariable(inst->getOperand(i))->print();
@@ -345,7 +349,24 @@ InterpretBasicBlock:
             }
 
             case IRInstruction::PHI : {
-
+                auto labelNum = operandNum / 2;
+                auto foundLabel = false;
+                for(auto i = 0; i < labelNum; ++i){
+                    auto label = inst->getOperand(2 * i + 1);
+//                    std::cout << label->getName() << ' ' << lastBlock->getName() << std::endl;
+                    if(label->getName() == lastBlock->getName()){
+                        auto tempVar = change_Operand_To_TemporaryVariable(inst->getOperand(2 * i));
+                        TempVarVector.push_back(new TemporaryVariable{tempVar->getValue(),
+                                                                      tempVar->getType(),
+                                                                      tempVar->getElementType(),
+                                                                      tempVar->getArraySize()});
+                        inst->setTempVar(TempVarVector.back());
+                        foundLabel = true;
+                        break;
+                    }
+                }
+                if(!foundLabel)
+                    printf("Phi: Failed to Find LastBlock Label in Given Label List!\n");
                 break;
             }
 
