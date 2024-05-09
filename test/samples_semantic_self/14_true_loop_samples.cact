@@ -1,0 +1,14 @@
+int a[100];
+
+int main() {
+    int i = 1, b, c;
+    while (i > 1) {
+        if (i < 3) {
+            b = b + c;
+            break;
+        }
+        i = i + 1;
+        a[i] = b + c;
+    }
+    return 0;
+}

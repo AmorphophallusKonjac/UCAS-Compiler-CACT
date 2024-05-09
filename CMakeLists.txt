@@ -23,11 +23,7 @@ add_custom_target(
 )
 
 add_definitions(-w -g)
-add_library(antlr STATIC ${ANTLR_LIB_FILES}
-        src/Interpreter/Interpreter.cpp
-        src/Interpreter/Interpreter.h
-        src/Interpreter/TemporaryVariable.cpp
-        src/Interpreter/TemporaryVariable.h)
+add_library(antlr STATIC ${ANTLR_LIB_FILES})
 add_executable(compiler ${SOURCE_FILES})
 add_dependencies(compiler gen_files_form_g4)
 find_package(Threads REQUIRED)
@@ -42,6 +38,11 @@ add_test(
 
 add_test(
         NAME semantic_test
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/semantic_test.sh
+)
+
+add_test(
+        NAME semantic_interpret_test
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/semantic_interpret_test.sh
 )
 
