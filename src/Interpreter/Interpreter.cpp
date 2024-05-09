@@ -27,7 +27,8 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *>& varVector
         auto initializer = var->getInitializer();
         auto varType = getTempVarType(var->getType());
         auto tempVar = change_ConstantVal_to_TemporaryVariable(initializer);
-        Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+        Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
+                                              tempVar->getElementType(), tempVar->getArraySize()));
         TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, varType));
         var->setTempVar(TempVarVector.back());
         tempVar->print();
@@ -83,7 +84,8 @@ InterpretBasicBlock:
                 else if(operandNum == 1) {
                     auto operand = inst->getOperand(0);
                     auto ret = change_Operand_To_TemporaryVariable(operand);
-                    return new TemporaryVariable(ret->getValue(), ret->getType());
+                    return new TemporaryVariable(ret->getValue(), ret->getType(),
+                                                 ret->getElementType(), ret->getArraySize());
                 }
                 break;
             }
@@ -127,7 +129,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 + *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -137,7 +140,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 - *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -147,7 +151,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 * *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -157,7 +162,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 / *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -167,7 +173,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 % *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -177,7 +184,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 && *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -187,7 +195,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 || *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -197,7 +206,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 ^ *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -207,7 +217,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 <= *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -217,7 +228,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 >= *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -227,7 +239,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 < *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -237,7 +250,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 > *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -247,7 +261,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 == *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -257,32 +272,23 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 != *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
             }
 
             case IRInstruction::Alloca : {
-                auto allocType = dynamic_cast<IRSequentialType*>(inst->getType());
-                if(allocType->getPrimitiveID() == IRType::PointerTyID){
-                    auto tempVarType = getTempVarType(allocType->getElementType());
-                    auto initialValue = get_initial_value(tempVarType);
-                    Stack.push_back(new TemporaryVariable(initialValue,tempVarType));
-                    auto pointer = new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer);
-                    TempVarVector.push_back(pointer);
-                    inst->setTempVar(TempVarVector.back());
-                    Stack.back()->print();
-                    pointer->print();
-                }
-                else if(allocType->getPrimitiveID() == IRType::ArrayTyID){
-                    auto tempVarType = getTempVarType(allocType->getType());
-                    auto tempVar = change_ConstantVal_to_TemporaryVariable(inst);
-                    Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
-                    TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, tempVarType));
-                    inst->setTempVar(TempVarVector.back());
-                    tempVar->print();
-                }
+                auto seqType = dynamic_cast<IRSequentialType*>(inst->getType());
+                auto operand = inst->getOperand(0);
+                auto varType = getTempVarType(seqType->getElementType());
+                auto tempVar = allocaOnStack(operand, varType);
+                Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
+                                                      tempVar->getElementType(), tempVar->getArraySize()));
+                TempVarVector.push_back(new TemporaryVariable(Stack.size()-1, TemporaryVariable::Pointer, varType));
+                inst->setTempVar(TempVarVector.back());
+                tempVar->print();
                 break;
             }
 
@@ -295,7 +301,8 @@ InterpretBasicBlock:
                 auto offset = std::any_cast<unsigned long>(tempVar->getValue());
                 TemporaryVariable* loadVar;
                 loadVar = Stack[offset];
-                TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType()));
+                TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType(),
+                                                              loadVar->getElementType(), loadVar->getArraySize()));
                 inst->setTempVar(TempVarVector.back());
                 loadVar->print();
                 break;
@@ -317,7 +324,21 @@ InterpretBasicBlock:
             }
 
             case IRInstruction::Memcpy : {
-
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto pointer_offset0 = std::any_cast<unsigned long>(tempVar0->getValue());
+                auto pointer_offset1 = std::any_cast<unsigned long>(tempVar1->getValue());
+                auto array0 = Stack[pointer_offset0];
+                auto array1 = Stack[pointer_offset1];
+                auto array0_address = std::any_cast<unsigned long>(array0->getValue());
+                auto array1_address = std::any_cast<unsigned long>(array1->getValue());
+                auto arraySize = array0->getArraySize();
+                for(auto i = 0; i < arraySize; ++i){
+                    Stack[array1_address + i]->setValue(Stack[array0_address + i]->getValue());
+                    Stack[array1_address + i]->setType(Stack[array0_address + i]->getType());
+                    Stack[array1_address + i]->setElementType(Stack[array0_address + i]->getElementType());
+                    Stack[array1_address + i]->setArraySize(Stack[array0_address + i]->getArraySize());
+                }
                 break;
             }
 
@@ -341,7 +362,8 @@ InterpretBasicBlock:
                 for(int i = 1; i < operandNum; ++i){    // 把参数放入栈里
                     auto operand_i = inst->getOperand(i);
                     auto arg_i = change_Operand_To_TemporaryVariable(operand_i);
-                    Stack.push_back(new TemporaryVariable(arg_i->getValue(), arg_i->getType()));
+                    Stack.push_back(new TemporaryVariable(arg_i->getValue(), arg_i->getType(),
+                                                          arg_i->getElementType(), arg_i->getArraySize()));
                 }
 
                 TemporaryVariable* ret = nullptr;
@@ -352,7 +374,8 @@ InterpretBasicBlock:
                     auto callFunc = dynamic_cast<IRFunction*>(operand0);    // 函数指针
                     ret = interpretFunction(callFunc);
                 }
-                TempVarVector.push_back(new TemporaryVariable{ret->getValue(), ret->getType()});
+                TempVarVector.push_back(new TemporaryVariable{ret->getValue(), ret->getType(),
+                                                              ret->getElementType(), ret->getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 break;
             }
@@ -361,7 +384,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 << *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -371,7 +395,8 @@ InterpretBasicBlock:
                 auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 TemporaryVariable result = *tempVar0 >> *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType()});
+                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
+                                                              result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
                 result.print();
                 break;
@@ -420,6 +445,9 @@ TemporaryVariable::tempVarType Interpreter::getTempVarType(IRType* ty){
         case IRType::PointerTyID : {
             return TemporaryVariable::tempVarType::Pointer;
         }
+        case IRType::ArrayTyID : {
+            return TemporaryVariable::tempVarType::Pointer;
+        }
         default: {
             printf("Cannot change IRType to tempVarType\n");
         }
@@ -431,16 +459,16 @@ TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
         auto arrayType = dynamic_cast<IRConstantArray*>(irValue);
         auto elementList = arrayType->getValues();
         auto arraySize = elementList.size();
-        printf("%d\n",arraySize);
         TemporaryVariable::tempVarType elementTy;
         for(const auto& element : elementList){
             auto val = element.get();
             auto elementType = getTempVarType(val->getType());
             elementTy = elementType;
             auto tempVar = change_ConstantVal_to_TemporaryVariable(val);
-            Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType()));
+            Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
+                                                  tempVar->getElementType(), tempVar->getArraySize()));
         }
-        return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementTy);
+        return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementTy, arraySize);
     }
 
     auto ty = getTempVarType(irValue->getType());
@@ -473,6 +501,22 @@ TemporaryVariable* Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
             std::cout << TemporaryVariable::getTypeString(ty);
             printf(" to TemporaryVariable\n");
         }
+    }
+}
+
+TemporaryVariable* Interpreter::allocaOnStack(IRValue* irValue, TemporaryVariable::tempVarType varType){
+    if(irValue->getType()->getPrimitiveID() == IRType::ArrayTyID){
+        auto arrayType = dynamic_cast<IRConstantArray*>(irValue);
+        auto elementList = arrayType->getValues();
+        auto arraySize = elementList.size();
+        auto elementType = getTempVarType(arrayType->getType()->getElementType());
+        for(int i = 0; i < arraySize; ++i){
+            Stack.push_back(new TemporaryVariable(get_initial_value(elementType), elementType));
+        }
+        return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementType, arraySize);
+    }
+    else {
+        return new TemporaryVariable(get_initial_value(varType), varType);
     }
 }
 

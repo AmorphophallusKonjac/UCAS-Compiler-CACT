@@ -32,11 +32,14 @@ public:
 
 private:
     tempVarType type;
+
     tempVarType elementType;
+
+    unsigned long  arraySize;
 
 public:
 
-    TemporaryVariable(std::any value, tempVarType type, tempVarType elementType = Void);
+    TemporaryVariable(std::any value, tempVarType type, tempVarType elementType = Void, unsigned long arraySize = 0);
 
     void setType(tempVarType type);
 
@@ -51,6 +54,10 @@ public:
     tempVarType getElementType() const;
 
     static std::string getTypeString(tempVarType ty);
+
+    unsigned long getArraySize() const;
+
+    void setArraySize(unsigned long  arraySize);
 
     void print();
 
@@ -68,7 +75,7 @@ public:
         }
         else if(type == Pointer && other.type == Int){
             auto offset = std::any_cast<int>(other.value) / getTypeSize(getElementType());
-            return {std::any_cast<unsigned long>(value) + offset, Pointer};
+            return {std::any_cast<unsigned long>(value) + offset, Pointer, elementType};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");

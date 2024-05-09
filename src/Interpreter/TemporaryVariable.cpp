@@ -22,8 +22,8 @@ void TemporaryVariable::setType(TemporaryVariable::tempVarType type) {
 }
 
 TemporaryVariable::TemporaryVariable(std::any value, TemporaryVariable::tempVarType type,
-                                     TemporaryVariable::tempVarType elementType) :
-                                     value(std::move(value)), type(type), elementType(elementType){}
+                                     TemporaryVariable::tempVarType elementType, unsigned long arraySize) :
+                                     value(std::move(value)), type(type), elementType(elementType), arraySize(arraySize){}
 
 std::string TemporaryVariable::getTypeString(tempVarType ty) {
     switch (ty) {
@@ -53,29 +53,34 @@ void TemporaryVariable::print() {
     printf(" , value = ");
     switch (ty) {
         case Bool:{
-            printf("%d\n", std::any_cast<bool>(getValue()));
+            printf("%d", std::any_cast<bool>(getValue()));
             break;
         }
         case Int:{
-            printf("%d\n", std::any_cast<int>(getValue()));
+            printf("%d", std::any_cast<int>(getValue()));
             break;
         }
         case Float:{
-            printf("%f\n", std::any_cast<float>(getValue()));
+            printf("%f", std::any_cast<float>(getValue()));
             break;
         }
         case Double:{
-            printf("%lf\n", std::any_cast<double>(getValue()));
+            printf("%lf", std::any_cast<double>(getValue()));
             break;
         }
         case Pointer:{
-            printf("%lu\n", std::any_cast<unsigned long>(getValue()));
+            printf("%lu", std::any_cast<unsigned long>(getValue()));
+            printf(", Element Type = ");
+            std::cout << getTypeString(elementType);
+            printf(", Array Size = ");
+            printf("%d", arraySize);
             break;
         }
         default:{
-            printf("NULL\n");
+            printf("NULL");
         }
     }
+    puts("");
 }
 
 unsigned long TemporaryVariable::getTypeSize(TemporaryVariable::tempVarType ty) {
@@ -95,5 +100,13 @@ TemporaryVariable::tempVarType TemporaryVariable::getElementType() const {
 
 void TemporaryVariable::setElementType(TemporaryVariable::tempVarType elementType) {
     TemporaryVariable::elementType = elementType;
+}
+
+unsigned long TemporaryVariable::getArraySize() const {
+    return arraySize;
+}
+
+void TemporaryVariable::setArraySize(unsigned long  arraySize) {
+    TemporaryVariable::arraySize = arraySize;
 }
 

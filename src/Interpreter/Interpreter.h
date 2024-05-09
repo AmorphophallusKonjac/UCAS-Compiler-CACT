@@ -36,6 +36,8 @@ private:
 
     static TemporaryVariable* runBuildInFunction(const std::string& name);
 
+    static TemporaryVariable* allocaOnStack(IRValue* irValue, TemporaryVariable::tempVarType varType);
+
 public:
     explicit Interpreter(IRModule *ir);
     int interpret();
