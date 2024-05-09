@@ -9,7 +9,7 @@ DominatorTree::DominatorTree(IRBasicBlock *BB) : basicBlock(BB), bucket(), child
 
 DominatorTree *DominatorTree::getDominatorTree(IRFunction *F) {
     auto BBList = F->getBasicBlockList();
-    for (auto BB : BBList) {
+    for (auto BB: BBList) {
         resetNode(BB->getNode());
     }
     auto root = F->getEntryBlock()->getNode();
@@ -20,7 +20,10 @@ DominatorTree *DominatorTree::getDominatorTree(IRFunction *F) {
         auto parent = node->parent;
         auto s = parent;
         for (auto use: node->basicBlock->getUses()) {
-            auto v = dynamic_cast<IRTerminatorInst *>(use->getUser())->getParent()->getNode();
+            auto terminator = dynamic_cast<IRTerminatorInst *>(use->getUser());
+            if (terminator == nullptr)
+                continue;
+            auto v = terminator->getParent()->getNode();
             DominatorTree *newS;
             if (v->dfnum <= node->dfnum) {
                 newS = v;
@@ -87,7 +90,7 @@ DominatorTree *DominatorTree::ancestorWithLowestSemi(DominatorTree *v) {
 }
 
 void DominatorTree::computeDominanceFrontier(DominatorTree *node) {
- std::set<DominatorTree *> S;
+    std::set<DominatorTree *> S;
     S.clear();
     auto succList = node->basicBlock->getTerminator();
     for (unsigned i = 0, e = succList->getNumSuccessors(); i != e; ++i) {

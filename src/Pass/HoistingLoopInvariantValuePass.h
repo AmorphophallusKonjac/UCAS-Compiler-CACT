@@ -1,0 +1,25 @@
+#ifndef COMPILER_HOISTINGLOOPINVARIANTVALUEPASS_H
+#define COMPILER_HOISTINGLOOPINVARIANTVALUEPASS_H
+
+#include "Pass.h"
+#include "utils/LoopInfo.h"
+#include "IR/iMemory.h"
+
+class HoistingLoopInvariantValuePass : public FunctionPass {
+public:
+    explicit HoistingLoopInvariantValuePass(std::string name);
+
+    void runOnFunction(IRFunction &F) override;
+
+private:
+    static std::vector<IRValue *> findInvariantValue(LoopInfo *loop);
+
+    static bool binaryOperandCondition(IRValue *op, std::set<IRValue *> *Set, LoopInfo *loop);
+
+    static bool loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set);
+
+    static bool storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop);
+};
+
+
+#endif //COMPILER_HOISTINGLOOPINVARIANTVALUEPASS_H
