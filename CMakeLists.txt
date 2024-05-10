@@ -51,4 +51,9 @@ add_test(
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/code_gen.sh
 )
 
+add_test(
+        NAME test_against
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/code_gen_test_against/code_gen_test_against.sh
+)
+
 set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
