@@ -64,7 +64,7 @@ InterpretBasicBlock:
 //        for(int i = 0; i < operandNum; ++i){
 //            if(inst->getOpcode() == IRInstruction::Br && (i==0 || i==1))
 //                continue;
-//            if(inst->getOpcode() == IRInstruction::PHI && (i % 2 == 1))
+//            if(inst->getOpcode() == IRInstruction::PHI)
 //                continue;
 //            printf("Operand ");
 //            std::cout << inst->getOperand(i)->getName() << ": ";
@@ -581,7 +581,7 @@ TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) 
             std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
         }
         auto val = std::any_cast<int>(Stack.back()->getValue());
-        printf("print_int: %d\n", val);
+        printf("%d\n", val);
         ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
     }
 
@@ -591,7 +591,7 @@ TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) 
             std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
         }
         auto val = std::any_cast<float>(Stack.back()->getValue());
-        printf("print_float: %f\n", val);
+        printf("%f\n", val);
         ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
     }
 
@@ -601,7 +601,7 @@ TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) 
             std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
         }
         auto val = std::any_cast<double>(Stack.back()->getValue());
-        printf("print_double: %lf\n", val);
+        printf("%lf\n", val);
         ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
     }
 
@@ -611,27 +611,28 @@ TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) 
             std::cout << TemporaryVariable::getTypeString(Stack.back()->getType()) << std::endl;
         }
         int val = std::any_cast<bool>(Stack.back()->getValue());
-        printf("print_bool: %d\n", val);
+        if(val) puts("true");
+        else puts("false");
         ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
     }
 
     if(funcName == "get_int"){
         int val;
-        printf("get_int: ");
+//        printf("get_int: ");
         std::cin >> val;
         ret = new TemporaryVariable(val, TemporaryVariable::Int);
     }
 
     if(funcName == "get_float"){
         float val;
-        printf("get_float: ");
+//        printf("get_float: ");
         std::cin >> val;
         ret = new TemporaryVariable(val, TemporaryVariable::Float);
     }
 
     if(funcName == "get_double"){
         double val;
-        printf("get_double: ");
+//        printf("get_double: ");
         std::cin >> val;
         ret = new TemporaryVariable(val, TemporaryVariable::Double);
     }

@@ -49,8 +49,6 @@ int main(int argc, const char *argv[]) {
 
             int ret = ip.interpret();
 
-            printf("ret = %d\n", ret);
-
             return ret;
         }
     }
