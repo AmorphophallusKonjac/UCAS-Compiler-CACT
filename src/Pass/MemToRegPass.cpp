@@ -139,7 +139,7 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
                         DFNode->phi.insert(alloc);
                         auto phi = new IRPHINode(const_cast<IRType *>(alloc->getAllocatedType()), alloc);
                         DFNode->basicBlock->addInstructionToFront(dynamic_cast<IRInstruction *>(phi));
-                        if (node->orig.find(alloc) == node->phi.end()) {
+                        if (DFNode->orig.find(alloc) == DFNode->orig.end()) {
                             workList.insert(DFNode);
                         }
                     }
