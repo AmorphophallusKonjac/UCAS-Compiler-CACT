@@ -20,10 +20,12 @@ public:
 
     static bool isAncestor(DominatorTree *p, DominatorTree *ch);
 
+    static void printDominatorTree(IRFunction *F);
+
     int dfnum = 0;
     DominatorTree *parent = nullptr;
-    DominatorTree *semi = nullptr; // 本节点在支配树上的父亲
-    DominatorTree *idom = nullptr;
+    DominatorTree *semi = nullptr;
+    DominatorTree *idom = nullptr; // 本节点在支配树上的父亲
     DominatorTree *samedom = nullptr;
     DominatorTree *ancestor = nullptr;
     IRBasicBlock *basicBlock;

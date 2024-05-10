@@ -1,3 +1,4 @@
+#include <iostream>
 #include "DominatorTree.h"
 #include "IR/IRBasicBlock.h"
 #include "IR/IRFunction.h"
@@ -24,6 +25,9 @@ DominatorTree *DominatorTree::getDominatorTree(IRFunction *F) {
             if (terminator == nullptr)
                 continue;
             auto v = terminator->getParent()->getNode();
+            if (v->dfnum == 0) { // 不联通的点不能用来更新支配树
+                continue;
+            }
             DominatorTree *newS;
             if (v->dfnum <= node->dfnum) {
                 newS = v;
@@ -127,4 +131,15 @@ void DominatorTree::resetNode(DominatorTree *n) {
     n->DF.clear();
     n->orig.clear();
     n->phi.clear();
+}
+
+void DominatorTree::printDominatorTree(IRFunction *F) {
+    auto BBList = F->getBasicBlockList();
+    for (auto BB: BBList) {
+        auto node = BB->getNode();
+        if (node->idom) {
+            auto faBB = node->idom->basicBlock;
+            std::cout << faBB->getName() << " " << BB->getName() << std::endl;
+        }
+    }
 }
