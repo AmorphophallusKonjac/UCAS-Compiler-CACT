@@ -5,6 +5,7 @@
 #include "Pass/AlgebraicPass.h"
 #include "Pass/ConstantPass.h"
 #include "Pass/LocalSubExpPass.h"
+#include "Pass/HoistingLoopInvariantValuePass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -22,9 +23,8 @@ void Optimizer::addPass(Pass *pass) {
 }
 
 void Optimizer::build() {
-//    addPass(new CutDeadBlockPass("CutDeadBlockPass0"));
     addPass(new MemToRegPass("Mem2Reg"));
-//    addPass(new CutDeadBlockPass("CutDeadBlockPass1"));
+    addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
 //    addPass(new LocalSubExpPass("LocalSubExpPass"));
 //    addPass(new ConstantPass("ConstantPass"));
 //    addPass(new AlgebraicPass("AlgebraicPass"));
