@@ -308,7 +308,7 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Memcpy:
             //instruction begin
-            OS << this->getOpcodeName() << " ";//打印store
+            OS << this->getOpcodeName() << " ";//打印memcpy
 
             operand1 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getSrcPointerOperand();
             operand1->getType()->print(OS);

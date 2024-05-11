@@ -1,4 +1,5 @@
 #include "LocalSubExpPass.h"
+#include "IR/IRInstruction.h"
 #include "IR/IRValue.h"
 
 #include <algorithm>
@@ -18,7 +19,11 @@ void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
                 IRInstruction* irinst2 = BB.getInstList()[j];
 
                 bool flag = false;
-                if(irinst1->getOpcode() == irinst2->getOpcode()){
+                /*满足两者操作类型相同，并且以下几种指令是不可以消除局部公共子表达式的*/
+                if( (irinst1->getOpcode() == irinst2->getOpcode()) &&
+                    (irinst1->getOpcode() != IRInstruction::Br)    &&
+                    (irinst1->getOpcode() != IRInstruction::PHI)   &&
+                    (irinst1->getOpcode() != IRInstruction::Call)){
                     /*如果是可交换的，则两方都需要进行考虑*/
                     if(irinst1->isCommutative()){
                         if( (irinst1->getOperand(0) == irinst2->getOperand(0) && irinst1->getOperand(1) == irinst2->getOperand(1)) ||
@@ -37,6 +42,7 @@ void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
                 if(flag){//erase完毕后下一条指令自动上前
                     flagEnd = true;
                     auto ircancelinst = std::find(BB.getInstList().begin(), BB.getInstList().end(), irinst2);
+                    irinst2->dropAllReferences();
                     BB.getInstList().erase(ircancelinst);
                     irinst2->replaceAllUsesWith(irinst1);
                 }else{
