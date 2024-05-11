@@ -39,8 +39,11 @@ private:
     static TemporaryVariable* allocaOnStack(IRValue* irValue, TemporaryVariable::tempVarType varType);
 
 public:
-    explicit Interpreter(IRModule *ir);
+    explicit Interpreter(IRModule *ir, bool debugOpt = false);
+
     int interpret();
+
+    static bool debugOpt;
 
 };
 

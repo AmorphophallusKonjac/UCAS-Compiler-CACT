@@ -42,13 +42,24 @@ int main(int argc, const char *argv[]) {
     frontEnd.print();
 
     if (argc > 2) {
-        std::string interpret(argv[2]);
-        if (interpret == "-i") {
-
+        bool isInterpret = false;
+        bool isDebug = false;
+        for(int i = 2; i < argc; ++i){
+            std::string arg_i(argv[i]);
+            if(arg_i == "-i")
+                isInterpret = true;
+            if(arg_i == "-p")
+                isDebug = true;
+        }
+        if (isInterpret) {
+            if(isDebug) {
+                Interpreter::debugOpt = true;
+            }
+            else{
+                Interpreter::debugOpt = false;
+            }
             Interpreter ip(&ir);
-
             int ret = ip.interpret();
-
             return ret;
         }
     }
