@@ -10,11 +10,15 @@ DominatorTree::DominatorTree(IRBasicBlock *BB) : basicBlock(BB), bucket(), child
 
 DominatorTree *DominatorTree::getDominatorTree(IRFunction *F) {
     auto BBList = F->getBasicBlockList();
+
+    /*每一个BB都有一个getnode函数，直接获得和它对应的支配书节点*/
     for (auto BB: BBList) {
         resetNode(BB->getNode());
     }
     auto root = F->getEntryBlock()->getNode();
     std::vector<DominatorTree *> vertex;
+
+    /*根据root和dfs构造函数的支配树*/
     dfs(nullptr, root, vertex);
     for (unsigned i = vertex.size() - 1; i > 0; i = i - 1) {
         auto node = vertex[i];
