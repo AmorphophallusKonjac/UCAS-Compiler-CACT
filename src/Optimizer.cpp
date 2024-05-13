@@ -7,6 +7,7 @@
 #include "Pass/LocalSubExpPass.h"
 #include "Pass/HoistingLoopInvariantValuePass.h"
 #include "Pass/GlobalSubExpPass.h"
+#include "Pass/LoopArrayScalarizePass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -27,8 +28,9 @@ void Optimizer::build() {
     addPass(new MemToRegPass("Mem2Reg"));
     addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
     addPass(new LocalSubExpPass("LocalSubExpPass"));
-    addPass(new GlobalSubExpPass("GlobalSubExpPass"));
     addPass(new ConstantPass("ConstantPass"));
     addPass(new AlgebraicPass("AlgebraicPass"));
     addPass(new RenamePass("RenamePass"));
+    addPass(new GlobalSubExpPass("GlobalSubExpPass"));
+    //addPass(new LoopArrayScalarizePass("LoopArrayScalarizePass"));
 }

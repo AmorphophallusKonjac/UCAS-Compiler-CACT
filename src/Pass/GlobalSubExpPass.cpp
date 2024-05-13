@@ -14,7 +14,111 @@
 #include <vector>
 
 std::vector<IRInstruction*> irdomiinstArray;
+std::vector<IRInstruction*> irloadstoreArray;
 
+/*我认为这两个函数是解耦的：一个负责消除除了ldst之外其他的公共子表达式，另一个负责在此基础上进行ld st指令的尽可能消除*/
+void childrenldst(IRBasicBlock& BB){
+    for(auto domi : BB.getNode()->children){
+        auto childBB = domi->basicBlock;
+
+        /*对于子块中的每一条load store指令，如果操作数之前从没有出现过，那么就必然要放进去*/
+        for(unsigned i=0; i<childBB->getInstList().size();){
+            IRInstruction* childinst = childBB->getInstList()[i];
+
+            if((childinst->getOpcode() == IRInstruction::Store) ||
+               (childinst->getOpcode() == IRInstruction::Load) ){
+                    bool flag = false;
+
+                    for(unsigned j=0; j<irloadstoreArray.size();j++){
+                        IRInstruction* parentinst = irloadstoreArray[j];
+
+                        /*这里专门进行loadstore指令相关的消除*/
+                        if( (childinst->getOpcode() == IRInstruction::Store)   &&
+                            (parentinst->getOpcode() == IRInstruction::Load)   &&
+                            (parentinst->getOperand(0) == childinst->getOperand(1))){
+
+                            /*Array中ld指令到st指令的更新*/
+                            auto irldstcancelinst = std::find(irloadstoreArray.begin(), irloadstoreArray.end(), parentinst);
+                            auto irldstinsert = irloadstoreArray.erase(irldstcancelinst);
+                            irloadstoreArray.insert(irldstinsert, childinst);
+
+                            flag = true;
+                            i++;
+                            break;
+                        }else if( (childinst->getOpcode() == IRInstruction::Load)   &&
+                                  (parentinst->getOpcode() == IRInstruction::Store) &&
+                                  (parentinst->getOperand(1) == childinst->getOperand(0))){
+
+                            /*Array中st指令到ld指令的更新*/
+                            auto irldstcancelinst = std::find(irloadstoreArray.begin(), irloadstoreArray.end(), parentinst);
+                            auto irldstinsert = irloadstoreArray.erase(irldstcancelinst);
+                            irloadstoreArray.insert(irldstinsert, childinst);
+
+                            flag = true;
+                            i++;
+                            break;
+                        }else if( (childinst->getOpcode() == IRInstruction::Load)   &&
+                                  (parentinst->getOpcode() == IRInstruction::Load)  &&
+                                  (parentinst->getOperand(0) == childinst->getOperand(0))){
+
+                            /*childBB中childinst的删除，同时用array中的指令替代所有需要子指令*/
+                            auto ircancelinst = std::find(childBB->getInstList().begin(), childBB->getInstList().end(), childinst);
+                            childinst->dropAllReferences();
+                            childBB->getInstList().erase(ircancelinst);
+                            childinst->replaceAllUsesWith(parentinst);
+
+                            flag = true;
+                            break;
+                        }else if( (childinst->getOpcode() == IRInstruction::Store)  &&
+                                  (parentinst->getOpcode() == IRInstruction::Store) &&
+                                  (parentinst->getOperand(1) == childinst->getOperand(1))){
+                            /*Array中st指令到st指令的更新*/
+                            auto irldstcancelinst = std::find(irloadstoreArray.begin(), irloadstoreArray.end(), parentinst);
+                            auto irldstinsert = irloadstoreArray.erase(irldstcancelinst);
+                            irloadstoreArray.insert(irldstinsert, childinst);
+
+                            /*？
+                             *这里的store指令其实是可以考虑子指令替换父指令的，需要进行这个操作吗？
+                             */
+                            i++;
+                            break;
+                        }
+                    }
+
+                    /*
+                     * 如果flag为true，证明之前loadstoreArray里就有，并且已经顶替过
+                     * 如果为false，证明没有顶替，且需要重新压入
+                     */
+                    if(!flag){
+                        irloadstoreArray.push_back(childinst);
+                        i++;
+                    }
+            }else{
+                i++;
+            }
+        }
+
+        /*继续往下消*/
+        childrenldst(*childBB);
+
+        /*
+         * 在回溯过程中，将load指令全部消除
+         * 不消store指令的原因：store指令虽然不支配后面的节点，但是仍可能会通过某条路径产生影响，因此不消除
+         * 消除load的原因：load可能是因为一条可能的路径而产生的load，并不能保证都在后面的load之前执行(后面的load可能仍需要进行操作)，因此需要消除
+         */
+        for(unsigned k=0; k<childBB->getInstList().size(); k++){
+            for(unsigned t=0; t<irloadstoreArray.size();){
+                if(childBB->getInstList()[k] == irloadstoreArray[t] &&
+                   childBB->getInstList()[k]->getOpcode() == IRInstruction::Load ){
+                        auto ircancelinst = std::find(irloadstoreArray.begin(), irloadstoreArray.end(), irloadstoreArray[t]);
+                        irloadstoreArray.erase(ircancelinst);
+                   }else{
+                    t++;
+                   }
+            }
+        }
+    }
+}
 void childrenSubExp(IRBasicBlock& BB){
         for(auto domi : BB.getNode()->children){
             auto childBB = domi->basicBlock;
@@ -74,6 +178,7 @@ void GlobalSubExpPass::runOnFunction(IRFunction& F) {
     auto rootBB = F.getEntryBlock();
     irdomiinstArray = rootBB->getInstList();
     childrenSubExp(*rootBB);
+    //childrenldst(*rootBB);
 }
 
 GlobalSubExpPass::GlobalSubExpPass(std::string name) : FunctionPass(name) {

@@ -12,9 +12,9 @@ include_directories(src)
 
 
 FILE(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "grammar/*.cpp")
-
 FILE(GLOB_RECURSE ANTLR_LIB_FILES "deps/antlr4-runtime/*.cpp")
 
+#自定义一个生成目标
 add_custom_target(
         gen_files_form_g4
         COMMAND echo "Using antlr4 to generate files from grammar file..."
@@ -22,11 +22,17 @@ add_custom_target(
         VERBATIM
 )
 
+#添加编译参数
 add_definitions(-w -g)
-add_library(antlr STATIC ${ANTLR_LIB_FILES})
+
+#根据source_files编译compiler(executable添加一个可执行目标)
+#同时生成完可链接的antlr静态库(antlr4)之后完成
 add_executable(compiler ${SOURCE_FILES})
-add_dependencies(compiler gen_files_form_g4)
+add_dependencies(compiler antlr)
+
+#寻找外部库Threads，并且创建静态库目标antlr，链接到compiler
 find_package(Threads REQUIRED)
+add_library(antlr STATIC ${ANTLR_LIB_FILES})
 target_link_libraries(compiler antlr Threads::Threads)
 
 enable_testing()
@@ -47,13 +53,13 @@ add_test(
 )
 
 add_test(
-        NAME code_gen
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/code_gen.sh
+        NAME codegen_test
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test.sh
 )
 
 add_test(
-        NAME test_against
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/code_gen_test_against/code_gen_test_against.sh
+        NAME codegen_test_against
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_against.sh
 )
 
-set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
+#set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
