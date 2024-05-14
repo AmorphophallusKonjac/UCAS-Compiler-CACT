@@ -2,6 +2,8 @@
 
 #include <utility>
 #include "IR/iOther.h"
+#include "IR/IRConstant.h"
+#include "IR/IRArgument.h"
 
 std::vector<LoopInfo *> LoopInfo::findLoop(IRFunction *F) {
     std::vector<LoopInfo *> loopList;
@@ -85,6 +87,18 @@ bool LoopInfo::internelIsFullyExitingBlock(IRBasicBlock *&BB, IRBasicBlock *exit
         }
     }
     return true;
+}
+
+bool LoopInfo::isLoopInvariant(IRValue *value, LoopInfo *loop) {
+auto loopBBList = loop->getBasicBlockList();
+    if (IRConstant::classof(value) || IRArgument::classof(value)) {
+        return true;
+    }
+    auto inst = dynamic_cast<IRInstruction *>(value);
+    if (std::find(loopBBList.begin(), loopBBList.end(), inst->getParent()) == loopBBList.end()) {
+        return true;
+    }
+    return false;
 }
 
 LoopInfo::LoopInfo() = default;

@@ -9,6 +9,8 @@
 #include "Pass/StrengthReductionPass.h"
 #include "Pass/GlobalSubExpPass.h"
 #include "Pass/LoopArrayScalarizePass.h"
+#include "Pass/CutDeadCodePass.h"
+#include "Pass/EliminateBasicInductionVarPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -38,5 +40,10 @@ void Optimizer::build() {
     addPass(new StrengthReductionPass("StrengthReduction"));
 
     addPass(new AlgebraicPass("AlgebraicPass"));
+
+    addPass(new CutDeadCodePass("CutDeadCodePass"));
+    addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
+    addPass(new CutDeadCodePass("CutDeadCodePass"));
+
     addPass(new RenamePass("RenamePass"));
 }

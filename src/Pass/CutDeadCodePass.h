@@ -3,11 +3,11 @@
 
 #include "Pass.h"
 
-class CutDeadCodePass : public BasicBlockPass {
+class CutDeadCodePass : public FunctionPass {
 public:
     explicit CutDeadCodePass(std::string name);
 
-    void runOnBasicBlock(IRBasicBlock &BB) override;
+    void runOnFunction(IRFunction &F) override;
 };
 
 

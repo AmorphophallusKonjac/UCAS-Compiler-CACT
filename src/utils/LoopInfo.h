@@ -8,6 +8,8 @@ class IRFunction;
 
 class IRBasicBlock;
 
+class IRValue;
+
 class LoopInfo {
 private:
     IRBasicBlock *preHeader{};
@@ -39,6 +41,8 @@ public:
     static std::vector<LoopInfo *> findLoop(IRFunction *F);
 
     const std::vector<IRBasicBlock *> &getBasicBlockList() const;
+
+    static bool isLoopInvariant(IRValue *value, LoopInfo *loop);
 };
 
 

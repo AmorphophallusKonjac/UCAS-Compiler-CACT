@@ -2,35 +2,44 @@
 
 #include <utility>
 
-CutDeadCodePass::CutDeadCodePass(std::string name) : BasicBlockPass(std::move(name)) {
+CutDeadCodePass::CutDeadCodePass(std::string name) : FunctionPass(std::move(name)) {
 
 }
 
-void CutDeadCodePass::runOnBasicBlock(IRBasicBlock &BB) {
-    auto &instList = BB.getInstList();
+void CutDeadCodePass::runOnFunction(IRFunction &F) {
+    bool codeChanged = true;
     std::vector<IRInstruction *> bin;
-    for (auto inst: instList) {
-        auto uses = inst->getUses();
-        auto opcode = inst->getOpcode();
-        bool mayWithoutUse = false;
-        switch (opcode) {
-            case IRInstruction::Ret:
-            case IRInstruction::Br:
-            case IRInstruction::Store:
-            case IRInstruction::Memcpy:
-            case IRInstruction::Call:
-                mayWithoutUse = true;
-                break;
-            default:
-                mayWithoutUse = false;
-                break;
+    while (codeChanged) {
+        codeChanged = false;
+        auto BBList = F.getBasicBlockList();
+        for (auto BB: BBList) {
+            auto &instList = BB->getInstList();
+            for (auto inst: instList) {
+                auto uses = inst->getUses();
+                auto opcode = inst->getOpcode();
+                bool mayWithoutUse = false;
+                switch (opcode) {
+                    case IRInstruction::Ret:
+                    case IRInstruction::Br:
+                    case IRInstruction::Store:
+                    case IRInstruction::Memcpy:
+                    case IRInstruction::Call:
+                        mayWithoutUse = true;
+                        break;
+                    default:
+                        mayWithoutUse = false;
+                        break;
+                }
+                if (uses.empty() && !mayWithoutUse) {
+                    codeChanged = true;
+                    bin.push_back(inst);
+                }
+            }
+            for (auto trash: bin) {
+                trash->dropAllReferences();
+                instList.erase(std::find(instList.begin(), instList.end(), trash));
+            }
+            bin.clear();
         }
-        if (uses.empty() && !mayWithoutUse) {
-            bin.push_back(inst);
-        }
-    }
-    for (auto trash: bin) {
-        trash->dropAllReferences();
-        instList.erase(std::find(instList.begin(), instList.end(), trash));
     }
 }

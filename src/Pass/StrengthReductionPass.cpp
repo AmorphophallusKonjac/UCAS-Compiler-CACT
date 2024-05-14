@@ -27,7 +27,7 @@ void StrengthReductionPass::runOnFunction(IRFunction &F) {
         auto loopList = LoopInfo::findLoop(&F);
         for (auto loop: loopList) {
             auto loopBBList = loop->getBasicBlockList();
-            auto BISet = findBasicInductionVar(loop);
+            auto BISet = BasicInductionVariable::findBasicInductionVar(loop);
             while (!BISet.empty()) {
                 auto BI = BISet.begin();
                 BISet.erase(BI);
@@ -35,55 +35,6 @@ void StrengthReductionPass::runOnFunction(IRFunction &F) {
             }
         }
     }
-}
-
-std::set<BasicInductionVariable *> StrengthReductionPass::findBasicInductionVar(LoopInfo *loop) {
-    std::set<BasicInductionVariable *> BISet;
-    auto loopBBList = loop->getBasicBlockList();
-    auto header = loop->getHeader();
-    for (auto inst: header->getInstList()) {
-        if (IRPHINode::classof(inst)) {
-            auto phi = dynamic_cast<IRPHINode *>(inst);
-            for (unsigned i = 0, E = phi->getNumIncomingValues(); i < E; ++i) {
-                auto val = phi->getIncomingValue(i);
-                auto BB = phi->getIncomingBlock(i);
-
-                if (std::find(loopBBList.begin(), loopBBList.end(), BB) == loopBBList.end()) // 上一个块得是循环内的块
-                    continue;
-
-                auto BO = dynamic_cast<IRBinaryOperator *>(val);
-
-                if (BO == nullptr) // 值必须是指令
-                    continue;
-
-                if (BO->getOpcode() != IRInstruction::Add) // 是加法
-                    continue;
-
-                if (std::find(loopBBList.begin(), loopBBList.end(), BO->getParent()) == loopBBList.end()) // 加法在循环内
-                    continue;
-
-                if (BO->getOperand(0) == dynamic_cast<IRValue *>(phi) && isLoopInvariant(BO->getOperand(1), loop) ||
-                    BO->getOperand(1) == dynamic_cast<IRValue *>(phi) && isLoopInvariant(BO->getOperand(0), loop)) {
-                    BISet.insert(new BasicInductionVariable(phi, BO, loop));
-                }
-            }
-        } else {
-            break;
-        }
-    }
-    return BISet;
-}
-
-bool StrengthReductionPass::isLoopInvariant(IRValue *value, LoopInfo *loop) {
-    auto loopBBList = loop->getBasicBlockList();
-    if (IRConstant::classof(value) || IRArgument::classof(value)) {
-        return true;
-    }
-    auto inst = dynamic_cast<IRInstruction *>(value);
-    if (std::find(loopBBList.begin(), loopBBList.end(), inst->getParent()) == loopBBList.end()) {
-        return true;
-    }
-    return false;
 }
 
 bool StrengthReductionPass::reduction(IRFunction *F, BasicInductionVariable *const &BI, LoopInfo *loop,
@@ -335,10 +286,10 @@ IRBinaryOperator *StrengthReductionPass::findInductionVarUsePhi(BasicInductionVa
                 continue;
             auto BO = dynamic_cast<IRBinaryOperator *>(inst);
             if (BO->getOperand(0) == dynamic_cast<IRValue *>(BI->getPhiNode()) &&
-                isLoopInvariant(BO->getOperand(1), loop)
+                LoopInfo::isLoopInvariant(BO->getOperand(1), loop)
                 ||
                 BO->getOperand(1) == dynamic_cast<IRValue *>(BI->getPhiNode()) &&
-                isLoopInvariant(BO->getOperand(0), loop) && inst->getOpcode() != IRInstruction::Sub) {
+                LoopInfo::isLoopInvariant(BO->getOperand(0), loop) && inst->getOpcode() != IRInstruction::Sub) {
                 return BO;
             }
         }
@@ -356,10 +307,10 @@ IRBinaryOperator *StrengthReductionPass::findInductionVarUseCalc(BasicInductionV
                 continue;
             auto BO = dynamic_cast<IRBinaryOperator *>(inst);
             if (BO->getOperand(0) == dynamic_cast<IRValue *>(BI->getCalcNode()) &&
-                isLoopInvariant(BO->getOperand(1), loop)
+                LoopInfo::isLoopInvariant(BO->getOperand(1), loop)
                 ||
                 BO->getOperand(1) == dynamic_cast<IRValue *>(BI->getCalcNode()) &&
-                isLoopInvariant(BO->getOperand(0), loop) && inst->getOpcode() != IRInstruction::Sub) {
+                LoopInfo::isLoopInvariant(BO->getOperand(0), loop) && inst->getOpcode() != IRInstruction::Sub) {
                 return BO;
             }
         }
