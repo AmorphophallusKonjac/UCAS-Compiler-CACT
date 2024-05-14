@@ -21,6 +21,12 @@ public:
     void printPrefixName(std::ostream &OS) const override;
     bool jugdeZero(IRConstant* irconst) const;
     void zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const;
+
+    static inline bool classof(IRConstant *) {return true;}
+
+    static inline bool classof(IRValue *v) {
+        return v->getValueType() == IRValue::ConstantVal;
+    }
 };
 
 class IRConstantBool : public IRConstant {
