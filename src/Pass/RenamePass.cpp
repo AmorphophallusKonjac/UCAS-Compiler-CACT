@@ -1,5 +1,7 @@
 #include "RenamePass.h"
 #include "IR/iPHINdoe.h"
+#include "IR/iMemory.h"
+#include "IR/iOther.h"
 
 #include <utility>
 
@@ -8,19 +10,25 @@ RenamePass::RenamePass(std::string name) : FunctionPass(std::move(name)) {
 }
 
 void RenamePass::runOnFunction(IRFunction &F) {
-    int cnt = 0;
+    F.setCount(0);
     auto ArgList = F.getArgumentList();
     auto BBList = F.getBasicBlockList();
     for (auto arg: ArgList) {
-        arg->setName(std::to_string(cnt++));
+        arg->setName(std::to_string(F.getCount()));
+        F.addCount();
     }
     for (auto BB: BBList) {
-        BB->setName(std::to_string(cnt++));
+        BB->setName(std::to_string(F.getCount()));
+        F.addCount();
         auto InstList = BB->getInstList();
         for (auto inst: InstList) {
-            if (!inst->getName().empty() || IRPHINode::classof(inst)) {
-                inst->setName(std::to_string(cnt++));
+            if (IRStoreInst::classof(inst) ||
+                IRMemcpyInst::classof(inst) ||
+                IRCallInst::classof(inst) && dynamic_cast<IRCallInst *>(inst)->getType() == IRType::VoidTy) {
+                continue;
             }
+            inst->setName(std::to_string(F.getCount()));
+            F.addCount();
         }
     }
 }
