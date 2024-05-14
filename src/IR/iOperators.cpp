@@ -25,7 +25,10 @@ IRBinaryOperator *IRBinaryOperator::create(BinaryOps Op, IRValue *S1, IRValue *S
             return new IRSetCondInst(Op, S1, S2, Name, parent);
 
         default:
-            return new IRBinaryOperator(Op, S1, S2, S1->getType(), Name, parent);
+            if (S1->getType()->isDerivedType())
+                return new IRBinaryOperator(Op, S1, S2, S1->getType(), Name, parent);
+            else
+                return new IRBinaryOperator(Op, S1, S2, S2->getType(), Name, parent);
     }
 }
 
