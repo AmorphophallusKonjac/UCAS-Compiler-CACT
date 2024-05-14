@@ -16,10 +16,12 @@ private:
 
     static bool isLoopInvariant(IRValue *value, LoopInfo *loop);
 
-    static void reduction(IRFunction *F, BasicInductionVariable *const &BI, LoopInfo *loop,
+    static bool reduction(IRFunction *F, BasicInductionVariable *const &BI, LoopInfo *loop,
                           std::set<BasicInductionVariable *> *BISet);
 
-    static IRBinaryOperator *findInductionVar(BasicInductionVariable *const &BI, LoopInfo *loop);
+    static IRBinaryOperator *findInductionVarUsePhi(BasicInductionVariable *const &BI, LoopInfo *loop);
+
+    static IRBinaryOperator *findInductionVarUseCalc(BasicInductionVariable *const &BI, LoopInfo *loop);
 };
 
 

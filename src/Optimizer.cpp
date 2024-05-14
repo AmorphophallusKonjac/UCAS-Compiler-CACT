@@ -36,7 +36,6 @@ void Optimizer::build() {
     addPass(new ConstantPass("ConstantPass"));
 
     addPass(new StrengthReductionPass("StrengthReduction"));
-    addPass(new ConstantPass("ConstantPass"));
 
     addPass(new AlgebraicPass("AlgebraicPass"));
     addPass(new RenamePass("RenamePass"));
