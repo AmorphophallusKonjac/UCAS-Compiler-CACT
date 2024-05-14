@@ -6,6 +6,7 @@
 #include "Pass/ConstantPass.h"
 #include "Pass/LocalSubExpPass.h"
 #include "Pass/HoistingLoopInvariantValuePass.h"
+#include "Pass/StrengthReductionPass.h"
 #include "Pass/GlobalSubExpPass.h"
 #include "Pass/LoopArrayScalarizePass.h"
 
@@ -26,9 +27,14 @@ void Optimizer::addPass(Pass *pass) {
 
 void Optimizer::build() {
     addPass(new MemToRegPass("Mem2Reg"));
+
     addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
     addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new ConstantPass("ConstantPass"));
+
+    addPass(new StrengthReductionPass("StrengthReduction"));
+    addPass(new ConstantPass("ConstantPass"));
+    
     addPass(new AlgebraicPass("AlgebraicPass"));
     addPass(new RenamePass("RenamePass"));
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
