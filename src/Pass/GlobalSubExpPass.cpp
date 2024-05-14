@@ -200,7 +200,7 @@ void childrenSubExp(IRBasicBlock &BB) {
 void GlobalSubExpPass::runOnFunction(IRFunction &F) {
   auto rootBB = F.getEntryBlock();
   childrenSubExp(*rootBB);
-  childrenldst(*rootBB);
+  //childrenldst(*rootBB);
 
   irdomiinstArray.clear();
   irloadstoreArray.clear();
