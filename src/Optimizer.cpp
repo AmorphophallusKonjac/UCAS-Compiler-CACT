@@ -45,5 +45,7 @@ void Optimizer::build() {
     addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
     addPass(new CutDeadCodePass("CutDeadCodePass"));
 
+    addPass(new CutDeadBlockPass("CutDeadBLock"));
+
     addPass(new RenamePass("RenamePass"));
 }

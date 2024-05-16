@@ -46,6 +46,10 @@ public:
 
     DominatorTree *getNode() { return &node; }
 
+    std::vector<IRBasicBlock *> findPredecessor();
+
+    std::vector<IRBasicBlock *> findSuccessor();
+
     /******classof方法，判断从父类下来的子类是不是对应的IRBasicBlock类******/
     static inline bool classof(const IRBasicBlock *BB) { return true; }
 

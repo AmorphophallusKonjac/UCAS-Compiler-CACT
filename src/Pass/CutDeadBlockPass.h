@@ -4,6 +4,12 @@
 #include "Pass.h"
 
 class CutDeadBlockPass : public FunctionPass {
+private:
+    enum dType {
+        NONE,
+        NO_CODE,
+        NO_BRANCH
+    };
 public:
     explicit CutDeadBlockPass(std::string name = "");
 

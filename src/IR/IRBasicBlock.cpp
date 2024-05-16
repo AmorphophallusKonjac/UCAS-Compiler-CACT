@@ -76,3 +76,23 @@ void IRBasicBlock::addInstructionToFront(IRInstruction *inst) {
     inst->setParent(this);
     InstList.insert(InstList.begin(), inst);
 }
+
+std::vector<IRBasicBlock *> IRBasicBlock::findPredecessor() {
+    std::vector<IRBasicBlock *> predecessor;
+    for (auto use : this->getUses()) {
+        auto brInst = dynamic_cast<IRBranchInst *>(use->getUser());
+        if (brInst) {
+            predecessor.push_back(brInst->getParent());
+        }
+    }
+    return predecessor;
+}
+
+std::vector<IRBasicBlock *> IRBasicBlock::findSuccessor() {
+   std::vector<IRBasicBlock *> successor;
+   auto terminator = this->getTerminator();
+   for (unsigned i = 0, E = terminator->getNumSuccessors(); i < E; ++i) {
+       successor.push_back(terminator->getSuccessor(i));
+   }
+   return successor;
+}
