@@ -5,7 +5,6 @@
 #include <utility>
 
 void CutDeadBlockPass::runOnFunction(IRFunction &F) {
-    //TODO fib_subseq: %114
     bool codeChanged = true;
     auto &BBList = F.getBasicBlockList();
     while (codeChanged) {
