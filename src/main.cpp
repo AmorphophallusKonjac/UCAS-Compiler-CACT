@@ -44,23 +44,26 @@ int main(int argc, const char *argv[]) {
     if (argc > 2) {
         bool isInterpret = false;
         bool isDebug = false;
-        for(int i = 2; i < argc; ++i){
+        bool isCount = false;
+        for (int i = 2; i < argc; ++i) {
             std::string arg_i(argv[i]);
-            if(arg_i == "-i")
+            if (arg_i == "-i")
                 isInterpret = true;
-            if(arg_i == "-p")
+            if (arg_i == "-p")
                 isDebug = true;
+            if (arg_i == "-c")
+                isCount = true;
         }
         if (isInterpret) {
-            if(isDebug) {
+            if (isDebug) {
                 Interpreter::debugOpt = true;
-            }
-            else{
+            } else {
                 Interpreter::debugOpt = false;
             }
             Interpreter ip(&ir);
             int ret = ip.interpret();
-//            printf("inst_cnt = %d\n", ip.getInstCnt());
+            if (isCount)
+                printf("inst_cnt = %d\n", Interpreter::getInstCnt());
             return ret;
         }
     }
