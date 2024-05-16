@@ -558,7 +558,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
-    /******先构建玩currentsymbol，再去往下访问******/
+    /******先构建完currentsymbol，再去往下访问******/
     if (dimension == 0) {
         currentSymbol = this->currentBlock->addNewVar(name, line, context->dataType);
     } else {

@@ -179,17 +179,6 @@ void FuncSymbolInfo::setIRValue(IRModule* irModule, IRFunction::FuncTy functy){
     }
 
     dynamic_cast<IRFunction*>(irValue)->setCount(IRArgs.size()+1);
-    // if(IRParams.empty()){
-    //     dynamic_cast<IRFunction*>(irValue)->setCount(0);
-    // }else{
-    //     /******如果不为空，这个时候再将参数全部加进去*****/
-    //     dynamic_cast<IRFunction*>(irValue)->setCount(IRParams.size());
-    //     for(auto param :getparamList()){
-    //         IRArgs.push_back(new IRArgument(param->getIRValue()->getType(),
-    //                                             param->getIRValue()->getName(),
-    //                                             dynamic_cast<IRFunction*>(irValue)));
-    //     }
-    // }
 }
 
 
