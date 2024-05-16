@@ -14,6 +14,10 @@ class Interpreter {
 private:
     IRModule *ir;
 
+    static int inst_cnt;
+
+private:
+
     static std::vector<TemporaryVariable*> TempVarVector;
 
     static std::vector<TemporaryVariable*> Stack;
@@ -39,12 +43,13 @@ private:
     static TemporaryVariable* allocaOnStack(IRValue* irValue, TemporaryVariable::tempVarType varType);
 
 public:
-    explicit Interpreter(IRModule *ir, bool debugOpt = false);
+    explicit Interpreter(IRModule *ir);
 
     int interpret();
 
     static bool debugOpt;
 
+    static int getInstCnt() ;
 };
 
 

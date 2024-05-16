@@ -8,8 +8,9 @@
 std::vector<TemporaryVariable*> Interpreter::TempVarVector;
 std::vector<TemporaryVariable*> Interpreter::Stack;
 bool Interpreter::debugOpt;
+int Interpreter::inst_cnt;
 
-Interpreter::Interpreter(IRModule *ir, bool debugOpt) : ir(ir) {
+Interpreter::Interpreter(IRModule *ir) : ir(ir) {
 }
 
 int Interpreter::interpret() {
@@ -63,6 +64,7 @@ InterpretBasicBlock:
 
     for(auto inst : instList){
         auto opcode = inst->getOpcode();
+        ++inst_cnt;
 
         if(debugOpt) {
             std::cout << "Inst Name: " << inst->getName();
@@ -673,4 +675,8 @@ TemporaryVariable* Interpreter::runBuildInFunction(const std::string& funcName) 
     }
     Stack.pop_back();
     return ret;
+}
+
+int Interpreter::getInstCnt() {
+    return inst_cnt;
 }

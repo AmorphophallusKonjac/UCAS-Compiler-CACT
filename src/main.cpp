@@ -60,6 +60,7 @@ int main(int argc, const char *argv[]) {
             }
             Interpreter ip(&ir);
             int ret = ip.interpret();
+//            printf("inst_cnt = %d\n", ip.getInstCnt());
             return ret;
         }
     }

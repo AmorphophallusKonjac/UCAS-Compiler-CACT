@@ -75,11 +75,11 @@ public:
         }
         else if(type == Pointer && other.type == Int){
             auto offset = std::any_cast<int>(other.value) / getTypeSize(getElementType());
-            return {std::any_cast<unsigned long>(value) + offset, Pointer, elementType};
+            return {std::any_cast<unsigned long>(value) + offset, Pointer, getElementType()};
         }
         else if(type == Int && other.type == Pointer){
             auto offset = std::any_cast<int>(value) / getTypeSize(other.getElementType());
-            return {std::any_cast<unsigned long>(other.value) + offset, Pointer, other.elementType};
+            return {std::any_cast<unsigned long>(other.value) + offset, Pointer, other.getElementType()};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");
