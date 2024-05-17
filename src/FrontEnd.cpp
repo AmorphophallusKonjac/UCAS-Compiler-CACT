@@ -28,13 +28,6 @@ void FrontEnd::analyze() {
 
 void FrontEnd::print() {
     std::string strsrc = ir->getName();
-    /**替换test**/
-    std::string strTest = "test";
-    std::string strIRgen = "IRgen";
-    size_t pos1 = strsrc.find(strTest);  // 查找目标子串的位置
-    if (pos1 != std::string::npos) {
-        strsrc.replace(pos1, strTest.length(), strIRgen);  // 替换子串
-    }
 
     /**替换cact**/
     std::string strCact = ".cact";

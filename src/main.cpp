@@ -32,19 +32,11 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
-    Optimizer opt(&ir);
-
-    // 在 build 方法中 new 自己定义的 pass 并添加进 opt
-    opt.build();
-
-    opt.run();
-
-    frontEnd.print();
-
     if (argc > 2) {
         bool isInterpret = false;
         bool isDebug = false;
         bool isCount = false;
+        bool isPrint = false;
         for (int i = 2; i < argc; ++i) {
             std::string arg_i(argv[i]);
             if (arg_i == "-simulate") {
@@ -56,6 +48,12 @@ int main(int argc, const char *argv[]) {
             }
             if (arg_i == "-c")
                 isCount = true;
+            if (arg_i == "-emit-IR") {
+                isPrint = true;
+            }
+        }
+        if (isPrint) {
+            frontEnd.print();
         }
         if (isInterpret) {
             if (isDebug) {
