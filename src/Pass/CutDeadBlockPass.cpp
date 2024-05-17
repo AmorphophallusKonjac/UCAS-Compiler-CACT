@@ -10,7 +10,8 @@ void CutDeadBlockPass::runOnFunction(IRFunction &F) {
     while (codeChanged) {
         codeChanged = false;
         IRBasicBlock *deadBlock = nullptr;
-        dType dTy = NONE;
+        dType dTy;
+        dTy = NONE;
         for (auto BB: BBList) {
             auto instList = BB->getInstList();
             auto successor = BB->findSuccessor();
@@ -41,42 +42,37 @@ void CutDeadBlockPass::runOnFunction(IRFunction &F) {
             auto predecessor = deadBlock->findPredecessor();
             auto successor = deadBlock->findSuccessor();
             auto &instList = deadBlock->getInstList();
-            auto &preInstList = predecessor[0]->getInstList();
-            switch (dTy) {
-                case NO_CODE:
-                    for (auto use: deadBlock->getUses()) {
-                        auto inst = dynamic_cast<IRInstruction *>(use->getUser());
-                        if (IRBranchInst::classof(inst)) {
-                            use->set(dynamic_cast<IRValue *>(successor[0]));
-                        } else if (IRPHINode::classof(inst)) {
-                            use->set(dynamic_cast<IRValue *>(predecessor[0]));
-                        } else {
-                            assert(0 && "wtf");
-                        }
+            if (dTy == NO_CODE) {
+                for (auto use: deadBlock->getUses()) {
+                    auto inst = dynamic_cast<IRInstruction *>(use->getUser());
+                    if (IRBranchInst::classof(inst)) {
+                        use->set(dynamic_cast<IRValue *>(successor[0]));
+                    } else if (IRPHINode::classof(inst)) {
+                        use->set(dynamic_cast<IRValue *>(predecessor[0]));
+                    } else {
+                        assert(0 && "wtf");
                     }
-                    instList[0]->dropAllReferences();
-                    instList.erase(std::find(instList.begin(), instList.end(), instList[0]));
-                    break;
-                case NO_BRANCH:
-                    predecessor[0]->getTerminator()->dropAllReferences();
-                    preInstList.erase(
-                            std::find(preInstList.begin(), preInstList.end(), predecessor[0]->getTerminator()));
-                    for (auto use: deadBlock->getUses()) {
-                        auto inst = dynamic_cast<IRInstruction *>(use->getUser());
-                        if (IRPHINode::classof(inst)) {
-                            use->set(dynamic_cast<IRValue *>(predecessor[0]));
-                        } else {
-                            assert(0 && "wtf");
-                        }
+                }
+                instList[0]->dropAllReferences();
+                instList.erase(std::find(instList.begin(), instList.end(), instList[0]));
+            } else if (dTy == NO_BRANCH) {
+                auto &preInstList = predecessor[0]->getInstList();
+                predecessor[0]->getTerminator()->dropAllReferences();
+                preInstList.erase(
+                        std::find(preInstList.begin(), preInstList.end(), predecessor[0]->getTerminator()));
+                for (auto use: deadBlock->getUses()) {
+                    auto inst = dynamic_cast<IRInstruction *>(use->getUser());
+                    if (IRPHINode::classof(inst)) {
+                        use->set(dynamic_cast<IRValue *>(predecessor[0]));
+                    } else {
+                        assert(0 && "wtf");
                     }
-                    for (auto inst: instList) {
-                        inst->setParent(predecessor[0]);
-                        preInstList.push_back(inst);
-                    }
-                    instList.clear();
-                    break;
-                default:
-                    assert(0 && "wtf");
+                }
+                for (auto inst: instList) {
+                    inst->setParent(predecessor[0]);
+                    preInstList.push_back(inst);
+                }
+                instList.clear();
             }
             BBList.erase(std::find(BBList.begin(), BBList.end(), deadBlock));
         }
