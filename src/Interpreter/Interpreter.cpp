@@ -98,13 +98,19 @@ InterpretBasicBlock:
                 Stack.pop_back();   // 弹出函数标识符
 
                 if(operandNum == 0){
-                    return new TemporaryVariable(nullptr, TemporaryVariable::Void);
+                    auto ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+                    if(debugOpt){
+                        ret->print();
+                    }
+                    return ret;
                 }
                 else if(operandNum == 1) {
                     auto operand = inst->getOperand(0);
                     auto ret = change_Operand_To_TemporaryVariable(operand);
-                    return new TemporaryVariable(ret->getValue(), ret->getType(),
-                                                 ret->getElementType(), ret->getArraySize());
+                    if(debugOpt){
+                        ret->print();
+                    }
+                    return ret;
                 }
                 break;
             }
