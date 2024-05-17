@@ -50,6 +50,8 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
     IRConstant* irnewconst;
     for (std::vector<IRInstruction*>::iterator instIterator= BB.getInstList().begin(); instIterator != BB.getInstList().end();) {
         auto inst = *instIterator;
+        bool flag = true;
+
         if( IRInstruction::BinaryOps::Add <= inst->getOpcode()  &&
             inst->getOpcode() <= IRInstruction::BinaryOps::Xor  && 
             inst->getOperand(0)->getValueType() == IRInstruction::ConstantVal   &&
@@ -77,12 +79,32 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
                                             dynamic_cast<IRConstantDouble*>(inst->getOperand(1))->getRawValue())));
                 }
 
+                inst->dropAllReferences();
                 instIterator = BB.getInstList().erase(instIterator);
                 inst->replaceAllUsesWith(irnewconst);
 
-            }else{
-                instIterator++;
+                flag = false;
             }
+        else if( inst->getOpcode() == IRInstruction::BinaryOps::Add){
+            if( inst->getOperand(0)->getValueType() == IRInstruction::ConstantVal &&
+                dynamic_cast<IRConstantInt*>(inst->getOperand(0))->getRawValue() == 0){
+                    inst->replaceAllUsesWith(inst->getOperand(1));
+                    inst->dropAllReferences();
+                    instIterator = BB.getInstList().erase(instIterator);
+                    flag = false;
+                }
+            else if( inst->getOperand(1)->getValueType() == IRInstruction::ConstantVal &&
+                dynamic_cast<IRConstantInt*>(inst->getOperand(1))->getRawValue() == 0){
+                    inst->replaceAllUsesWith(inst->getOperand(0));
+                    inst->dropAllReferences();
+                    instIterator = BB.getInstList().erase(instIterator);
+                    flag = false;
+                }
+        }
+
+        if(flag){
+            instIterator++;
+        }
     }
 }
 
