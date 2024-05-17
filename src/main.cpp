@@ -67,7 +67,7 @@ int main(int argc, const char *argv[]) {
             int ret = ip.interpret();
             if (isCount)
                 printf("inst_cnt = %d\n", Interpreter::getInstCnt());
-            printf("ret value is %d\n", ret);
+//            printf("ret value is %d\n", ret);
         }
     }
 
