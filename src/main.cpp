@@ -47,10 +47,13 @@ int main(int argc, const char *argv[]) {
         bool isCount = false;
         for (int i = 2; i < argc; ++i) {
             std::string arg_i(argv[i]);
-            if (arg_i == "-i")
+            if (arg_i == "-simulate") {
                 isInterpret = true;
-            if (arg_i == "-p")
+            }
+            if (arg_i == "-verbose") {
+                isInterpret = true;
                 isDebug = true;
+            }
             if (arg_i == "-c")
                 isCount = true;
         }
