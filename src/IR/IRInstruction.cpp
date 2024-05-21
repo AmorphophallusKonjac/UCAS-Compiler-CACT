@@ -16,6 +16,7 @@
 
 IRInstruction::IRInstruction(IRType *Ty, unsigned int iType, const std::string &Name, IRBasicBlock *parent)
         : IRUser(Ty, InstructionVal, Name) {
+    Live = new LiveVariableInst(this);
     Parent = parent;
     this->iType = iType;
 
