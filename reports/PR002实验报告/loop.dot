@@ -1,0 +1,9 @@
+digraph G {
+    node [shape=rectangle]
+    guard -> exit
+    guard -> preheader
+    preheader -> body
+    body -> latch
+    latch -> body
+    latch -> exit
+}
