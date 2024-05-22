@@ -468,32 +468,6 @@ std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementCont
     currentIRFunc->addBasicBlock(context->nextBlock);
     currentIRBasicBlock = context->nextBlock;
 
-//    context->bodyBlock = new IRBasicBlock();
-//    context->nextBlock = new IRBasicBlock();
-//
-//    context->beginBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
-//    currentIRFunc->addCount();
-//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
-//    currentIRBasicBlock = context->beginBlock;
-//
-//    context->condition()->trueBlock = context->bodyBlock;
-//    context->condition()->falseBlock = context->nextBlock;
-//    visit(context->condition());
-//
-//    context->bodyBlock->setParent(currentIRFunc);
-//    context->bodyBlock->setName(std::to_string(currentIRFunc->getCount()));
-//    currentIRFunc->addCount();
-//    currentIRFunc->addBasicBlock(context->bodyBlock);
-//    currentIRBasicBlock = context->bodyBlock;
-//    visit(context->statement());
-//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
-//
-//    context->nextBlock->setParent(currentIRFunc);
-//    context->nextBlock->setName(std::to_string(currentIRFunc->getCount()));
-//    currentIRFunc->addCount();
-//    currentIRFunc->addBasicBlock(context->nextBlock);
-//    currentIRBasicBlock = context->nextBlock;
-
     currentBlock = currentBlock->getParentBlock();
     return {};
 }
