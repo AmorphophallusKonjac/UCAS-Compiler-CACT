@@ -1,5 +1,6 @@
 build
 cmake-build-debug
+cmake-build-server
 
 .DS_Store
 
@@ -21,3 +22,14 @@ scripts
 testbench
 
 share_CACT.sh
+demo.c
+CACT-IR.md
+boot.ps1
+.history
+
+test/runllvm.sh
+test/*/ll
+test/*/s
+IRgen
+IRgenbench
+test/samples_codegen_llvmtest

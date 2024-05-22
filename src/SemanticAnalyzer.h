@@ -4,14 +4,16 @@
 #include "CACTLexer.h"
 #include "CACTParser.h"
 #include "CACTVisitor.h"
+#include "IR/IRModule.h"
 #include "symbolTable.h"
 #include "tree/ParseTree.h"
+#include "utils/ErrorHandler.h"
 
 using namespace antlr4;
 
 class SemanticAnalyzer : public CACTVisitor {
 public:
-    explicit SemanticAnalyzer(std::ifstream *stream);
+    explicit SemanticAnalyzer(GlobalBlock *globalBlock, IRModule *ir, tree::ParseTree *root);
 
     std::any visitFunctionType(CACTParser::FunctionTypeContext *context) override;
 
@@ -89,19 +91,31 @@ public:
 
     std::any visitFloatingConstant(CACTParser::FloatingConstantContext *context) override;
 
+    std::any visitMultiplicativeOp(CACTParser::MultiplicativeOpContext *context) override;
+
+    std::any visitAdditiveOp(CACTParser::AdditiveOpContext *context) override;
+
+    std::any visitRelationalOp(CACTParser::RelationalOpContext *context) override;
+
+    std::any visitEqualityOp(CACTParser::EqualityOpContext *context) override;
+
+    std::any visitLogicalAndOp(CACTParser::LogicalAndOpContext *context) override;
+
+    std::any visitLogicalOrOp(CACTParser::LogicalOrOpContext *context) override;
+
     ~SemanticAnalyzer() override;
 
     void analyze();
+
     std::any visitAddOp(CACTParser::AddOpContext *context) override;
 
 private:
-    ANTLRInputStream input;
-    CACTLexer lexer;
-    CommonTokenStream tokens;
-    CACTParser parser;
     tree::ParseTree *root;
-    GlobalBlock globalBlock;
+    GlobalBlock *globalBlock;
     BlockInfo *currentBlock;
+    FuncSymbolInfo *currentFunc = nullptr;
+    ConstVarArraySymbolInfo *currentSymbol;
+    IRModule *ir;
 };
 
 

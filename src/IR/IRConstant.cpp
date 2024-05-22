@@ -1,0 +1,174 @@
+#include "IRConstant.h"
+
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+
+IRConstantBool::IRConstantBool(bool V) : IRConstant(IRType::BoolTy) {
+    Val = V;
+}
+
+IRConstantBool *IRConstantBool::True = new IRConstantBool(true);
+IRConstantBool *IRConstantBool::False = new IRConstantBool(false);
+IRConstantInt *IRConstantInt::Null = new IRConstantInt(0);
+IRConstantInt *IRConstantInt::AllOnes = new IRConstantInt(-1);
+IRConstantFloat *IRConstantFloat::Null = new IRConstantFloat(0);
+IRConstantDouble *IRConstantDouble::Null = new IRConstantDouble(0);
+
+std::map<int, IRConstantInt *> IRConstantInt::constantMap;
+std::map<float, IRConstantFloat *> IRConstantFloat::constantMap;
+std::map<double, IRConstantDouble *> IRConstantDouble::constantMap;
+
+bool IRConstant::jugdeZero(IRConstant* irconst) const {
+    /******根据IRConstant中的type类型来打印出它的value值******/
+    switch (irconst->getType()->getPrimitiveID()) {
+        case IRType::IntTyID:
+            return dynamic_cast<const IRConstantInt *>(irconst)->getRawValue() == 0;
+        case IRType::FloatTyID:
+            return dynamic_cast<const IRConstantFloat *>(irconst)->getRawValue() == 0;
+        case IRType::DoubleTyID:
+            return dynamic_cast<const IRConstantDouble *>(irconst)->getRawValue() == 0;
+        case IRType::BoolTyID:
+            return dynamic_cast<const IRConstantBool *>(irconst)->getRawValue() == false;
+    }
+}
+
+void IRConstant::zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const {
+    if(zeroArray.size() >= 10)
+        OS << "zeroinitializer(" << zeroArray.size() << "), ";
+    else if(!zeroArray.empty()){
+        for (auto zeroconst : zeroArray) {
+            zeroconst->print(OS);
+            OS << ", ";
+        }
+    }
+}
+
+void IRConstant::printPrefixName(std::ostream &OS) const {
+    /******根据IRConstant中的type类型来打印出它的value值******/
+    switch (this->getType()->getPrimitiveID()) {
+        case IRType::IntTyID:
+            OS << dynamic_cast<const IRConstantInt *>(this)->getRawValue();
+            break;
+        case IRType::FloatTyID:
+            OS << dynamic_cast<const IRConstantFloat *>(this)->getRawValue();
+            break;
+        case IRType::DoubleTyID:
+            OS << dynamic_cast<const IRConstantDouble *>(this)->getRawValue();
+            break;
+        case IRType::BoolTyID:
+            OS << std::boolalpha << dynamic_cast<const IRConstantBool *>(this)->getRawValue();
+            break;
+        case IRType::ArrayTyID:
+            OS << "[";
+            std::vector<IRConstant*> zeroArray;
+            for(auto iruse: dynamic_cast<const IRConstantArray *>(this)->getValues()){
+                /***遇到0先压进vector不处理***/
+                if(jugdeZero(dynamic_cast<IRConstant*>(iruse.get()))){
+                    zeroArray.push_back(dynamic_cast<IRConstant*>(iruse.get()));
+                }
+                /***没有0了则进行处理***/
+                else{
+                    zeroProcess(zeroArray,OS);
+                    zeroArray.clear();//清空vector
+
+                    dynamic_cast<IRConstant*>(iruse.get())->print(OS);
+                    OS << ", ";
+                }
+            }
+            zeroProcess(zeroArray,OS);
+            zeroArray.clear();//清空vector
+
+            // 回退2个字符
+            OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
+            OS << "]";
+    }
+}
+
+void IRConstant::print(std::ostream &OS) const {
+    static int print_cnt = 0;
+    this->getType()->print(OS);
+    this->printPrefixName(OS);
+    print_cnt++;
+    //OS << print_cnt << std::endl;
+}
+
+IRConstant *IRConstant::getNullValue(const IRType *Ty) {
+    switch (Ty->getPrimitiveID()) {
+        case IRType::IntTyID:
+            return IRConstantInt::Null;
+        case IRType::FloatTyID:
+            return IRConstantFloat::Null;
+        case IRType::DoubleTyID:
+            return IRConstantDouble::Null;
+        case IRType::BoolTyID:
+            return IRConstantBool::False;
+    }
+    return nullptr;
+}
+IRConstant *IRConstant::getAllOnesValue(const IRType *Ty) {
+    switch (Ty->getPrimitiveID()) {
+        case IRType::IntTyID:
+            return IRConstantInt::AllOnes;
+        case IRType::BoolTyID:
+            return IRConstantBool::True;
+    }
+    return nullptr;
+}
+
+IRConstantInt::IRConstantInt(int V) : IRConstant(IRType::IntTy) {
+    Val = V;
+}
+
+IRConstantInt *IRConstantInt::get(int V) {
+    if (V == 0) {
+        return IRConstantInt::Null;
+    } else if (V == -1) {
+        return IRConstantInt::AllOnes;
+    } else if (auto ret = constantMap[V]) {
+        return ret;
+    } else {
+        ret = new IRConstantInt(V);
+        constantMap[V] = ret;
+        return ret;
+    }
+}
+
+IRConstantFloat::IRConstantFloat(float V) : IRConstant(IRType::FloatTy) {
+    Val = V;
+}
+IRConstantFloat *IRConstantFloat::get(float V) {
+    if (V == 0) {
+        return IRConstantFloat::Null;
+    } else if (auto ret = constantMap[V]) {
+        return ret;
+    } else {
+        ret = new IRConstantFloat(V);
+        constantMap[V] = ret;
+        return ret;
+    }
+}
+
+IRConstantDouble::IRConstantDouble(double V) : IRConstant(IRType::DoubleTy) {
+    Val = V;
+}
+IRConstantDouble *IRConstantDouble::get(double V) {
+    if (V == 0) {
+        return IRConstantDouble::Null;
+    } else if (auto ret = constantMap[V]) {
+        return ret;
+    } else {
+        ret = new IRConstantDouble(V);
+        constantMap[V] = ret;
+        return ret;
+    }
+}
+
+IRConstantArray::IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
+    : IRConstant(dynamic_cast<IRType *>(ty)) {
+    arrayTy = ty;
+    for (auto val: V) {
+        Operands.emplace_back(val, this);
+    }
+}

@@ -1,1 +1,3 @@
-hell maria
+int a[4] = {1};
+double b;
+double a;
