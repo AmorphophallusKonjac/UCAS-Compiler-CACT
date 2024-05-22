@@ -25,6 +25,8 @@ public:
 
     std::vector<IRValue*>& getOUTLive(){ return OUTLiveList; };
 
+    static void genLiveVariable(IRFunction *F);
+
 };
 
 class LiveVariableBB : public LiveVariable {
