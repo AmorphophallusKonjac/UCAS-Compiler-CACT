@@ -11,6 +11,10 @@
 #include "Pass/LoopArrayScalarizePass.h"
 #include "Pass/CutDeadCodePass.h"
 #include "Pass/EliminateBasicInductionVarPass.h"
+<<<<<<< HEAD
+=======
+#include "Pass/RegisterPass.h"
+>>>>>>> 15dd03c (add register class)
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -48,4 +52,9 @@ void Optimizer::build() {
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RenamePass("RenamePass"));
+<<<<<<< HEAD
+=======
+
+    addPass(new RegisterPass("RegisterPass"));
+>>>>>>> 15dd03c (add register class)
 }
