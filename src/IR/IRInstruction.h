@@ -5,10 +5,15 @@
 
 #include "IRUser.h"
 #include "IRBasicBlock.h"
+#include "utils/LiveVariable.h"
+
+class LiveVariableInst;
 
 class IRInstruction : public IRUser {
 private:
     IRBasicBlock *Parent;
+
+    LiveVariableInst *Live;
 
 protected:
 
@@ -79,6 +84,8 @@ public:
     void printPrefixName(std::ostream &OS) const override;
 
     void print(std::ostream &OS) const override;
+
+    LiveVariableInst *getLive() { return Live; }
 
     static inline bool classof(const IRInstruction *I) { return true; }
 

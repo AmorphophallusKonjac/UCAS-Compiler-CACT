@@ -5,10 +5,13 @@
 #include "IRInstruction.h"
 #include "IRValue.h"
 #include "utils/DominatorTree.h"
+#include "utils/LiveVariable.h"
 
 class IRTerminatorInst;
 
 class DominatorTree;
+
+class LiveVariableBB;
 
 class IRBasicBlock : public IRValue {
 private:
@@ -17,6 +20,8 @@ private:
     IRFunction *parent;
 
     DominatorTree node;
+
+    LiveVariableBB* Live;
 
 public:
     explicit IRBasicBlock(const std::string &Name = "", IRFunction *Parent = nullptr);
@@ -45,6 +50,8 @@ public:
     void addInstructionToFront(IRInstruction *inst);
 
     DominatorTree *getNode() { return &node; }
+
+    LiveVariableBB *getLive() { return Live; }
 
     std::vector<IRBasicBlock *> findPredecessor();
 
