@@ -6,6 +6,7 @@
 #include "IR/iOperators.h"
 #include "IR/iOther.h"
 #include "IR/iTerminators.h"
+#include <cstddef>
 
 std::any IRGenerator::visitCompilationUnit(CACTParser::CompilationUnitContext *context) {
     return visitChildren(context);
@@ -297,8 +298,10 @@ std::any IRGenerator::visitVariableDefinition(CACTParser::VariableDefinitionCont
     auto symbol = currentBlock->lookUpSymbol(name);
     if (currentBlock != globalBlock) {
         if (dimension == 0) {
-            new IRStoreInst(dynamic_cast<VarSymbolInfo *>(symbol)->getirInitailizer(),
-                            dynamic_cast<VarSymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+            if(dynamic_cast<VarSymbolInfo *>(symbol)->isinitial == true){
+                new IRStoreInst(dynamic_cast<VarSymbolInfo *>(symbol)->getirInitailizer(),
+                                dynamic_cast<VarSymbolInfo *>(symbol)->getIRValue(), currentIRBasicBlock);
+            }
         } else {
             IRValue *srcGlobalVar;
             srcGlobalVar = new IRGlobalVariable

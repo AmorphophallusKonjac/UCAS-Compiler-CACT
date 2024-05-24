@@ -12,6 +12,7 @@
 #include "IR/iMemory.h"
 #include "IR/IRFunction.h"
 #include "cassert"
+#include "utils/CACT.h"
 
 #include <cstddef>
 #include <iostream>

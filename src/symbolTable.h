@@ -130,7 +130,7 @@ private:
     int global = 0;//代表是否是全局变量
 
 protected:
-    IRValue* irinitializer;
+    IRValue* irinitializer = nullptr;
 
 public:
     DataType getDataType() { return dataType; }
@@ -170,6 +170,8 @@ public:
 /***********变量符号表***********/
 class VarSymbolInfo : public ConstVarArraySymbolInfo {
 public:
+    bool isinitial = true;
+
     int getArrayLength() { return -1; }
 
     std::vector<int> getArraySize() override { return std::vector<int>(); }
