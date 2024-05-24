@@ -573,9 +573,11 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
         this->visit(context->constantInitValue());
     } else {
         /*如果没有显式初始化，那么通过一个循环把所有相关初始化为0的数全部压进去*/
+        //没有显式初始化，压0,显示这个symbol不显式初始化
         unsigned loop;
         if (context->arraySize.empty()) {
             loop = 1;
+            dynamic_cast<VarSymbolInfo*>(currentSymbol)->isinitial = false;
         } else {
             loop = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
                                    std::multiplies());

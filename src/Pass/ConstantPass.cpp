@@ -87,14 +87,16 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
             }
         else if( inst->getOpcode() == IRInstruction::BinaryOps::Add){
             if( inst->getOperand(0)->getValueType() == IRInstruction::ConstantVal &&
+                dynamic_cast<IRConstantInt*>(inst->getOperand(0)) != nullptr &&
                 dynamic_cast<IRConstantInt*>(inst->getOperand(0))->getRawValue() == 0){
                     inst->replaceAllUsesWith(inst->getOperand(1));
                     inst->dropAllReferences();
                     instIterator = BB.getInstList().erase(instIterator);
                     flag = false;
                 }
-            else if( inst->getOperand(1)->getValueType() == IRInstruction::ConstantVal &&
-                dynamic_cast<IRConstantInt*>(inst->getOperand(1))->getRawValue() == 0){
+            else if(inst->getOperand(1)->getValueType() == IRInstruction::ConstantVal &&
+                    dynamic_cast<IRConstantInt*>(inst->getOperand(1)) != nullptr &&
+                    dynamic_cast<IRConstantInt*>(inst->getOperand(1))->getRawValue() == 0){
                     inst->replaceAllUsesWith(inst->getOperand(0));
                     inst->dropAllReferences();
                     instIterator = BB.getInstList().erase(instIterator);
