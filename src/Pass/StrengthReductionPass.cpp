@@ -8,6 +8,7 @@
 #include "Pass/ConstantPass.h"
 #include "Pass/GlobalSubExpPass.h"
 #include "Pass/LocalSubExpPass.h"
+#include "Pass/EliminateBasicInductionVarPass.h"
 #include <iostream>
 
 StrengthReductionPass::StrengthReductionPass(std::string name) : FunctionPass(std::move(name)) {
@@ -19,19 +20,22 @@ void StrengthReductionPass::runOnFunction(IRFunction &F) {
     ConstantPass CP("ConstantPass");
     LocalSubExpPass LSEP("LocalSubExpPass");
     GlobalSubExpPass GSEP("GlobalSubExpPass");
+    EliminateBasicInductionVarPass EBIVP("EliminateBasicInductionVarPass");
     while (codeIsChanged) {
         codeIsChanged = false;
         LSEP.runOnFunction(F);
         GSEP.runOnFunction(F);
         CP.runOnFunction(F);
+        EBIVP.runOnFunction(F);
         auto loopList = LoopInfo::findLoop(&F);
         for (auto loop: loopList) {
             auto loopBBList = loop->getBasicBlockList();
             auto BISet = BasicInductionVariable::findBasicInductionVar(loop);
             while (!BISet.empty()) {
-                auto BI = BISet.begin();
-                BISet.erase(BI);
-                codeIsChanged |= reduction(&F, *BI, loop, &BISet);
+                auto ptrBI = BISet.begin();
+                auto BI = *ptrBI;
+                BISet.erase(ptrBI);
+                codeIsChanged |= reduction(&F, BI, loop, &BISet);
             }
         }
     }
