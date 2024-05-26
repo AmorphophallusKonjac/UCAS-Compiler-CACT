@@ -5,6 +5,7 @@
 #include "utils/LoopInfo.h"
 #include "IR/iPHINdoe.h"
 #include "IR/iOperators.h"
+#include "CutDeadCodePass.h"
 
 EliminateBasicInductionVarPass::EliminateBasicInductionVarPass(std::string name) : FunctionPass(std::move(name)) {
 
@@ -13,9 +14,11 @@ EliminateBasicInductionVarPass::EliminateBasicInductionVarPass(std::string name)
 void EliminateBasicInductionVarPass::runOnFunction(IRFunction &F) {
     auto loopList = LoopInfo::findLoop(&F);
     std::vector<IRInstruction *> bin;
+    CutDeadCodePass CDCP("CutDeadCodePass");
     bool codeChanged = true;
     while (codeChanged) {
         codeChanged = false;
+        CDCP.runOnFunction(F);
         for (auto loop: loopList) {
             auto BISet = BasicInductionVariable::findBasicInductionVar(loop);
             for (auto BI: BISet) {
