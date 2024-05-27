@@ -32,26 +32,17 @@ void Optimizer::addPass(Pass *pass) {
 void Optimizer::build() {
     addPass(new MemToRegPass("Mem2Reg"));
 
-    //addPass(new LoopArrayScalarizePass("LoopArrayScalarizePass"));
-
     addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
     addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
     addPass(new ConstantPass("ConstantPass"));
 
-//    addPass(new StrengthReductionPass("StrengthReduction"));
-
-//    addPass(new AlgebraicPass("AlgebraicPass"));
-
-//    addPass(new CutDeadCodePass("CutDeadCodePass"));
-//    addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
-//    addPass(new CutDeadCodePass("CutDeadCodePass"));
-
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new CutDeadBlockPass("CutDeadBLock"));
-
     addPass(new RenamePass("RenamePass"));
+    
+//    addPass(new CutDeadBlockPass("CutDeadBLock"));
+
 
 
     //addPass(new RegisterPass("RegisterPass"));
