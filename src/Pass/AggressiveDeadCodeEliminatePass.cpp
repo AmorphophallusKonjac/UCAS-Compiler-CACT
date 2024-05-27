@@ -34,6 +34,18 @@ void AggressiveDeadCodeEliminatePass::runOnFunction(IRFunction &F) {
                 }
             }
         }
+        auto br = dynamic_cast<IRBranchInst *>(activeInst);
+        if (br) {
+            for (unsigned i = 0, E = br->getNumSuccessors(); i < E; ++i) {
+                auto BB = br->getSuccessor(i);
+                activeBlockSet.insert(BB);
+                auto inst = dynamic_cast<IRInstruction *>(BB->getTerminator());
+                if (activeInstSet.find(inst) == activeInstSet.end()) {
+                    activeInstSet.insert(inst);
+                    workList.push(inst);
+                }
+            }
+        }
         for (unsigned i = 0, E = activeInst->getNumOperands(); i < E; ++i) {
             auto inst = dynamic_cast<IRInstruction *>(activeInst->getOperand(i));
             if (inst == nullptr)
