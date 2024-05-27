@@ -12,7 +12,9 @@ EliminateBasicInductionVarPass::EliminateBasicInductionVarPass(std::string name)
 }
 
 void EliminateBasicInductionVarPass::runOnFunction(IRFunction &F) {
-    auto loopList = LoopInfo::findLoop(&F);
+    ControlFlowGraph cfg(&F);
+    DominatorTree::getDominatorTree(&cfg);
+    auto loopList = LoopInfo::findLoop(&F, &cfg);
     std::vector<IRInstruction *> bin;
     CutDeadCodePass CDCP("CutDeadCodePass");
     bool codeChanged = true;

@@ -12,6 +12,7 @@
 #include "Pass/CutDeadCodePass.h"
 #include "Pass/EliminateBasicInductionVarPass.h"
 #include "Pass/RegisterPass.h"
+#include "Pass/AggressiveDeadCodeEliminatePass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -38,17 +39,20 @@ void Optimizer::build() {
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
     addPass(new ConstantPass("ConstantPass"));
 
-    addPass(new StrengthReductionPass("StrengthReduction"));
+//    addPass(new StrengthReductionPass("StrengthReduction"));
 
-    addPass(new AlgebraicPass("AlgebraicPass"));
+//    addPass(new AlgebraicPass("AlgebraicPass"));
 
-    addPass(new CutDeadCodePass("CutDeadCodePass"));
-    addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
-    addPass(new CutDeadCodePass("CutDeadCodePass"));
+//    addPass(new CutDeadCodePass("CutDeadCodePass"));
+//    addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
+//    addPass(new CutDeadCodePass("CutDeadCodePass"));
+
+    addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RenamePass("RenamePass"));
 
-    addPass(new RegisterPass("RegisterPass"));
+
+    //addPass(new RegisterPass("RegisterPass"));
 }

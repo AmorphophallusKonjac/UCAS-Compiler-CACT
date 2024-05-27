@@ -22,7 +22,7 @@ void IRBasicBlock::setParent(IRFunction *parent) {
 }
 
 IRBasicBlock::IRBasicBlock(const std::string &Name, IRFunction *Parent)
-        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name), node(this) {
+        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name) {
     Live = new LiveVariableBB(this);
     parent = Parent;
     if (Parent)
@@ -30,7 +30,7 @@ IRBasicBlock::IRBasicBlock(const std::string &Name, IRFunction *Parent)
 }
 
 IRBasicBlock::IRBasicBlock(const std::string &Name, IRBasicBlock *InsertBefore)
-        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name), node(this) {
+        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name) {
     Live = new LiveVariableBB(this);
     parent = InsertBefore->parent;
     InsertBefore->parent->addBasicBlock(this);

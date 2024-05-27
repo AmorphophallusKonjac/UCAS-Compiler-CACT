@@ -4,8 +4,9 @@
 #include "IR/iOther.h"
 #include "IR/IRConstant.h"
 #include "IR/IRArgument.h"
+#include "utils/ControlFlowGraph.h"
 
-std::vector<LoopInfo *> LoopInfo::findLoop(IRFunction *F) {
+std::vector<LoopInfo *> LoopInfo::findLoop(IRFunction *F, ControlFlowGraph *cfg) {
     std::vector<LoopInfo *> loopList;
     auto BBList = F->getBasicBlockList();
     for (auto BB: BBList) {
@@ -13,10 +14,10 @@ std::vector<LoopInfo *> LoopInfo::findLoop(IRFunction *F) {
         if (terminator->getNumSuccessors() == 2) {
             IRBasicBlock *successor0 = terminator->getSuccessor(0);
             IRBasicBlock *successor1 = terminator->getSuccessor(1);
-            if (DominatorTree::isAncestor(successor1->getNode(), BB->getNode())) {
+            if (DominatorTree::isAncestor(successor1->getDominatorTree(cfg), BB->getDominatorTree(cfg))) {
                 std::swap(successor0, successor1);
             }
-            if (DominatorTree::isAncestor(successor0->getNode(), BB->getNode())) {
+            if (DominatorTree::isAncestor(successor0->getDominatorTree(cfg), BB->getDominatorTree(cfg))) {
                 auto header = successor0;
                 auto preHeader = dynamic_cast<IRInstruction *>(header->getUses()[0]->getUser())->getParent();
                 auto exiting = BB;

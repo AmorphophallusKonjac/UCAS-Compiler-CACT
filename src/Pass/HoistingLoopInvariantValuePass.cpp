@@ -1,4 +1,6 @@
 #include "HoistingLoopInvariantValuePass.h"
+#include "utils/ControlFlowGraph.h"
+#include "utils/ControlFlowGraphVertex.h"
 
 #include <utility>
 
@@ -7,10 +9,11 @@ HoistingLoopInvariantValuePass::HoistingLoopInvariantValuePass(std::string name)
 }
 
 void HoistingLoopInvariantValuePass::runOnFunction(IRFunction &F) {
-    DominatorTree::getDominatorTree(&F);
-    auto LoopList = LoopInfo::findLoop(&F);
+    ControlFlowGraph cfg(&F);
+    DominatorTree::getDominatorTree(&cfg);
+    auto LoopList = LoopInfo::findLoop(&F, &cfg);
     for (auto loop: LoopList) {
-        auto invariantValueList = findInvariantValue(loop);
+        auto invariantValueList = findInvariantValue(loop, &cfg);
         auto preHeader = loop->getPreHeader();
         auto &preHeaderBB = loop->getPreHeader()->getInstList();
         for (auto iV: invariantValueList) {
@@ -24,7 +27,7 @@ void HoistingLoopInvariantValuePass::runOnFunction(IRFunction &F) {
     }
 }
 
-std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopInfo *loop) {
+std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopInfo *loop, ControlFlowGraph *cfg) {
     std::vector<IRValue *> invariantValueList;
     std::set<IRValue *> invariantValueSet;
     auto BBList = loop->getBasicBlockList();
@@ -49,7 +52,7 @@ std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopIn
                         invariantValueSet.insert(dynamic_cast<IRValue *>(inst));
                     }
                 } else if (IRStoreInst::classof(inst)) {
-                    if (storeInstCondition(dynamic_cast<IRStoreInst *>(inst), &invariantValueSet, loop)) {
+                    if (storeInstCondition(dynamic_cast<IRStoreInst *>(inst), &invariantValueSet, loop, cfg)) {
                         invariantValueSet.insert(dynamic_cast<IRValue *>(inst));
                     }
                 }
@@ -115,7 +118,8 @@ bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::se
     return false;
 }
 
-bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop) {
+bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop,
+                                                        ControlFlowGraph *cfg) {
     /*!
      * 经过 mem2reg 后 store 只会有两种情况：
      * 1. 全局变量
@@ -138,7 +142,7 @@ bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::
 
     auto exiting = loop->getExiting();
     for (auto exitingBB: exiting) {
-        if (!DominatorTree::isAncestor(inst->getParent()->getNode(), exitingBB->getNode())) {
+        if (!DominatorTree::isAncestor(inst->getParent()->getDominatorTree(cfg), exitingBB->getDominatorTree(cfg))) {
             return false;
         }
     }
