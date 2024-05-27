@@ -21,9 +21,9 @@ public:
 
     ~LiveVariable() = default;
 
-    std::vector<IRValue*>& getINLive(){ return INLiveList; };
+    std::vector<IRValue*>* getINLive() { return &INLiveList; };
 
-    std::vector<IRValue*>& getOUTLive(){ return OUTLiveList; };
+    std::vector<IRValue*>* getOUTLive(){ return &OUTLiveList; };
 
     static void genLiveVariable(IRFunction *F);
 

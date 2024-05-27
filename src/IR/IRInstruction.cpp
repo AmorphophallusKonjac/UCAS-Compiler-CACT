@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <ostream>
+#include <iomanip>
 
 #include "IR/IRBasicBlock.h"
 #include "IR/IRDerivedTypes.h"
@@ -162,6 +163,17 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand;
     IRValue *operand1;
     IRValue *operand2;
+
+    std::string LiveString;
+    LiveString = "INLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
+        LiveString = LiveString + "%" + irval->getName() + ", ";
+    LiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
+        LiveString = LiveString + "%" + irval->getName() + ", ";
+
+    OS << std::setw(100) << std::setfill(' ') << LiveString;
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 100));
 
     switch (getOpcode()) {
         // Terminators
@@ -420,6 +432,8 @@ void IRInstruction::print(std::ostream &OS) const {
         default:
             throw std::runtime_error("<Invalid operator> ");
     }
+
+    OS.seekp(0, std::ios::end);
     OS << std::endl;
     // TODO
 }
