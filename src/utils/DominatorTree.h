@@ -10,17 +10,19 @@ class IRAllocaInst;
 
 class IRFunction;
 
+class ControlFlowGraph;
+
+class ControlFlowGraphVertex;
+
 class DominatorTree {
 public:
-    explicit DominatorTree(IRBasicBlock *BB);
+    explicit DominatorTree(IRBasicBlock *BB, ControlFlowGraphVertex *v);
 
     ~DominatorTree() = default;
 
-    static DominatorTree *getDominatorTree(IRFunction *F);
+    static DominatorTree *getDominatorTree(ControlFlowGraph *G);
 
     static bool isAncestor(DominatorTree *p, DominatorTree *ch);
-
-    static void printDominatorTree(IRFunction *F);
 
     int dfnum = 0;
     DominatorTree *parent = nullptr;
@@ -28,7 +30,8 @@ public:
     DominatorTree *idom = nullptr; // 本节点在支配树上的父亲
     DominatorTree *samedom = nullptr;
     DominatorTree *ancestor = nullptr;
-    IRBasicBlock *basicBlock;
+    IRBasicBlock *basicBlock = nullptr; // 本节点对应的 basicBlock
+    ControlFlowGraphVertex *vertex = nullptr; // 本节点对应的 CFG 节点
     std::set<DominatorTree *> bucket;
     std::vector<DominatorTree *> children; // 本节点在支配树的孩子
     std::set<DominatorTree *> DF; // 本节点的支配边界

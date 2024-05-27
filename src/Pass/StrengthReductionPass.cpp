@@ -16,6 +16,8 @@ StrengthReductionPass::StrengthReductionPass(std::string name) : FunctionPass(st
 }
 
 void StrengthReductionPass::runOnFunction(IRFunction &F) {
+    ControlFlowGraph cfg(&F);
+    DominatorTree::getDominatorTree(&cfg);
     bool codeIsChanged = true;
     ConstantPass CP("ConstantPass");
     LocalSubExpPass LSEP("LocalSubExpPass");
@@ -27,7 +29,7 @@ void StrengthReductionPass::runOnFunction(IRFunction &F) {
         GSEP.runOnFunction(F);
         CP.runOnFunction(F);
         EBIVP.runOnFunction(F);
-        auto loopList = LoopInfo::findLoop(&F);
+        auto loopList = LoopInfo::findLoop(&F, &cfg);
         for (auto loop: loopList) {
             auto loopBBList = loop->getBasicBlockList();
             auto BISet = BasicInductionVariable::findBasicInductionVar(loop);

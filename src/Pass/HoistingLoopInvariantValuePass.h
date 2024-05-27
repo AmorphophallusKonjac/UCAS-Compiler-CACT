@@ -12,13 +12,14 @@ public:
     void runOnFunction(IRFunction &F) override;
 
 private:
-    static std::vector<IRValue *> findInvariantValue(LoopInfo *loop);
+    static std::vector<IRValue *> findInvariantValue(LoopInfo *loop, ControlFlowGraph *cfg);
 
     static bool binaryOperandCondition(IRValue *op, std::set<IRValue *> *Set, LoopInfo *loop);
 
     static bool loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set);
 
-    static bool storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop);
+    static bool storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop,
+                                   ControlFlowGraph *cfg);
 };
 
 

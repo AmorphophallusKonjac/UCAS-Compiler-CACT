@@ -1,11 +1,14 @@
 #ifndef COMPILER_IRBASICBLOCK_H
 #define COMPILER_IRBASICBLOCK_H
 #pragma once
+
 #include "IRFunction.h"
 #include "IRInstruction.h"
 #include "IRValue.h"
 #include "utils/DominatorTree.h"
 #include "utils/LiveVariable.h"
+#include "utils/ControlFlowGraph.h"
+#include "utils/ControlFlowGraphVertex.h"
 
 class IRTerminatorInst;
 
@@ -19,9 +22,7 @@ private:
 
     IRFunction *parent;
 
-    DominatorTree node;
-
-    LiveVariableBB* Live;
+    LiveVariableBB *Live;
 
 public:
     explicit IRBasicBlock(const std::string &Name = "", IRFunction *Parent = nullptr);
@@ -47,9 +48,12 @@ public:
 
     /******向InstList中添加instruction******/
     void addInstruction(IRInstruction *inst);
+
     void addInstructionToFront(IRInstruction *inst);
 
-    DominatorTree *getNode() { return &node; }
+    DominatorTree *getDominatorTree(ControlFlowGraph *G) { return getControlGraphVertex(G)->getDominatorTreeNode(); }
+
+    ControlFlowGraphVertex *getControlGraphVertex(ControlFlowGraph *G) { return G->getVertexFromBasicBlock(this); }
 
     LiveVariableBB *getLive() { return Live; }
 
