@@ -16,6 +16,8 @@ ControlDependenceGraph::ControlDependenceGraph(IRFunction *F)
     }
     r = new ControlDependenceGraphVertex(this, nullptr, ControlDependenceGraphVertex::R);
     exit = new ControlDependenceGraphVertex(this, nullptr, ControlDependenceGraphVertex::EXIT);
+    vertexSet.insert(r);
+    vertexSet.insert(exit);
 
     DominatorTree::getDominatorTree(&rCfg);
 
@@ -54,4 +56,16 @@ ControlDependenceGraphVertex *ControlDependenceGraph::getR() const {
 
 ControlDependenceGraphVertex *ControlDependenceGraph::getExit() const {
     return exit;
+}
+
+void ControlDependenceGraph::print() {
+    for (auto vertex: vertexSet) {
+        for (auto succ: vertex->getSuccessors()) {
+            vertex->print();
+            std::cout << " ";
+            succ->print();
+            std::cout << std::endl;
+        }
+    }
+    std::cout << std::endl;
 }

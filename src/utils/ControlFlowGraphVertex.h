@@ -36,6 +36,8 @@ public:
 
     DominatorTree *getDominatorTreeNode();
 
+    void print();
+
 private:
     std::vector<ControlFlowGraphVertex *> successors;
 

@@ -28,6 +28,8 @@ public:
 
     ControlDependenceGraphVertex *getExit() const;
 
+    void print();
+
 private:
     std::set<ControlDependenceGraphVertex *> vertexSet;
     std::map<IRBasicBlock *, ControlDependenceGraphVertex *> vertexMap;

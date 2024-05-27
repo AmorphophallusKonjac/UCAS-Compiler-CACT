@@ -1,6 +1,8 @@
 #include "ControlDependenceGraphVertex.h"
 #include <algorithm>
 #include <cassert>
+#include <iostream>
+#include "IR/IRBasicBlock.h"
 
 ControlDependenceGraphVertex::ControlDependenceGraphVertex(ControlDependenceGraph *P, IRBasicBlock *BB,
                                                            ControlDependenceGraphVertex::vertexType ty)
@@ -25,4 +27,14 @@ const std::vector<ControlDependenceGraphVertex *> &ControlDependenceGraphVertex:
 
 IRBasicBlock *ControlDependenceGraphVertex::getBasicBlock() const {
     return basicBlock;
+}
+
+void ControlDependenceGraphVertex::print() {
+    if (ty == BB) {
+        std::cout << basicBlock->getName();
+    } else if (ty == R) {
+        std::cout << "r";
+    } else if (ty == EXIT) {
+        std::cout << "exit";
+    }
 }
