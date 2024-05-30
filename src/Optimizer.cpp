@@ -49,10 +49,10 @@ void Optimizer::build() {
 
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new CutDeadBlockPass("CutDeadBLock"));
+    //addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RenamePass("RenamePass"));
 
 
-    //addPass(new RegisterPass("RegisterPass"));
+    addPass(new RegisterPass("RegisterPass"));
 }

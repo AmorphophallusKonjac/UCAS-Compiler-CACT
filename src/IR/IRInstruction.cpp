@@ -172,8 +172,8 @@ void IRInstruction::print(std::ostream &OS) const {
     for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
         LiveString = LiveString + "%" + irval->getName() + ", ";
 
-    OS << std::setw(100) << std::setfill(' ') << LiveString;
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 100));
+    OS << std::setw(400) << std::setfill(' ') << LiveString;
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 400));
 
     switch (getOpcode()) {
         // Terminators
