@@ -1,6 +1,8 @@
 #include <cassert>
 #include "ControlFlowGraphVertex.h"
 #include <algorithm>
+#include <iostream>
+#include "IR/IRBasicBlock.h"
 
 const std::vector<ControlFlowGraphVertex *> &ControlFlowGraphVertex::getSuccessors() const {
     return successors;
@@ -36,4 +38,14 @@ ControlFlowGraphVertex::vertexType ControlFlowGraphVertex::getTy() const {
 
 DominatorTree *ControlFlowGraphVertex::getDominatorTreeNode() {
     return &dominatorTreeNode;
+}
+
+void ControlFlowGraphVertex::print() {
+    if (ty == BB) {
+        std::cout << basicBlock->getName();
+    } else if (ty == R) {
+        std::cout << "r";
+    } else if (ty == EXIT) {
+        std::cout << "exit";
+    }
 }

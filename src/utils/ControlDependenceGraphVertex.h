@@ -27,6 +27,8 @@ public:
 
     IRBasicBlock *getBasicBlock() const;
 
+    void print();
+
 private:
     std::vector<ControlDependenceGraphVertex *> successors;
 

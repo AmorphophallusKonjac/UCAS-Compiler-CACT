@@ -25,6 +25,8 @@ public:
 
     ControlFlowGraphVertex *getVertexFromBasicBlock(IRBasicBlock *BB);
 
+    void print();
+
 protected:
     std::set<ControlFlowGraphVertex *> vertexSet;
     std::map<IRBasicBlock *, ControlFlowGraphVertex *> vertexMap;

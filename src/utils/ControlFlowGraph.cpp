@@ -1,10 +1,29 @@
+#include <iostream>
 #include "ControlFlowGraph.h"
 #include "IR/IRFunction.h"
 #include "utils/ControlFlowGraphVertex.h"
 #include "IR/iTerminators.h"
 
 ControlFlowGraph::ControlFlowGraph(IRFunction *F) {
-    auto BBList = F->getBasicBlockList();
+    auto &BBList = F->getBasicBlockList();
+
+    std::vector<IRBasicBlock *> bin;
+    for (auto BB: BBList) {
+        if (BB == F->getEntryBlock())
+            continue;
+        auto &instList = BB->getInstList();
+        if (BB->getUses().empty()) {
+            for (auto inst: instList)
+                inst->dropAllReferences();
+            instList.clear();
+            bin.push_back(BB);
+        }
+    }
+
+    for (auto trash: bin) {
+        BBList.erase(std::find(BBList.begin(), BBList.end(), trash));
+    }
+
     for (auto BB: BBList) {
         auto v = new ControlFlowGraphVertex(this, BB, ControlFlowGraphVertex::BB);
         vertexSet.insert(v);
@@ -31,6 +50,18 @@ const std::set<ControlFlowGraphVertex *> &ControlFlowGraph::getVertexSet() const
 
 ControlFlowGraphVertex *ControlFlowGraph::getVertexFromBasicBlock(IRBasicBlock *BB) {
     return vertexMap[BB];
+}
+
+void ControlFlowGraph::print() {
+    for (auto vertex: vertexSet) {
+        for (auto succ: vertex->getSuccessors()) {
+            vertex->print();
+            std::cout << " ";
+            succ->print();
+            std::cout << std::endl;
+        }
+    }
+    std::cout << std::endl;
 }
 
 ReverseControlFlowGraph::ReverseControlFlowGraph(IRFunction *F) : ControlFlowGraph() {
