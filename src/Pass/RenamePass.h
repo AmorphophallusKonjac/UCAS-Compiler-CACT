@@ -5,7 +5,7 @@
 
 class RenamePass : public FunctionPass {
 public:
-    explicit RenamePass(std::string name = "");
+    explicit RenamePass(std::string name = "", int level = 0);
 
     void runOnFunction(IRFunction &F) override;
 };

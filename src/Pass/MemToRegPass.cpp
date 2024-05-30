@@ -12,7 +12,7 @@
 
 class DominatorTree;
 
-MemToRegPass::MemToRegPass(std::string name) : FunctionPass(std::move(name)) {
+MemToRegPass::MemToRegPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

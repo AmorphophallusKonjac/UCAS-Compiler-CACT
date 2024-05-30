@@ -6,7 +6,7 @@
 
 class AggressiveDeadCodeEliminatePass : public FunctionPass {
 public:
-    explicit AggressiveDeadCodeEliminatePass(std::string name = "");
+    explicit AggressiveDeadCodeEliminatePass(std::string name = "", int level = 1);
 
     void runOnFunction(IRFunction &F) override;
 

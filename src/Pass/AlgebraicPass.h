@@ -5,7 +5,7 @@
 
 class AlgebraicPass : public BasicBlockPass {
 public:
-    explicit AlgebraicPass(std::string name = "");
+    explicit AlgebraicPass(std::string name = "", int level = 1);
 
     void runOnBasicBlock(IRBasicBlock &BB) override;
 };

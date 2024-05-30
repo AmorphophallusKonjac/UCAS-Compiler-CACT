@@ -10,7 +10,7 @@ class DominatorTree;
 
 class MemToRegPass : public FunctionPass {
 public:
-    explicit MemToRegPass(std::string name = "");
+    explicit MemToRegPass(std::string name = "", int level = 1);
 
     void runOnFunction(IRFunction &F) override;
 

@@ -12,9 +12,12 @@ public:
     void run();
     void addPass(Pass * pass);
     void build();
+    void setLevel(int level);
+
 private:
     std::vector<Pass *> passList;
     IRModule *ir;
+    int level;
 };
 
 

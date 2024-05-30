@@ -19,6 +19,6 @@ void LoopArrayScalarizePass::runOnFunction(IRFunction &F) {
     }
 }
 
-LoopArrayScalarizePass::LoopArrayScalarizePass(std::string name) : FunctionPass(name) {
+LoopArrayScalarizePass::LoopArrayScalarizePass(std::string name, int level) : FunctionPass(name, level) {
 
 }

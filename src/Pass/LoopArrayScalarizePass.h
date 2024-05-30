@@ -5,7 +5,7 @@
 
 class LoopArrayScalarizePass : public FunctionPass {
 public:
-    explicit LoopArrayScalarizePass(std::string name = "");
+    explicit LoopArrayScalarizePass(std::string name = "", int level = 2);
 
     void runOnFunction(IRFunction &F) override;
 };

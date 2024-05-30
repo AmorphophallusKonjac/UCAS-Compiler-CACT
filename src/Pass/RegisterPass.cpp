@@ -1,7 +1,7 @@
 #include "RegisterPass.h"
 #include "utils/LiveVariable.h"
 
-RegisterPass::RegisterPass(std::string name) : FunctionPass(std::move(name)) {
+RegisterPass::RegisterPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

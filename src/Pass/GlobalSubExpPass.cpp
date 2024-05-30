@@ -208,4 +208,4 @@ void GlobalSubExpPass::runOnFunction(IRFunction &F) {
     irloadstoreArray.clear();
 }
 
-GlobalSubExpPass::GlobalSubExpPass(std::string name) : FunctionPass(name) {}
+GlobalSubExpPass::GlobalSubExpPass(std::string name, int level) : FunctionPass(name, level) {}

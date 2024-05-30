@@ -8,14 +8,18 @@ class Optimizer;
 
 class Pass {
 public:
-    explicit Pass(std::string name);
+    explicit Pass(std::string name, int level);
 
     virtual void run(IRModule &ir) = 0;
 
     void addToOpt(Optimizer &opt);
 
+    int getLevel() const;
+
 private:
     std::string name;
+
+    int level = 0;
 };
 
 /*!
@@ -23,7 +27,7 @@ private:
  */
 class FunctionPass : public Pass {
 public:
-    explicit FunctionPass(std::string name);
+    explicit FunctionPass(std::string name, int level);
 
     /*!
      * runOnFunction - 在函数上运行的优化行为
@@ -43,7 +47,7 @@ public:
  */
 class BasicBlockPass : public FunctionPass {
 public:
-    explicit BasicBlockPass(std::string name);
+    explicit BasicBlockPass(std::string name, int level);
 
     /*!
      * runOnBasicBlock - 在基本块上运行优化行为

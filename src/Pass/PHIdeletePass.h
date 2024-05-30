@@ -6,7 +6,7 @@
 
 class PHIdeletePass : public FunctionPass {
 public:
-    explicit PHIdeletePass(std::string name = "");
+    explicit PHIdeletePass(std::string name = "", int level = 0);
 
     void runOnFunction(IRFunction &F) override;
 };

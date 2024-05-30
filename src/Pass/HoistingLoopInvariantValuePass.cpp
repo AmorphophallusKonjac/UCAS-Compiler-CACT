@@ -4,7 +4,7 @@
 
 #include <utility>
 
-HoistingLoopInvariantValuePass::HoistingLoopInvariantValuePass(std::string name) : FunctionPass(std::move(name)) {
+HoistingLoopInvariantValuePass::HoistingLoopInvariantValuePass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

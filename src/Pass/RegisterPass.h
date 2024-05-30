@@ -6,7 +6,7 @@
 
 class RegisterPass : public FunctionPass {
 public:
-    explicit RegisterPass(std::string name = "");
+    explicit RegisterPass(std::string name = "", int level = 0);
 
     void runOnFunction(IRFunction &F) override;
 };

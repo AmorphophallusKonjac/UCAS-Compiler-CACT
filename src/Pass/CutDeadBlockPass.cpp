@@ -79,6 +79,6 @@ void CutDeadBlockPass::runOnFunction(IRFunction &F) {
     }
 }
 
-CutDeadBlockPass::CutDeadBlockPass(std::string name) : FunctionPass(std::move(name)) {
+CutDeadBlockPass::CutDeadBlockPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }

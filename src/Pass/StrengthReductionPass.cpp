@@ -11,7 +11,7 @@
 #include "Pass/EliminateBasicInductionVarPass.h"
 #include <iostream>
 
-StrengthReductionPass::StrengthReductionPass(std::string name) : FunctionPass(std::move(name)) {
+StrengthReductionPass::StrengthReductionPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

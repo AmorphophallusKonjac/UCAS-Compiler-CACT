@@ -7,7 +7,7 @@
 
 class HoistingLoopInvariantValuePass : public FunctionPass {
 public:
-    explicit HoistingLoopInvariantValuePass(std::string name);
+    explicit HoistingLoopInvariantValuePass(std::string name = "", int level = 2);
 
     void runOnFunction(IRFunction &F) override;
 

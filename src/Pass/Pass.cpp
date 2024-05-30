@@ -20,15 +20,18 @@ void Pass::addToOpt(Optimizer &opt) {
     opt.addPass(this);
 }
 
-Pass::Pass(std::string name)
-        : name(name) {
+Pass::Pass(std::string name, int level) : name(name), level(level) {
 
 }
 
-FunctionPass::FunctionPass(std::string name) : Pass(std::move(name)) {
+int Pass::getLevel() const {
+    return level;
+}
+
+FunctionPass::FunctionPass(std::string name, int level) : Pass(std::move(name), level) {
 
 }
 
-BasicBlockPass::BasicBlockPass(std::string name) : FunctionPass(std::move(name)) {
+BasicBlockPass::BasicBlockPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
