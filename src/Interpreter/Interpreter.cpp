@@ -491,6 +491,7 @@ TemporaryVariable* Interpreter::change_Operand_To_TemporaryVariable(IRValue *irV
         || valueType == IRValue::GlobalVariableVal) {
         if(irValue->getTempVar() == nullptr) {
             auto newTempVar = new TemporaryVariable(0, TemporaryVariable::Void);
+            TempVarVector.push_back(newTempVar);
             irValue->setTempVar(newTempVar);
         }
         return irValue->getTempVar();
