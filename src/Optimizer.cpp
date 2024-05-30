@@ -13,6 +13,7 @@
 #include "Pass/EliminateBasicInductionVarPass.h"
 #include "Pass/RegisterPass.h"
 #include "Pass/AggressiveDeadCodeEliminatePass.h"
+#include "Pass/PHIdeletePass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -46,6 +47,6 @@ void Optimizer::build() {
 //    addPass(new CutDeadBlockPass("CutDeadBLock"));
 
 
-
-    addPass(new RegisterPass("RegisterPass"));
+    //addPass(new PHIdeletePass("PHIdeletePass"));
+    // addPass(new RegisterPass("RegisterPass"));
 }

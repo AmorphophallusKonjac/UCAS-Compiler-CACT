@@ -91,6 +91,8 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
             return "shl";
         case Shr:
             return "shr";
+        case Move:
+            return "mv";
 
         default:
             return "<Invalid operator> ";
@@ -427,6 +429,25 @@ void IRInstruction::print(std::ostream &OS) const {
                 OS << ", ";
             }
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
+            break;
+        case Move:
+            OS << this->getOpcodeName() << " ";//打印move
+
+            //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
+            this->printPrefixName(OS);
+            OS << ", ";
+            operand = this->getOperand(0);
+            switch (operand->getValueType()) {
+                case IRValue::ConstantVal:
+                    operand->print(OS);
+                    break;
+                case IRValue::ArgumentVal:
+                    operand->printPrefixName(OS);//打印本名
+                    break;
+                case IRValue::InstructionVal:
+                    operand->printPrefixName(OS);
+                    break;
+            }
             break;
 
         default:

@@ -63,5 +63,29 @@ public:
     }
 };
 
+class MoveInst: public IRInstruction {
+    MoveInst(const MoveInst &MI) : IRInstruction(MI.getType(), MI.getOpcode()) {
+        Operands.reserve(1);
+        Operands.emplace_back(MI.Operands[0], this);
+    }
+
+public:
+    MoveInst(IRValue *Src, const std::string& dstname, IRBasicBlock *parent = nullptr)
+        : IRInstruction(IRType::VoidTy, Move, dstname, parent) {
+        Operands.reserve(1);
+        Operands.emplace_back(Src, this);
+    }
+
+    OtherOps getOpcode() const { return (OtherOps) IRInstruction::getOpcode(); }
+
+    IRInstruction *clone() const override { return new MoveInst(*this); }
+
+    // Methods for support type inquiry through isa, cast, and dyn_cast:
+    static inline bool classof(const MoveInst *) { return true; }
+    static inline bool classof(const IRInstruction *I) {
+        return I->getOpcode() == IRInstruction::Move;
+    }
+};
+
 
 #endif//COMPILER_IOTHER_H
