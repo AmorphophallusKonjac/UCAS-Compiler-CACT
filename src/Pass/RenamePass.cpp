@@ -24,6 +24,7 @@ void RenamePass::runOnFunction(IRFunction &F) {
         for (auto inst: InstList) {
             if (IRStoreInst::classof(inst) ||
                 IRMemcpyInst::classof(inst) ||
+                IRMoveInst::classof(inst) ||
                 IRCallInst::classof(inst) && dynamic_cast<IRCallInst *>(inst)->getType() == IRType::VoidTy) {
                 continue;
             }
