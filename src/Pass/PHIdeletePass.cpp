@@ -16,7 +16,7 @@ void PHIdeletePass::runOnFunction(IRFunction &F){
                 auto phiinst = dynamic_cast<IRPHINode*>(inst);
                 for(unsigned i=0; i < phiinst->getNumIncomingValues(); i++){
                     /*add move inst*/
-                    phiinst->getIncomingBlock(i)->getInstList().insert(phiinst->getIncomingBlock(i)->getInstList().end()-1, new MoveInst(phiinst->getIncomingValue(i), inst->getName()));
+                    phiinst->getIncomingBlock(i)->getInstList().insert(phiinst->getIncomingBlock(i)->getInstList().end()-1, new IRMoveInst(phiinst->getIncomingValue(i), inst->getName()));
                 }
                 /*delete phi inst*/
                 auto irinst = std::find(inst->getParent()->getInstList().begin(), inst->getParent()->getInstList().end(), inst);

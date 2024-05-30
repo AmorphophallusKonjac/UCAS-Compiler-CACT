@@ -43,10 +43,12 @@ void Optimizer::build() {
     //addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RenamePass("RenamePass"));
+
+    addPass(new PHIdeletePass("PHIdeletePass"));
     
+
 //    addPass(new CutDeadBlockPass("CutDeadBLock"));
 
 
-    //addPass(new PHIdeletePass("PHIdeletePass"));
     // addPass(new RegisterPass("RegisterPass"));
 }
