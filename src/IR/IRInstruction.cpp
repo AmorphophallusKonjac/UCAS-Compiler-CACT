@@ -168,10 +168,10 @@ void IRInstruction::print(std::ostream &OS) const {
 
     std::string LiveString;
     LiveString = "INLive: ";
-    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
+    for (auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
         LiveString = LiveString + "%" + irval->getName() + ", ";
-    LiveString +=  "     OUTLive: ";
-    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
+    LiveString += "     OUTLive: ";
+    for (auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
         LiveString = LiveString + "%" + irval->getName() + ", ";
 
     OS << std::setw(400) << std::setfill(' ') << LiveString;
@@ -363,8 +363,8 @@ void IRInstruction::print(std::ostream &OS) const {
             }
             OS << this->getOpcodeName() << " ";//打印call
 
-            IRCallInst* ircall;
-            IRFunction* irfunc;
+            IRCallInst *ircall;
+            IRFunction *irfunc;
             ircall = dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this));
             irfunc = ircall->getCalledFunction();
             irfunc->getFunctionType()->print(OS);
@@ -434,18 +434,29 @@ void IRInstruction::print(std::ostream &OS) const {
             OS << this->getOpcodeName() << " ";//打印move
 
             //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
-            this->printPrefixName(OS);
-            OS << ", ";
-            operand = this->getOperand(0);
-            switch (operand->getValueType()) {
+            operand1 = dynamic_cast<IRMoveInst *>(const_cast<IRInstruction *>(this))->getDest();
+            switch (operand1->getValueType()) {
                 case IRValue::ConstantVal:
-                    operand->print(OS);
+                    operand1->print(OS);
                     break;
                 case IRValue::ArgumentVal:
-                    operand->printPrefixName(OS);//打印本名
+                    operand1->printPrefixName(OS);//打印本名
                     break;
                 case IRValue::InstructionVal:
-                    operand->printPrefixName(OS);
+                    operand1->printPrefixName(OS);
+                    break;
+            }
+            OS << ", ";
+            operand2 = dynamic_cast<IRMoveInst *>(const_cast<IRInstruction *>(this))->getSrc();
+            switch (operand2->getValueType()) {
+                case IRValue::ConstantVal:
+                    operand2->print(OS);
+                    break;
+                case IRValue::ArgumentVal:
+                    operand2->printPrefixName(OS);//打印本名
+                    break;
+                case IRValue::InstructionVal:
+                    operand2->printPrefixName(OS);
                     break;
             }
             break;

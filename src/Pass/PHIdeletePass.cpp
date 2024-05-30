@@ -9,17 +9,22 @@ PHIdeletePass::PHIdeletePass(std::string name) : FunctionPass(std::move(name)) {
 
 }
 
-void PHIdeletePass::runOnFunction(IRFunction &F){
-    for(auto BB: F.getBasicBlockList()){
-        for(auto inst: BB->getInstList()){
-            if(inst->getOpcode() == IRInstruction::PHI){
-                auto phiinst = dynamic_cast<IRPHINode*>(inst);
-                for(unsigned i=0; i < phiinst->getNumIncomingValues(); i++){
+void PHIdeletePass::runOnFunction(IRFunction &F) {
+    for (auto BB: F.getBasicBlockList()) {
+        for (auto inst: BB->getInstList()) {
+            if (inst->getOpcode() == IRInstruction::PHI) {
+                auto phiinst = dynamic_cast<IRPHINode *>(inst);
+                for (unsigned i = 0; i < phiinst->getNumIncomingValues(); i++) {
                     /*add move inst*/
-                    phiinst->getIncomingBlock(i)->getInstList().insert(phiinst->getIncomingBlock(i)->getInstList().end()-1, new IRMoveInst(phiinst->getIncomingValue(i), inst->getName()));
+                    auto mvInst = new IRMoveInst(phiinst->getIncomingValue(i), inst);
+                    mvInst->setParent(phiinst->getIncomingBlock(i));
+                    phiinst->getIncomingBlock(i)->getInstList().insert(
+                            phiinst->getIncomingBlock(i)->getInstList().end() - 1,
+                            mvInst);
                 }
                 /*delete phi inst*/
-                auto irinst = std::find(inst->getParent()->getInstList().begin(), inst->getParent()->getInstList().end(), inst);
+                auto irinst = std::find(inst->getParent()->getInstList().begin(),
+                                        inst->getParent()->getInstList().end(), inst);
                 inst->getParent()->getInstList().erase(irinst);
             }
         }
