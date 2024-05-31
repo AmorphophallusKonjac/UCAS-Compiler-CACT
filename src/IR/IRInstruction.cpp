@@ -166,17 +166,22 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand1;
     IRValue *operand2;
 
-    std::string LiveString;
-    LiveString = "INLive: ";
-    for (auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
-        LiveString = LiveString + "%" + irval->getName() + ", ";
-    LiveString += "     OUTLive: ";
-    for (auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
-        LiveString = LiveString + "%" + irval->getName() + ", ";
+    std::string INLiveString;
+    std::string OUTLiveString;
+    
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
 
-    OS << std::setw(400) << std::setfill(' ') << LiveString;
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 400));
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
 
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+
+    OS << "    ";
     switch (getOpcode()) {
         // Terminators
         case Ret:

@@ -11,7 +11,8 @@ PHIdeletePass::PHIdeletePass(std::string name) : FunctionPass(std::move(name)) {
 
 void PHIdeletePass::runOnFunction(IRFunction &F) {
     for (auto BB: F.getBasicBlockList()) {
-        for (auto inst: BB->getInstList()) {
+        for (unsigned i=0; i<BB->getInstList().size();) {
+            auto inst = BB->getInstList()[i];
             if (inst->getOpcode() == IRInstruction::PHI) {
                 auto phiinst = dynamic_cast<IRPHINode *>(inst);
                 for (unsigned i = 0; i < phiinst->getNumIncomingValues(); i++) {
@@ -26,6 +27,8 @@ void PHIdeletePass::runOnFunction(IRFunction &F) {
                 auto irinst = std::find(inst->getParent()->getInstList().begin(),
                                         inst->getParent()->getInstList().end(), inst);
                 inst->getParent()->getInstList().erase(irinst);
+            }else{
+                i++;
             }
         }
     }
