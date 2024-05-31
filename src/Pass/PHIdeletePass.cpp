@@ -22,6 +22,7 @@ void PHIdeletePass::runOnFunction(IRFunction &F) {
                             phiinst->getIncomingBlock(i)->getInstList().end() - 1,
                             mvInst);
                 }
+                inst->dropAllReferences();
                 /*delete phi inst*/
                 auto irinst = std::find(inst->getParent()->getInstList().begin(),
                                         inst->getParent()->getInstList().end(), inst);
