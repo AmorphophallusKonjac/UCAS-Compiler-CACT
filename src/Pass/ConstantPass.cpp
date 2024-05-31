@@ -110,6 +110,6 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
     }
 }
 
-ConstantPass::ConstantPass(std::string name) : BasicBlockPass(std::move(name)) {
+ConstantPass::ConstantPass(std::string name, int level) : BasicBlockPass(std::move(name), level) {
 
 }

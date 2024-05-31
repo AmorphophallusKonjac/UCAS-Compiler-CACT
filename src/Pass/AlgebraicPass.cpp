@@ -143,6 +143,6 @@ void AlgebraicPass::runOnBasicBlock(IRBasicBlock &BB) {
     }
 }
 
-AlgebraicPass::AlgebraicPass(std::string name) : BasicBlockPass(name) {
+AlgebraicPass::AlgebraicPass(std::string name, int level) : BasicBlockPass(name, level) {
 
 }

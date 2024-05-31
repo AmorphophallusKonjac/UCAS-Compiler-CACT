@@ -17,12 +17,13 @@
 
 void Optimizer::run() {
     for (auto pass: passList) {
-        pass->run(*ir);
+        if (level >= pass->getLevel())
+            pass->run(*ir);
     }
 }
 
 Optimizer::Optimizer(IRModule *ir)
-        : ir(ir), passList() {
+        : ir(ir), passList(), level(0) {
 
 }
 
@@ -40,15 +41,20 @@ void Optimizer::build() {
 
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
+<<<<<<< HEAD
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
+=======
+>>>>>>> dev
     addPass(new RenamePass("RenamePass"));
 
     addPass(new PHIdeletePass("PHIdeletePass"));
-    
 
-//    addPass(new CutDeadBlockPass("CutDeadBLock"));
-
+    addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RegisterPass("RegisterPass"));
+}
+
+void Optimizer::setLevel(int level) {
+    this->level = level;
 }

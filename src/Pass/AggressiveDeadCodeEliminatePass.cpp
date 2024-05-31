@@ -7,7 +7,7 @@
 #include <queue>
 #include <set>
 
-AggressiveDeadCodeEliminatePass::AggressiveDeadCodeEliminatePass(std::string name) : FunctionPass(name) {
+AggressiveDeadCodeEliminatePass::AggressiveDeadCodeEliminatePass(std::string name, int level) : FunctionPass(name, level) {
 
 }
 

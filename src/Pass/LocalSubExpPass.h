@@ -5,7 +5,7 @@
 
 class LocalSubExpPass : public BasicBlockPass {
 public:
-    explicit LocalSubExpPass(std::string name = "");
+    explicit LocalSubExpPass(std::string name = "", int level = 1);
 
     void runOnBasicBlock(IRBasicBlock &BB) override;
 };

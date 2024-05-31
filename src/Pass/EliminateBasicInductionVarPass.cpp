@@ -7,7 +7,7 @@
 #include "IR/iOperators.h"
 #include "CutDeadCodePass.h"
 
-EliminateBasicInductionVarPass::EliminateBasicInductionVarPass(std::string name) : FunctionPass(std::move(name)) {
+EliminateBasicInductionVarPass::EliminateBasicInductionVarPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

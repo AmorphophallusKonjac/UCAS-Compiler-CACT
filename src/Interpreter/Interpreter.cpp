@@ -82,7 +82,8 @@ InterpretBasicBlock:
                     continue;
                 printf("Operand ");
                 std::cout << inst->getOperand(i)->getName() << ": ";
-                change_Operand_To_TemporaryVariable(inst->getOperand(i))->print();
+                if(change_Operand_To_TemporaryVariable(inst->getOperand(i)))
+                    change_Operand_To_TemporaryVariable(inst->getOperand(i))->print();
             }
         }
         switch (opcode) {
@@ -465,6 +466,18 @@ InterpretBasicBlock:
                 break;
             }
 
+            case IRInstruction::Move : {
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                tempVar0->setValue(tempVar1->getValue());
+                tempVar0->setType(tempVar1->getType());
+                tempVar0->setElementType(tempVar1->getElementType());
+                tempVar0->setArraySize(tempVar1->getArraySize());
+                if(debugOpt)
+                    tempVar0->print();
+                break;
+            }
+
             default:{
                 printf("Undefined Operator: %s\n", inst->getOpcodeName());
             }
@@ -476,6 +489,11 @@ TemporaryVariable* Interpreter::change_Operand_To_TemporaryVariable(IRValue *irV
     auto valueType = irValue -> getValueType();
     if (valueType == IRValue::ArgumentVal || valueType == IRValue::InstructionVal
         || valueType == IRValue::GlobalVariableVal) {
+        if(irValue->getTempVar() == nullptr) {
+            auto newTempVar = new TemporaryVariable(0, TemporaryVariable::Void);
+            TempVarVector.push_back(newTempVar);
+            irValue->setTempVar(newTempVar);
+        }
         return irValue->getTempVar();
     }
     else if(valueType == IRValue::ConstantVal) {

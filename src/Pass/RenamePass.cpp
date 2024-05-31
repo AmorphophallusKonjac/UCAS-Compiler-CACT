@@ -5,7 +5,7 @@
 
 #include <utility>
 
-RenamePass::RenamePass(std::string name) : FunctionPass(std::move(name)) {
+RenamePass::RenamePass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

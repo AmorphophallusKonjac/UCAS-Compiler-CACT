@@ -5,7 +5,7 @@
 #include "utils/LiveVariable.h"
 #include <algorithm>
 
-PHIdeletePass::PHIdeletePass(std::string name) : FunctionPass(std::move(name)) {
+PHIdeletePass::PHIdeletePass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

@@ -53,6 +53,6 @@ void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
     }
 }
 
-LocalSubExpPass::LocalSubExpPass(std::string name) : BasicBlockPass(name) {
+LocalSubExpPass::LocalSubExpPass(std::string name, int level) : BasicBlockPass(name, level) {
 
 }
