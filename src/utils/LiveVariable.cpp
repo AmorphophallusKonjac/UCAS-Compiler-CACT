@@ -86,11 +86,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             if(inst->getOperand(0)->getValueType() == IRValue::InstructionVal){
                 if(!(dynamic_cast<IRInstruction*>(inst->getOperand(0))->getOpcode() == IRInstruction::Alloca))
                     usevec.push_back(inst->getOperand(0));
-            }else if(inst->getOperand(0)->getValueType() == IRValue::GlobalVariableVal){
-                if(!(dynamic_cast<IRSequentialType*>(inst->getOperand(0)->getType())->getElementType()->getPrimitiveID() == IRType::ArrayTyID))
-                    usevec.push_back(inst->getOperand(0));
             }
-
             defvec.push_back(inst);
         }else if(inst->getOpcode() == IRInstruction::Shl ||
                  inst->getOpcode() == IRInstruction::Shr ){
@@ -103,9 +99,6 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             
             if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal){
                 if(!(dynamic_cast<IRInstruction*>(inst->getOperand(1))->getOpcode() == IRInstruction::Alloca))
-                    usevec.push_back(inst->getOperand(1));
-            }else if(inst->getOperand(1)->getValueType() == IRValue::GlobalVariableVal){
-                if(!(dynamic_cast<IRSequentialType*>(inst->getOperand(1)->getType())->getElementType()->getPrimitiveID() == IRType::ArrayTyID))
                     usevec.push_back(inst->getOperand(1));
             }
         }else if(inst->getOpcode() == IRInstruction::PHI){
