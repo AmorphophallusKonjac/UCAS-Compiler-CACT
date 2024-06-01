@@ -38,23 +38,23 @@ public:
       else        { regSeq = num+25; } 
       regName = "t" + std::to_string(regNum); };
 
+    /*初始化静态reg对象，并获得静态reg对象List*/
     static void initTreg(){
         for(unsigned i=0; i<RegMAXNum;i++){
             CallerSavedvec.push_back(new CallerSavedRegister(i));
         }
     }
 
-    const std::string& getRegName(){
-        return regName;
-    };
+    static std::vector<CallerSavedRegister*>& getTregList(){
+        return CallerSavedvec;
+    }
 
-    unsigned getRegSeq(){
-        return regSeq;
-    };
+    /*获得reg属性*/
+    const std::string& getRegName(){ return regName; };
 
-    RegTy getRegty(){
-        return regty;
-    };
+    unsigned getRegSeq(){ return regSeq; };
+
+    RegTy getRegty(){ return regty; };
 
 };
 
@@ -74,23 +74,22 @@ public:
       else        { regSeq = num+16; } 
       regName = "t" + std::to_string(regNum); };
 
+    /*初始化静态reg对象，并获得静态reg对象List*/
     static void initSreg(){
         for(unsigned i=0; i<RegMAXNum;i++){
             CalleeSavedvec.push_back(new CalleeSavedRegister(i));
         }
     }
+    static std::vector<CalleeSavedRegister*>& getSregList(){
+        return CalleeSavedvec;
+    }
 
-    const std::string& getRegName(){
-        return regName;
-    };
+    /*获得reg属性*/
+    const std::string& getRegName(){ return regName; };
 
-    unsigned getRegSeq(){
-        return regSeq;
-    };
+    unsigned getRegSeq(){ return regSeq; };
 
-    RegTy getRegty(){
-        return regty;
-    };
+    RegTy getRegty(){ return regty; };
 };
 
 class ParamRegister : public Register{
@@ -108,31 +107,44 @@ public:
     { regSeq = num+10; 
       regName = "t" + std::to_string(regNum); };
 
+    /*初始化静态reg对象，并获得静态reg对象List*/
     static void initAreg(){
         for(unsigned i=0; i<RegMAXNum;i++){
             Paramvec.push_back(new ParamRegister(i));
         }
     }
+    static std::vector<ParamRegister*>& getAregList(){
+        return Paramvec;
+    }
 
-    const std::string& getRegName(){
-        return regName;
-    };
+    /*获得reg属性*/
+    const std::string& getRegName(){ return regName; };
 
-    unsigned getRegSeq(){
-        return regSeq;
-    };
+    unsigned getRegSeq(){ return regSeq; };
 
-    RegTy getRegty(){
-        return regty;
-    };
+    RegTy getRegty(){ return regty; };
 };
 
 class RegisterFactory{
+private:
+    static std::vector<Register*> RegList;
+
 public:
+
+     /*初始化所有静态reg对*/
     static void initReg(){
         CallerSavedRegister::initTreg();
         CalleeSavedRegister::initSreg();
         ParamRegister::initAreg();
+
+        RegList.assign(CallerSavedRegister::getTregList().begin(), CallerSavedRegister::getTregList().end());
+        RegList.assign(CalleeSavedRegister::getSregList().begin(), CalleeSavedRegister::getSregList().end());
+        RegList.assign(ParamRegister::getAregList().begin(), ParamRegister::getAregList().end());
+    }
+
+    /*获得所有静态reg对象List*/
+    static std::vector<Register*>& getRegList(){
+        return RegList;
     }
 };
 
