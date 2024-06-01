@@ -46,16 +46,20 @@ void IRBasicBlock::printPrefixName(std::ostream &OS) const {
 
 void IRBasicBlock::print(std::ostream &OS) const {
 
-    std::string LiveString;
-    LiveString = "INLive: ";
-    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getINLive())
-        LiveString = LiveString + "%" + irval->getName() + ", ";
-    LiveString +=  "     OUTLive: ";
-    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getOUTLive())
-        LiveString = LiveString + "%" + irval->getName() + ", ";
+    std::string INLiveString;
+    std::string OUTLiveString;
 
-    OS << std::setw(400) << std::setfill(' ') << LiveString;
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 400));
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
+
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
+
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
 
     //打印每条指令
     this->printPrefixName(OS);
@@ -78,7 +82,6 @@ void IRBasicBlock::print(std::ostream &OS) const {
     OS << std::endl;
 
     for (auto inst: this->InstList) {
-        OS << "    ";
         inst->print(OS);
     }
     // TODO

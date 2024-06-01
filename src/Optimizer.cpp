@@ -47,7 +47,7 @@ void Optimizer::build() {
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
-    // addPass(new RegisterPass("RegisterPass"));
+    addPass(new RegisterPass("RegisterPass"));
 }
 
 void Optimizer::setLevel(int level) {
