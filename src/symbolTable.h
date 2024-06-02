@@ -218,6 +218,8 @@ private:
     int dimension;
 
 public:
+    bool isinitial = true;
+
     int getDimension() { return dimension; }
 
     int getArrayLength() { return std::accumulate(arraySize.begin(), arraySize.end(), 1, std::multiplies<int>()); }
