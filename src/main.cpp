@@ -4,6 +4,7 @@
 #include "IR/IRModule.h"
 #include "FrontEnd.h"
 #include "Optimizer.h"
+#include "BackEnd.h"
 #include "Interpreter/Interpreter.h"
 #include "utils/CLParser.h"
 
@@ -44,6 +45,9 @@ int main(int argc, const char *argv[]) {
 
 //    if (parser.get("emit-IR"))
     frontEnd.print();
+
+    BackEnd backEnd(&ir);
+    backEnd.print();
 
     Interpreter ip(&ir);
     Interpreter::debugOpt = parser.get("verbose");
