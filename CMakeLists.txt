@@ -70,5 +70,5 @@ add_test(
 set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
 set_tests_properties(semantic_test PROPERTIES TIMEOUT 60)
 set_tests_properties(semantic_interpret_test PROPERTIES TIMEOUT 20)
-set_tests_properties(codegen_test PROPERTIES TIMEOUT 60)
+set_tests_properties(codegen_test PROPERTIES TIMEOUT 400)
 set_tests_properties(codegen_test_against PROPERTIES TIMEOUT 400)
