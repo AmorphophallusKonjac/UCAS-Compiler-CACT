@@ -20,6 +20,7 @@ IRInstruction::IRInstruction(IRType *Ty, unsigned int iType, const std::string &
     Live = new LiveVariableInst(this);
     Parent = parent;
     this->iType = iType;
+    regNode = new RegisterNode(Name, this);
 
     if (parent) {
         parent->addInstruction(this);
@@ -166,7 +167,7 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand1;
     IRValue *operand2;
 
-    std::string INLiveString;
+    /*std::string INLiveString;
     std::string OUTLiveString;
     
     INLiveString = "INLive: ";
@@ -179,7 +180,7 @@ void IRInstruction::print(std::ostream &OS) const {
         OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
     OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
 
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));*/
 
     OS << "    ";
     switch (getOpcode()) {
