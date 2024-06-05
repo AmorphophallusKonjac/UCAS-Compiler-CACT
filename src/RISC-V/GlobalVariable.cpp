@@ -27,7 +27,8 @@ namespace RISCV {
             auto varType = irGV->getType()->getElementType();
             size = varType->getPrimitiveSize();
         }
-        module->addGlobalVariable(this);
+        if (module)
+            module->addGlobalVariable(this);
     }
 
     IRGlobalVariable *GlobalVariable::getIrGv() const {

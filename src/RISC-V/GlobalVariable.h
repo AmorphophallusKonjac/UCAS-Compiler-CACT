@@ -1,20 +1,22 @@
 #ifndef COMPILER_GLOBALVARIABLE_H
 #define COMPILER_GLOBALVARIABLE_H
 
-#include "User.h"
 #include "Environment.h"
+#include <iostream>
+
+class IRType;
+
+class IRConstant;
 
 class IRGlobalVariable;
 
 namespace RISCV {
 
-    class User;
-
     class Module;
 
-    class GlobalVariable : public User {
+    class GlobalVariable {
     public:
-        GlobalVariable(IRGlobalVariable *irGV, Module *module);
+        explicit GlobalVariable(IRGlobalVariable *irGV, Module *module = nullptr);
 
         IRGlobalVariable *getIrGv() const;
 

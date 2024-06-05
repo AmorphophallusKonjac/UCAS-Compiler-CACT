@@ -1,17 +1,18 @@
 #ifndef COMPILER_USER_H
 #define COMPILER_USER_H
 
-#include "IR/IRValue.h"
 #include <vector>
 #include <cassert>
 
 namespace RISCV {
 
+    class Value;
+
     class User {
     protected:
-        std::vector<IRValue *> Operands;
+        std::vector<Value *> Operands;
     public:
-        IRValue *getOperand(unsigned i) {
+        Value *getOperand(unsigned i) {
             assert(i < Operands.size() && "getOperand out of range!");
             return Operands[i];
         }

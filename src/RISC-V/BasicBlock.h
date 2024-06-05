@@ -1,10 +1,35 @@
 #ifndef COMPILER_BASICBLOCK_H
 #define COMPILER_BASICBLOCK_H
 
+#include <iostream>
+#include <vector>
+
+class IRBasicBlock;
+
 namespace RISCV {
 
-    class BasicBlock {
+    class Instruction;
 
+    class Function;
+
+    class BasicBlock {
+    private:
+        std::vector<Instruction *> InstList;
+        Function *parent;
+        std::string name;
+        IRBasicBlock *irBasicBlock;
+    public:
+        BasicBlock(IRBasicBlock *irBasicBlock, Function *parent);
+
+        void addInstruction(Instruction *inst);
+
+        void generate();
+
+        void setName(const std::string &name);
+
+        void print(std::ostream &O);
+
+        IRBasicBlock *getIrBb() const;
     };
 
 } // RISCV
