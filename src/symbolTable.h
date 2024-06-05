@@ -306,10 +306,7 @@ public:
     std::string curSymbol = "$";
     int stackSymbol_size = 0;
 
-    ~SymbolTable() {
-        for (auto it = symbolList.begin(); it != symbolList.end(); ++it) { delete it->second; }
-        symbolList.clear();
-    };
+    ~SymbolTable() = default;
 };
 
 class BlockTable {
