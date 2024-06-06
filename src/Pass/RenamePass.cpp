@@ -24,12 +24,19 @@ void RenamePass::runOnFunction(IRFunction &F) {
         for (auto inst: InstList) {
             if (IRStoreInst::classof(inst) ||
                 IRMemcpyInst::classof(inst) ||
-                IRMoveInst::classof(inst) ||
                 IRCallInst::classof(inst) && dynamic_cast<IRCallInst *>(inst)->getType() == IRType::VoidTy) {
                 continue;
             }
-            inst->setName(std::to_string(F.getCount()));
-            F.addCount();
+            if (IRMoveInst::classof(inst)) {
+                auto dest = dynamic_cast<IRMoveInst *>(inst)->getDest();
+                if (dest->getName().empty()) {
+                    dest->setName(std::to_string(F.getCount()));
+                    F.addCount();
+                }
+            } else {
+                inst->setName(std::to_string(F.getCount()));
+                F.addCount();
+            }
         }
     }
 }
