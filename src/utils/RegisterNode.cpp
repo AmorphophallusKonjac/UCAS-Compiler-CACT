@@ -74,8 +74,8 @@ void RegisterNode::Build(IRFunction& F){
         for(auto inst: BB->getInstList()){
             if(inst->getOpcode() == IRInstruction::Move){
                 /*源操作数与目的操作数均与这条move指令相关*/
-                dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.push_back(inst);
-                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.push_back(inst);
+                dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(inst);
+                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(inst);
 
                 /*有可能合并的传送指令*/
                 worklistMoves.push_back(inst);
@@ -166,6 +166,31 @@ void RegisterNode::Coalesce(){
     auto move = *worklistMoves.begin();
     RegisterNode* dst = GetAlias(dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode());
     RegisterNode* src = GetAlias(dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode());
+
+    /*构建unode,vnode*/
+    RegisterNode* unode;
+    RegisterNode* vnode;
+    if(std::find(precolored.begin(), precolored.end(), src) != precolored.end()){ unode = src; vnode = dst; }
+    else{ unode = dst; vnode = src; }
+
+    worklistMoves.erase(worklistMoves.begin());
+    if(unode == vnode){                                                                                                 //两个node一样
+        coalescedMoves.push_back(move);
+        AddWorkList(unode);
+    }else if(std::find(precolored.begin(), precolored.end(), vnode) != precolored.end() && 
+             std::find(adjSet.begin(), adjSet.end(), std::make_tuple(unode, vnode)) != adjSet.end()){   //vnode,unode都是机器寄存器
+                constrainedMoves.push_back(move);
+                AddWorkList(unode);
+                AddWorkList(vnode);
+    }else if((std::find(precolored.begin(), precolored.end(), unode) != precolored.end() && George(vnode, unode)) ||    //采用George保守合并策略
+             (std::find(precolored.begin(), precolored.end(), unode) == precolored.end() && Briggs(vnode, unode))       //采用Briggs保守合并策略
+                ){                                                                                                        
+                    coalescedMoves.push_back(move);
+                    Combine(unode, vnode);
+                    AddWorkList(unode);
+    }else{
+        activeMoves.push_back(move);
+    }
 }
 
 /*返回alias*/
@@ -175,4 +200,160 @@ RegisterNode* RegisterNode::GetAlias(RegisterNode* node){
     }else{
         return node;
     }
+}
+
+/*即满足低度数传送无关的节点，可以加入simplifyWorkList*/
+void RegisterNode::AddWorkList(RegisterNode* node){
+    if( std::find(precolored.begin(), precolored.end(), node) == precolored.end() &&
+        !MoveRelated(node) && (degree[node]<regNum)){
+            freezeWorklist.erase(std::find(freezeWorklist.begin(), freezeWorklist.end(), node));
+            simplifyWorklist.push_back(node);
+        }
+}
+
+/*考虑到tnode是机器寄存器，t与v邻接或tnode可以合并*/
+bool RegisterNode::OK(RegisterNode* tnode, RegisterNode* rnode){
+    return  degree[tnode]<regNum ||
+            std::find(precolored.begin(), precolored.end(), tnode)!=precolored.end() ||
+            std::find(adjSet.begin(), adjSet.end(), std::make_tuple(tnode, rnode))!=adjSet.end();
+}
+
+/*临邻接高度数结点不能大于K*/
+bool RegisterNode::Conservative(std::vector<RegisterNode*> nodes){
+    unsigned k=0;
+    for(auto nnode: nodes){
+        if(degree[nnode]>=regNum)
+            k++;
+    }
+    return (k<regNum);
+}
+
+bool RegisterNode::Briggs(RegisterNode* vnode, RegisterNode* unode){
+    auto uadj = Adjcent(unode);
+    auto vadj = Adjcent(vnode);
+    std::vector<RegisterNode*> uvunion(uadj.size() + vadj.size());
+
+    /*unadj是一个迭代器*/
+    auto uvadj = std::set_union(uadj.begin(), uadj.end(), vadj.begin(), vadj.end(), uvunion.begin());
+    uvunion.resize(uvadj - uvunion.begin());
+    return Conservative(uvunion);
+}
+
+bool RegisterNode::George(RegisterNode* vnode, RegisterNode* unode){
+    bool flag = true;
+    auto vadj = Adjcent(vnode);
+    for(auto tnode: vadj){
+        flag &= OK(tnode, unode);
+    }
+    return flag;
+}
+
+void RegisterNode::Combine(RegisterNode* unode, RegisterNode* vnode){
+    /*将vnode从哪个工作集中删除*/
+    if(std::find(freezeWorklist.begin(), freezeWorklist.end(), vnode) != freezeWorklist.end()){
+        freezeWorklist.erase(std::find(freezeWorklist.begin(), freezeWorklist.end(), vnode));
+    }else{
+        spillWorklist.erase(std::find(spillWorklist.begin(), spillWorklist.end(), vnode));
+    }
+    coalescedNodes.push_back(vnode);
+
+    /*unode传送有关的指令给到vnode,vnode进行enable*/
+    alias[vnode]=unode;
+    for(auto move: vnode->moveList){
+        unode->moveList.insert(move);
+    }
+    EnableMoves({vnode});
+
+    /*vnode的邻接结点处理到unode上*/
+    for(auto tnode:Adjcent(vnode)){
+        AddEdge(tnode, vnode);
+        DecrementDegree(tnode);
+    }
+
+    /*经过处理之后，unode可能需要加入到溢出工作集中(如果>=K)*/
+    if(degree[unode]>=regNum && std::find(freezeWorklist.begin(), freezeWorklist.end(), unode)!=freezeWorklist.end()){
+        freezeWorklist.erase(std::find(freezeWorklist.begin(), freezeWorklist.end(), unode));
+        spillWorklist.push_back(unode);
+    }
+}
+
+void RegisterNode::Freeze(){
+    RegisterNode* unode = *freezeWorklist.begin();
+
+    /*首先unode变成可简化的节点==结点，然后对与其相关的move指令的其他节点进行冻结操作*/
+    freezeWorklist.erase(freezeWorklist.begin());
+    simplifyWorklist.push_back(unode);
+    FreezeMoves(unode);
+}
+
+/*对应的unode在被冻结之后，考虑unode相关的传送指令对应的其他结点是否要加入简化工作集中*/
+void RegisterNode::FreezeMoves(RegisterNode* unode){
+
+    RegisterNode* xnode;
+    RegisterNode* ynode;
+    RegisterNode* vnode;
+    for(auto move: NodeMoves(unode)){
+        xnode = dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode();
+        ynode = dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getSrc())->getRegNode();
+
+        /*通过检查最终将vnode,unode表示为该move指令对应的两个node*/
+        if(GetAlias(ynode) == GetAlias(unode)){
+            vnode = GetAlias(xnode);
+        }else{
+            vnode = GetAlias(ynode);
+        }
+
+        /*这条传送指令将被冻结*/
+        activeMoves.erase(std::find(activeMoves.begin(), activeMoves.end(), move));
+        frozenMoves.push_back(move);
+
+        /*低度数传送有关结点变成低度数传送无关结点*/
+        if(NodeMoves(vnode).empty() && degree[vnode]<regNum){
+            freezeWorklist.erase(std::find(freezeWorklist.begin(), freezeWorklist.end(), vnode));
+            simplifyWorklist.push_back(vnode);
+        }
+    }                                                   
+}
+
+void RegisterNode::SelectSpill(){
+    RegisterNode* mnode = *spillWorklist.begin();
+
+    spillWorklist.erase(spillWorklist.begin());
+    simplifyWorklist.push_back(mnode);
+    FreezeMoves(mnode);
+}
+
+void RegisterNode::AssignColors(){
+    while(!selectStack.empty()){
+        RegisterNode* nnode = selectStack.back();
+        selectStack.pop_back();
+        
+        /*初始化颜色种类*/
+        std::vector<unsigned> okColors;
+        for(unsigned i=0; i<regNum; i++){
+            okColors.push_back(i);
+        }
+
+        /*若邻接结点已被染色，则选择数目减少*/
+        for(auto wnode: nnode->adjList){
+            if( std::find(coloredNodes.begin(), coloredNodes.end(), GetAlias(wnode)) != coloredNodes.end() ||
+                std::find(precolored.begin(), precolored.end(), GetAlias(wnode)) != precolored.end()){
+                    okColors.erase(std::find(okColors.begin(), okColors.end(), GetAlias(wnode)->color));
+                }
+        }
+
+        if(okColors.empty()){
+            spilledNodes.push_back(nnode);
+        }else{
+            coloredNodes.push_back(nnode);
+            /*这里可以考虑优先选择那个寄存器进行染色*/
+                                                                                                                                                                                                        nnode->color = *okColors.begin();
+        }
+
+        okColors.clear();
+    }
+
+    /*已经被合并的结点采用与其合并的寄存器结点的颜色*/
+    for(auto nnode: coalescedNodes)
+        nnode->color = GetAlias(nnode)->color;
 }

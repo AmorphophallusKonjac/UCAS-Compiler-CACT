@@ -40,19 +40,16 @@ private:
     static std::vector<IRInstruction*> coalescedMoves;     //已经合并的传送指令集合
     static std::vector<IRInstruction*> constrainedMoves;   //源操作数目的操作数冲突的传送指令集合
     static std::vector<IRInstruction*> frozenMoves;        //不再考虑合并的的传送指令集合
-    static std::vector<IRInstruction*> worklistMoves;      //有可能合并的传送指令集合
     static std::vector<IRInstruction*> activeMoves;        //还未做好合并准备的传送指令集合
 
     static std::vector<std::tuple<RegisterNode*, RegisterNode*>> adjSet;    //冲突边的集合
     std::list<RegisterNode*> adjList;                                       //图的邻接表表示
     static std::map<RegisterNode*, unsigned> degree;                        //包含每个结点当前度数的数组
-    std::vector<IRInstruction*> moveList;                                   //与该结点相关的传送指令表的映射
     static std::map<RegisterNode*, RegisterNode*> alias;                    //当一条传送指令被合并，有alias(v)=u
     unsigned color;
 
     static void init(WHICH which);
     static void Build(IRFunction& F);
-    static void AddEdge(RegisterNode* u, RegisterNode* v);
     static void MakeWorklist();
     static std::vector<RegisterNode*> Adjcent(RegisterNode* node);
     static std::vector<IRInstruction*> NodeMoves(RegisterNode* node);
@@ -62,10 +59,23 @@ private:
     static void EnableMoves(std::vector<RegisterNode*> nodes);
     static void Coalesce();
     static RegisterNode* GetAlias(RegisterNode* node);
+    static void AddWorkList(RegisterNode* node);
+    static bool OK(RegisterNode* tnode, RegisterNode* rnode);
+    static bool Conservative(std::vector<RegisterNode*> nodes);
+    static bool Briggs(RegisterNode* vnode, RegisterNode* unode);
+    static bool George(RegisterNode* vnode, RegisterNode* unode);
+    static void Combine(RegisterNode* unode, RegisterNode* vnode);
+    static void Freeze();
+    static void FreezeMoves(RegisterNode* unode);
+    static void SelectSpill();
+    static void AssignColors();
 
 public:
     std::string& getRegNodeName() { return RegisterNodeName; };
     IRInstruction* getParentInst() { return parentInst; };
+    static void AddEdge(RegisterNode* u, RegisterNode* v);
+    static std::vector<IRInstruction*> worklistMoves;      //有可能合并的传送指令集合
+    std::set<IRInstruction*> moveList;                                      //与该结点相关的传送指令表的映射
 
     explicit RegisterNode(std::string name, IRInstruction* inst) : RegisterNodeName(name), parentInst(inst) {};
 
