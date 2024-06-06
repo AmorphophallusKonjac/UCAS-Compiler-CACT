@@ -27,8 +27,6 @@ class IRGlobalVariable;
 
 class TemporaryVariable;
 
-class Register;
-
 class IRValue {
 public:
     enum ValueTy {
@@ -47,7 +45,6 @@ private:
     IRType *ty;
     ValueTy vTy;
     TemporaryVariable *tempVar;
-    Register* reg;
 
 public:
     //void operator=(const IRValue &) = delete;
@@ -98,8 +95,6 @@ public:
     }
 
     void setTempVar(TemporaryVariable *tempVar);
-
-    Register* getReg(){ return reg; };
 
     TemporaryVariable *getTempVar();
 };

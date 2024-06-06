@@ -45,7 +45,7 @@ private:
 
     static std::vector<std::tuple<RegisterNode*, RegisterNode*>> adjSet;    //冲突边的集合
     std::list<RegisterNode*> adjList;                                       //图的邻接表表示
-    static std::map<std::string, unsigned> degree;                          //包含每个结点当前度数的数组
+    static std::map<RegisterNode*, unsigned> degree;                        //包含每个结点当前度数的数组
     std::vector<IRInstruction*> moveList;                                   //与该结点相关的传送指令表的映射
     static std::map<RegisterNode*, RegisterNode*> alias;                    //当一条传送指令被合并，有alias(v)=u
     unsigned color;
@@ -54,6 +54,14 @@ private:
     static void Build(IRFunction& F);
     static void AddEdge(RegisterNode* u, RegisterNode* v);
     static void MakeWorklist();
+    static std::vector<RegisterNode*> Adjcent(RegisterNode* node);
+    static std::vector<IRInstruction*> NodeMoves(RegisterNode* node);
+    static bool MoveRelated(RegisterNode* node);
+    static void simplify();
+    static void DecrementDegree(RegisterNode* node);
+    static void EnableMoves(std::vector<RegisterNode*> nodes);
+    static void Coalesce();
+    static RegisterNode* GetAlias(RegisterNode* node);
 
 public:
     std::string& getRegNodeName() { return RegisterNodeName; };
