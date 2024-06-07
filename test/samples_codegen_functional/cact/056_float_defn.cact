@@ -1,0 +1,8 @@
+int main(){
+    float x;
+    x = 13.0f;
+    print_float(x);
+    const float y = 2e-5f;
+    print_float(y);
+    return 0;
+}

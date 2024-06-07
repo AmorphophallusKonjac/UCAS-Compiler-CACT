@@ -1,0 +1,8 @@
+int main(){
+    double x;
+    x = -13.0;
+    print_double(x);
+    const double y = 2e-5;
+    print_double(y);
+    return 0;
+}
