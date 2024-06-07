@@ -1,5 +1,6 @@
 #include "Value.h"
 #include "IR/IRValue.h"
+#include "BasicBlock.h"
 
 namespace RISCV {
     Register *Value::getReg() const {
@@ -28,6 +29,8 @@ namespace RISCV {
     void Value::print(std::ostream &O) {
         if (reg) {
             O << reg->getRegName();
+        } else if (BB) {
+            O << BB->getName();
         } else {
             O << val;
         }

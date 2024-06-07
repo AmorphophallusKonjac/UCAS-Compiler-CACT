@@ -35,4 +35,8 @@ namespace RISCV {
     void BasicBlock::setName(const std::string &name) {
         BasicBlock::name = name;
     }
+
+    const std::string &BasicBlock::getName() const {
+        return name;
+    }
 } // RISCV

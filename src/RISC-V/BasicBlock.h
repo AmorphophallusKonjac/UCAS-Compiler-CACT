@@ -27,6 +27,8 @@ namespace RISCV {
 
         void setName(const std::string &name);
 
+        const std::string &getName() const;
+
         void print(std::ostream &O);
 
         IRBasicBlock *getIrBb() const;

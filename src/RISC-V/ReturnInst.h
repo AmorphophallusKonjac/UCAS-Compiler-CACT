@@ -7,7 +7,9 @@ namespace RISCV {
 
     class ReturnInst : public Instruction {
     public:
+        explicit ReturnInst(BasicBlock *parent = nullptr);
 
+        void print(std::ostream &O) const override;
     };
 
 } // RISCV
