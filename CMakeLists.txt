@@ -69,7 +69,7 @@ add_test(
 
 add_test(
         NAME codegen_test_functional_against
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_function_against.sh
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_functional_against.sh
 )
 
 set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
