@@ -51,6 +51,7 @@ int main(int argc, const char *argv[]) {
         int ret = ip.interpret();
         if (parser.get("c"))
             printf("inst_cnt = %d\n", Interpreter::getInstCnt());
+        return ret;
     }
 
     return 0;
