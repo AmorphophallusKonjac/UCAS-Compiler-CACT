@@ -17,7 +17,7 @@ int main()
 			while(t<j)
 			{
 				aa= dp[i][t]+dp[t][j]+a[i]*a[t]*a[j];
-				if(!dp[i][j]||aa<dp[i][j])
+				if(dp[i][j]==0||aa<dp[i][j])
 				{
 					dp[i][j]=aa;
 				}

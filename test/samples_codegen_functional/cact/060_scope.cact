@@ -1,14 +1,17 @@
 int a = 7;
 
 int func() {
-	int b = a;
-	int a = 1;
-	if (a == b) {
-		a = a + 1;
-		return 1;
+	int b;
+	b = a;
+	{
+		int a = 1;
+		if (a == b) {
+			a = a + 1;
+			return 1;
+		}
+		else
+			return 0;
 	}
-	else
-		return 0;
 }
 
 int main() {

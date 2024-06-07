@@ -7,6 +7,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include <set>
 
 #include "IR/IRvalue.h"
 #include "IR/IRInstruction.h"

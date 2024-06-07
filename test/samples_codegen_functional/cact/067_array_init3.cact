@@ -1,8 +1,8 @@
 bool A[4][2] = {
     {true, true},
-    {true, },
-    true,
-    true,
+    {true, false},
+    {true, true},
+    {false, false}
 };
 int main() {
     int i, j;

@@ -12,8 +12,10 @@ int KnapSack(int n, int w[], int v[], int x[], int C)
                 V[i][j] = V[i - 1][j];
             else
             {
-            	int tmp1=V[i - 1][j];
-            	int tmp2=V[i - 1][j - w[i]] + v[i];
+            	int tmp1;
+                tmp1=V[i - 1][j];
+            	int tmp2;
+                tmp2=V[i - 1][j - w[i]] + v[i];
             	if(tmp1>tmp2)
             	{
             		V[i][j] = tmp1;

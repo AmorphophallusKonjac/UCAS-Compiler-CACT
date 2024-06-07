@@ -27,8 +27,10 @@ int dfs(int a, int b, int c, int d, int e, int last){
 int cns[20];
  
 int main(){
-    int n = get_int();//5
-    int i = 0; 
+    int n;
+    n = get_int();//5
+    int i;
+    i = 0; 
     while (i < maxn) {
         int j = 0;
         while(j < maxn) {
@@ -63,7 +65,8 @@ int main(){
     //list = {2,2,2,2,2}
     //cns = {0,0,5,0,0}
 
-    int ans = dfs(cns[1], cns[2], cns[3], cns[4], cns[5], 0);
+    int ans;
+    ans = dfs(cns[1], cns[2], cns[3], cns[4], cns[5], 0);
     //0,0,5,0,0,0
 
     print_int(ans);
