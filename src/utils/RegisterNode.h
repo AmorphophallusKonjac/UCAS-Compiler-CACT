@@ -1,6 +1,5 @@
 #ifndef COMPILER_REGISTERNODE_H
 #define COMPILER_REGISTERNODE_H
-#pragma once
 
 #include <algorithm>
 #include <vector>
@@ -88,7 +87,7 @@ public:
     std::set<IRInstruction*> moveList;                                      //与该结点相关的传送指令表的映射
 
     explicit RegisterNode(std::string name, IRInstruction* inst) : RegisterNodeName(name), parentInst(inst) {};
-    //explicit RegisterNode(std::string name, Register* reg) : RegisterNodeName(name), parentReg(reg) {};
+    explicit RegisterNode(std::string name, Register* reg) : RegisterNodeName(name), parentReg(reg) {};
     explicit RegisterNode(std::string name) : RegisterNodeName(name) {};
 };
 
