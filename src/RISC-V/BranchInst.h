@@ -7,7 +7,9 @@ namespace RISCV {
 
     class BranchInst : public Instruction {
     public:
-        BranchInst(unsigned iType, BasicBlock *dest, Value *op1, Value *op2, BasicBlock *parent = nullptr);
+        BranchInst(unsigned iType, BasicBlock *dest, Value *op1, Value *op2 = nullptr, BasicBlock *parent = nullptr);
+
+        void print(std::ostream &O) const override
     };
 
 } // RISCV
