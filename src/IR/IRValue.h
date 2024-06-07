@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "IRUse.h"
-#include "utils/Register.h"
 
 class IRType;
 

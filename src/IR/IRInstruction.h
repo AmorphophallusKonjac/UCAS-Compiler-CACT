@@ -15,6 +15,8 @@ class IRUser;
 
 class RegisterNode;
 
+class Register;
+
 class IRInstruction : public IRUser {
 private:
     IRBasicBlock *Parent;

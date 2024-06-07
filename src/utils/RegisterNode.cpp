@@ -9,6 +9,7 @@
 #include <tuple>
 
 unsigned RegisterNode::regNum = 0;
+RegisterNode::WHICH which = RegisterNode::GENERAL;
 
 std::list<RegisterNode*> RegisterNode::precolored {};
 std::list<RegisterNode*> RegisterNode::initial {};
@@ -66,22 +67,6 @@ void RegisterNode::init(WHICH which){
     which = which;
     if(which == GENERAL){ regNum = GPRNUM; }
     else if(which == FLOAT){ regNum = FPRNUM; }
-}
-
-
-void RegisterNode::Build(IRFunction& F){
-    for(auto BB: F.getBasicBlockList()){
-        for(auto inst: BB->getInstList()){
-            if(inst->getOpcode() == IRInstruction::Move){
-                /*源操作数与目的操作数均与这条move指令相关*/
-                dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(inst);
-                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(inst);
-
-                /*有可能合并的传送指令*/
-                worklistMoves.push_back(inst);
-            }
-        }
-    }
 }
 
 void RegisterNode::AddEdge(RegisterNode* u, RegisterNode* v){
@@ -356,4 +341,24 @@ void RegisterNode::AssignColors(){
     /*已经被合并的结点采用与其合并的寄存器结点的颜色*/
     for(auto nnode: coalescedNodes)
         nnode->color = GetAlias(nnode)->color;
+}
+
+/*void RegisterNode::RewriteProgram(){
+    
+}*/
+
+void RegisterNode::RegisterAlloc(IRFunction &F){
+    LiveVariable::genLiveVariable(&F);
+    MakeWorklist();
+    while(!(simplifyWorklist.empty() && worklistMoves.empty() && freezeWorklist.empty() && spillWorklist.empty())){
+        if(!simplifyWorklist.empty()) simplify();
+        else if(!worklistMoves.empty()) Coalesce();
+        else if(!freezeWorklist.empty()) Freeze();
+        else if(!spillWorklist.empty()) SelectSpill();
+    }
+    AssignColors();
+    if(!spilledNodes.empty()){
+        //RewriteProgram();
+        RegisterAlloc(F);
+    }
 }

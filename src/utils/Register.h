@@ -3,6 +3,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include "RegisterNode.h"
 
 #define GPRCallerSavedNUM 7
 #define GPRCalleeSavedNUM 12
@@ -13,6 +14,8 @@
 
 #define GPRNUM GPRCallerSavedNUM+GPRCalleeSavedNUM+GPRPARAMNUM
 #define FPRNUM FPRCallerSavedNUM+FPRCalleeSavedNUM+FPRPARAMNUM
+
+class RegisterNode;
 
 class Register{
 public:
@@ -30,6 +33,7 @@ protected:
     unsigned regSeq;    //所有寄存器中的编号
     std::string regName;//寄存器的名字
     RegTy    regty;     //寄存器的类型
+    RegisterNode* regNode;
 
 public:
 
@@ -41,6 +45,8 @@ public:
 
     /*获得reg中的类型*/
     virtual RegTy getRegty() = 0;
+
+    RegisterNode* getRegNode() { return regNode; };
 };
 
 class CallerSavedRegister : public Register{
@@ -54,7 +60,8 @@ public:
       if(num <= 2){ regSeq = num+5;  }
       else        { regSeq = num+25; } 
       regName = "t" + std::to_string(regNum); 
-      regty = CallerSaved; };
+      regty = CallerSaved; 
+      regNode = new RegisterNode(regName); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initTreg(){
@@ -87,7 +94,8 @@ public:
       if(num <= 1){ regSeq = num+8;  }
       else        { regSeq = num+16; } 
       regName = "s" + std::to_string(regNum); 
-      regty = CalleeSaved; };
+      regty = CalleeSaved; 
+      regNode = new RegisterNode(regName, this); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initSreg(){
@@ -117,7 +125,8 @@ public:
     { regNum = num;
       regSeq = num+10; 
       regName = "a" + std::to_string(regNum); 
-      regty = Param; };
+      regty = Param; 
+      regNode = new RegisterNode(regName, this); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initAreg(){
@@ -147,7 +156,8 @@ public:
     { regNum = num;
       regSeq = num+16;
       regName = "f" + std::to_string(regSeq); 
-      regty = FloatCallerSaved; };
+      regty = FloatCallerSaved; 
+      regNode = new RegisterNode(regName, this); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFTreg(){
@@ -179,7 +189,8 @@ public:
     { regNum = num;
       regSeq = num+8;
       regName = "f" + std::to_string(regSeq); 
-      regty = FloatCalleeSaved; };
+      regty = FloatCalleeSaved; 
+      regNode = new RegisterNode(regName, this); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFSreg(){
@@ -209,7 +220,8 @@ public:
     { regNum = num;
       regSeq = num;
       regName = "f" + std::to_string(regSeq); 
-      regty = FloatParam; };
+      regty = FloatParam; 
+      regNode = new RegisterNode(regName, this); };
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFAreg(){

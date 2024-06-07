@@ -9,11 +9,15 @@
 #include <map>
 #include <set>
 
-#include "IR/IRvalue.h"
 #include "IR/IRInstruction.h"
+#include "IR/IRFunction.h"
 #include "Register.h"
 
 class IRInstruction;
+
+class Register;
+
+class IRFunction;
 
 class RegisterNode{
 public:
@@ -23,8 +27,6 @@ public:
     };
 
 private:
-    std::string RegisterNodeName;
-    IRInstruction* parentInst;
     static unsigned regNum;
     static WHICH which;     //记录现在是对通用寄存器进行分配还是浮点寄存器进行分配
 
@@ -44,13 +46,10 @@ private:
     static std::vector<IRInstruction*> activeMoves;        //还未做好合并准备的传送指令集合
 
     static std::vector<std::tuple<RegisterNode*, RegisterNode*>> adjSet;    //冲突边的集合
-    std::list<RegisterNode*> adjList;                                       //图的邻接表表示
     static std::map<RegisterNode*, unsigned> degree;                        //包含每个结点当前度数的数组
     static std::map<RegisterNode*, RegisterNode*> alias;                    //当一条传送指令被合并，有alias(v)=u
-    unsigned color;
 
     static void init(WHICH which);
-    static void Build(IRFunction& F);
     static void MakeWorklist();
     static std::vector<RegisterNode*> Adjcent(RegisterNode* node);
     static std::vector<IRInstruction*> NodeMoves(RegisterNode* node);
@@ -70,17 +69,27 @@ private:
     static void FreezeMoves(RegisterNode* unode);
     static void SelectSpill();
     static void AssignColors();
+    //static void RewriteProgram();
+
+    std::list<RegisterNode*> adjList;                                       //图的邻接表表示
+    unsigned color;
+    std::string RegisterNodeName;
+    IRInstruction* parentInst;
+    Register* parentReg;
 
 public:
+    static void AddEdge(RegisterNode* u, RegisterNode* v);
+    static void RegisterAlloc(IRFunction &F);
+    static std::vector<IRInstruction*> worklistMoves;                       //有可能合并的传送指令集合
+
     std::string& getRegNodeName() { return RegisterNodeName; };
     IRInstruction* getParentInst() { return parentInst; };
-    static void AddEdge(RegisterNode* u, RegisterNode* v);
-    static std::vector<IRInstruction*> worklistMoves;      //有可能合并的传送指令集合
+    Register* getParentReg() { return parentReg; };
     std::set<IRInstruction*> moveList;                                      //与该结点相关的传送指令表的映射
 
     explicit RegisterNode(std::string name, IRInstruction* inst) : RegisterNodeName(name), parentInst(inst) {};
-
-
+    //explicit RegisterNode(std::string name, Register* reg) : RegisterNodeName(name), parentReg(reg) {};
+    explicit RegisterNode(std::string name) : RegisterNodeName(name) {};
 };
 
 #endif //COMPILER_REGISTERNODE_H

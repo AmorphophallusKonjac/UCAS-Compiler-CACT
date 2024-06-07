@@ -2,7 +2,7 @@
 #define COMPILER_REGISTERPASS_H
 
 #include "Pass.h"
-#include "utils/Register.h"
+#include "utils/RegisterNode.h"
 
 class RegisterPass : public FunctionPass {
 public:
