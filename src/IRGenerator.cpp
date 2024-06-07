@@ -310,7 +310,7 @@ std::any IRGenerator::visitVariableDefinition(CACTParser::VariableDefinitionCont
                      dynamic_cast<IRConstant *>(dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()),
                      "__" + symbol->getName() + std::to_string(currentIRFunc->getCount()) + "_" + "global" + "_" +
                      currentFunc->getName(), ir);
-            new IRMemcpyInst(srcGlobalVar, dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(),
+            new IRMemcpyInst(dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(), srcGlobalVar, 
                              currentIRBasicBlock);
         }
     }

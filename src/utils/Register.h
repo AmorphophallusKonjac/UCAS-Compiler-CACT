@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "RegisterNode.h"
+#include <iostream>
 
 #define GPRCallerSavedNUM 7
 #define GPRCalleeSavedNUM 12
@@ -16,6 +16,8 @@
 #define FPRNUM FPRCallerSavedNUM+FPRCalleeSavedNUM+FPRPARAMNUM
 
 class RegisterNode;
+
+class IRFunction;
 
 class Register {
 public:
@@ -216,33 +218,24 @@ public:
 
 class RegisterFactory {
 private:
-    static std::vector<Register *> RegList;
+    static std::vector<Register *> GeneralRegList;
+    static std::vector<Register *> FloatRegList;
 
 public:
 
     /*初始化所有静态reg对象*/
-    static void initReg() {
-        CallerSavedRegister::initTreg();
-        CalleeSavedRegister::initSreg();
-        ParamRegister::initAreg();
-        FloatCallerSavedRegister::initFTreg();
-        FloatCalleeSavedRegister::initFSreg();
-        FloatParamRegister::initFAreg();
-
-        RegList.assign(CallerSavedRegister::getTregList().begin(), CallerSavedRegister::getTregList().end());
-        RegList.assign(CalleeSavedRegister::getSregList().begin(), CalleeSavedRegister::getSregList().end());
-        RegList.assign(ParamRegister::getAregList().begin(), ParamRegister::getAregList().end());
-        RegList.assign(FloatCallerSavedRegister::getFTregList().begin(),
-                       FloatCallerSavedRegister::getFTregList().end());
-        RegList.assign(FloatCalleeSavedRegister::getFSregList().begin(),
-                       FloatCalleeSavedRegister::getFSregList().end());
-        RegList.assign(FloatParamRegister::getFAregList().begin(), FloatParamRegister::getFAregList().end());
-    }
+    static void initReg();
 
     /*获得所有静态reg对象List*/
-    static std::vector<Register *> &getRegList() {
-        return RegList;
+    static std::vector<Register *> &getGRegList() {
+        return GeneralRegList;
     }
+
+    static std::vector<Register *> &getFRegList() {
+        return FloatRegList;
+    }
+
+    static void print(std::ostream& OS,  IRFunction& F);
 };
 
 #endif //COMPILER_REGISTER_H

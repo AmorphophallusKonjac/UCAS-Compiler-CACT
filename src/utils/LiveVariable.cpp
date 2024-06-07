@@ -9,13 +9,49 @@
 #include "IR/iTerminators.h"
 #include "IR/iOther.h"
 #include <algorithm>
+#include <ostream>
 #include <vector>
+#include <iomanip>
 
 void LiveVariable::genLiveVariable(IRFunction *F) {
     
     /*先生成数据流的活跃变量，然后是块内的活跃变量*/
     LiveVariableBB::genLiveVariableBB(F);
 };
+
+void LiveVariableInst::print(std::ostream& OS, IRInstruction* inst){
+    std::string INLiveString;
+    std::string OUTLiveString;
+    
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(inst)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
+
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(inst)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
+
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+}
+
+void LiveVariableBB::print(std::ostream& OS, IRBasicBlock* BB){
+    std::string INLiveString;
+    std::string OUTLiveString;
+
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(BB)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
+
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(BB)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
+
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+}
 
 void LiveVariableBB::genLiveVariableBB(IRFunction *F) {
     /*IN[BB]=O*/
@@ -134,6 +170,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
                 if(!(inst->getOpcode() == IRInstruction::Move && 
                      std::find(usevec.begin(), usevec.end(), irlive) != usevec.end())){
                         RegisterNode::AddEdge(dynamic_cast<IRInstruction*>(ir)->getRegNode(), dynamic_cast<IRInstruction*>(irlive)->getRegNode());
+                        RegisterNode::initial.insert(dynamic_cast<IRInstruction*>(ir)->getRegNode());
                 }
             }
         }

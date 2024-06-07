@@ -112,8 +112,8 @@ class IRMemcpyInst : public IRInstruction {
     }
     bool Volatile;// True if this is a volatile store
 public:
-    IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, IRBasicBlock *InsertBefore);
-    IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, bool isVolatile = false,
+    IRMemcpyInst(IRValue *DestPtr, IRValue *SrcPtr, IRBasicBlock *InsertBefore);
+    IRMemcpyInst(IRValue *DestPtr, IRValue *SrcPtr, bool isVolatile = false,
                 IRBasicBlock *parent = nullptr);
     virtual IRInstruction *clone() const { return new IRMemcpyInst(*this); }
 
@@ -123,8 +123,8 @@ public:
     virtual bool mayWriteToMemory() const { return true; }
 
     /******load&&store中与存储地址相关的operand******/
-    IRValue *getSrcPointerOperand() { return getOperand(0); }
-    IRValue *getDestPointerOperand() { return getOperand(1); }
+    IRValue *getSrcPointerOperand() { return getOperand(1); }
+    IRValue *getDestPointerOperand() { return getOperand(0); }
 
     static inline bool classof(const IRMemcpyInst *) { return true; }
     static inline bool classof(const IRInstruction *I) {

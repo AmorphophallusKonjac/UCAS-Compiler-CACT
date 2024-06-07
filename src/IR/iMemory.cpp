@@ -50,16 +50,16 @@ IRStoreInst::IRStoreInst(IRValue *Val, IRValue *Ptr, bool isVolatile, IRBasicBlo
     Operands.emplace_back(Ptr, this);
 }
 
-IRMemcpyInst::IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, IRBasicBlock *InsertBefore)
+IRMemcpyInst::IRMemcpyInst(IRValue *DestPtr, IRValue *SrcPtr, IRBasicBlock *InsertBefore)
         : IRInstruction(IRType::VoidTy, Memcpy, "", InsertBefore), Volatile(false) {
     Operands.reserve(2);
-    Operands.emplace_back(SrcPtr, this);
     Operands.emplace_back(DestPtr, this);
+    Operands.emplace_back(SrcPtr, this);
 }
 
-IRMemcpyInst::IRMemcpyInst(IRValue *SrcPtr, IRValue *DestPtr, bool isVolatile, IRBasicBlock *parent)
+IRMemcpyInst::IRMemcpyInst(IRValue *DestPtr, IRValue *SrcPtr, bool isVolatile, IRBasicBlock *parent)
         : IRInstruction(IRType::VoidTy, Memcpy, "", parent), Volatile(isVolatile) {
     Operands.reserve(2);
-    Operands.emplace_back(SrcPtr, this);
     Operands.emplace_back(DestPtr, this);
+    Operands.emplace_back(SrcPtr, this);
 }

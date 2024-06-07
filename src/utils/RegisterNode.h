@@ -2,14 +2,12 @@
 #define COMPILER_REGISTERNODE_H
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 #include <string>
 #include <list>
 #include <map>
 #include <set>
-
-#include "IR/IRInstruction.h"
-#include "IR/IRFunction.h"
 #include "Register.h"
 
 class IRInstruction;
@@ -30,7 +28,6 @@ private:
     static WHICH which;     //记录现在是对通用寄存器进行分配还是浮点寄存器进行分配
 
     static std::list<RegisterNode*> precolored;       //机器寄存器集合
-    static std::list<RegisterNode*> initial;          //临时寄存器集合
     static std::list<RegisterNode*> simplifyWorklist; //低度数传送无关结点
     static std::list<RegisterNode*> freezeWorklist;   //低度数传送有关结点
     static std::list<RegisterNode*> spillWorklist;    //高度数结点表
@@ -68,27 +65,29 @@ private:
     static void FreezeMoves(RegisterNode* unode);
     static void SelectSpill();
     static void AssignColors();
-    //static void RewriteProgram();
+    static void RewriteProgram();
+    static void Build(IRFunction &F, WHICH which);
 
     std::list<RegisterNode*> adjList;                                       //图的邻接表表示
-    unsigned color;
+    int color;
     std::string RegisterNodeName;
     IRInstruction* parentInst;
     Register* parentReg;
 
 public:
     static void AddEdge(RegisterNode* u, RegisterNode* v);
-    static void RegisterAlloc(IRFunction &F);
+    static void RegisterAlloc(IRFunction &F, WHICH which);
     static std::vector<IRInstruction*> worklistMoves;                       //有可能合并的传送指令集合
+    static std::set<RegisterNode*> initial;          //临时寄存器集合
 
     std::string& getRegNodeName() { return RegisterNodeName; };
     IRInstruction* getParentInst() { return parentInst; };
     Register* getParentReg() { return parentReg; };
+    int getColor() { return color; };
     std::set<IRInstruction*> moveList;                                      //与该结点相关的传送指令表的映射
 
-    explicit RegisterNode(std::string name, IRInstruction* inst) : RegisterNodeName(name), parentInst(inst) {};
-    explicit RegisterNode(std::string name, Register* reg) : RegisterNodeName(name), parentReg(reg) {};
-    explicit RegisterNode(std::string name) : RegisterNodeName(name) {};
+    explicit RegisterNode(std::string name, IRInstruction* inst) : RegisterNodeName(name), parentInst(inst) { parentReg = nullptr; color = -1; };
+    explicit RegisterNode(std::string name, Register* reg) : RegisterNodeName(name), parentReg(reg) { parentInst = nullptr; color = reg->getRegSeq(); };
 };
 
 #endif //COMPILER_REGISTERNODE_H

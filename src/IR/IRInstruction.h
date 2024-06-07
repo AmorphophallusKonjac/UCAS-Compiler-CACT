@@ -99,7 +99,9 @@ public:
 
     RegisterNode* getRegNode(){ return regNode; };
 
-    void setReg(Register* reg){ reg = reg; };
+    void setReg(Register* reg){
+        this->reg = reg;
+    };
 
     Register* getReg(){ return reg; };
 

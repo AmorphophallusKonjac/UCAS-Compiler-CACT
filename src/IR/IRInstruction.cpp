@@ -167,20 +167,7 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand1;
     IRValue *operand2;
 
-    /*std::string INLiveString;
-    std::string OUTLiveString;
-    
-    INLiveString = "INLive: ";
-    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getINLive())
-        INLiveString = INLiveString + "%" + irval->getName() + ", ";
-    OS << std::setw(200) << std::setfill(' ') << INLiveString;
-
-    OUTLiveString +=  "     OUTLive: ";
-    for(auto irval: *const_cast<IRInstruction *>(this)->getLive()->getOUTLive())
-        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
-    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
-
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));*/
+    LiveVariableInst::print(OS, const_cast<IRInstruction*>(this));
 
     OS << "    ";
     switch (getOpcode()) {

@@ -1,18 +1,18 @@
 #include "RegisterNode.h"
 #include "IR/IRInstruction.h"
-#include "IR/IRvalue.h"
 #include "IR/iOther.h"
 #include "utils/DominatorTree.h"
+#include "utils/LiveVariable.h"
 #include "utils/Register.h"
 #include <algorithm>
 #include <vector>
 #include <tuple>
 
 unsigned RegisterNode::regNum = 0;
-RegisterNode::WHICH which = RegisterNode::GENERAL;
+RegisterNode::WHICH RegisterNode::which = RegisterNode::GENERAL;
 
 std::list<RegisterNode*> RegisterNode::precolored {};
-std::list<RegisterNode*> RegisterNode::initial {};
+std::set<RegisterNode*> RegisterNode::initial {};
 std::list<RegisterNode*> RegisterNode::simplifyWorklist {};
 std::list<RegisterNode*> RegisterNode::freezeWorklist {};
 std::list<RegisterNode*> RegisterNode::spillWorklist {};
@@ -64,9 +64,26 @@ bool RegisterNode::MoveRelated(RegisterNode* node){
 };
 
 void RegisterNode::init(WHICH which){
-    which = which;
+    RegisterNode::which = which;
     if(which == GENERAL){ regNum = GPRNUM; }
     else if(which == FLOAT){ regNum = FPRNUM; }
+    /*机器寄存器冲突图*/
+    switch(which){
+        case GENERAL:
+            for(auto reg1: RegisterFactory::getGRegList()){
+                for(auto reg2: RegisterFactory::getGRegList()){
+                    RegisterNode::AddEdge(reg1->getRegNode(), reg2->getRegNode());
+                }
+            }
+            break;
+        case FLOAT:
+            for(auto reg1: RegisterFactory::getFRegList()){
+                for(auto reg2: RegisterFactory::getFRegList()){
+                    RegisterNode::AddEdge(reg1->getRegNode(), reg2->getRegNode());
+                }
+            }
+            break;
+    }
 }
 
 void RegisterNode::AddEdge(RegisterNode* u, RegisterNode* v){
@@ -74,8 +91,8 @@ void RegisterNode::AddEdge(RegisterNode* u, RegisterNode* v){
 
     /*若adjList没有该元素，则加入*/
     if((it==adjSet.end()) && (u!=v)){
-        adjSet.push_back(std::make_tuple(u,v));
-        adjSet.push_back(std::make_tuple(v,u));
+        adjSet.emplace_back(u,v);
+        adjSet.emplace_back(v,u);
 
         /*相当于要求不是机器寄存器*/
         if(std::find(precolored.begin(), precolored.end(), u) == precolored.end()){
@@ -88,10 +105,12 @@ void RegisterNode::AddEdge(RegisterNode* u, RegisterNode* v){
             degree[v]++;
         }
     }
+
 }
 
 void RegisterNode::MakeWorklist(){
-    for(auto node: initial){
+    while(!initial.empty()){
+        auto node = *initial.begin();
         initial.erase(std::find(initial.begin(), initial.end(), node));
 
         if(degree[node] >= regNum){
@@ -315,8 +334,17 @@ void RegisterNode::AssignColors(){
         
         /*初始化颜色种类*/
         std::vector<unsigned> okColors;
-        for(unsigned i=0; i<regNum; i++){
-            okColors.push_back(i);
+        switch(which) {
+            case GENERAL:
+                for(auto reg: RegisterFactory::getGRegList()){
+                    okColors.push_back(reg->getRegNode()->getColor());
+                }
+                break;
+            case FLOAT:
+                for(auto reg: RegisterFactory::getFRegList()){
+                    okColors.push_back(reg->getRegNode()->getColor());
+                }
+                break;
         }
 
         /*若邻接结点已被染色，则选择数目减少*/
@@ -332,8 +360,26 @@ void RegisterNode::AssignColors(){
         }else{
             coloredNodes.push_back(nnode);
             /*这里可以考虑优先选择那个寄存器进行染色*/
-                                                                                                                                                                                                        nnode->color = *okColors.begin();
+            nnode->color = *okColors.begin();                                                                                                                                                                                             nnode->color = *okColors.begin();
         }
+
+        switch(which){
+            case GENERAL:
+                for(auto reg: RegisterFactory::getGRegList()){
+                    if(nnode->color == reg->getRegNode()->getColor()){
+                        nnode->getParentInst()->setReg(reg);
+                    }
+                }
+                break;
+            case FLOAT:
+                for(auto reg: RegisterFactory::getFRegList()){
+                    if(nnode->color == reg->getRegNode()->getColor()){
+                        nnode->getParentInst()->setReg(reg);
+                    }
+                }
+                break;
+        }
+
 
         okColors.clear();
     }
@@ -343,12 +389,13 @@ void RegisterNode::AssignColors(){
         nnode->color = GetAlias(nnode)->color;
 }
 
-/*void RegisterNode::RewriteProgram(){
+void RegisterNode::RewriteProgram(){
     
-}*/
+}
 
-void RegisterNode::RegisterAlloc(IRFunction &F){
-    LiveVariable::genLiveVariable(&F);
+void RegisterNode::RegisterAlloc(IRFunction &F, WHICH which){
+    Build(F, which);
+    return;
     MakeWorklist();
     while(!(simplifyWorklist.empty() && worklistMoves.empty() && freezeWorklist.empty() && spillWorklist.empty())){
         if(!simplifyWorklist.empty()) simplify();
@@ -358,7 +405,13 @@ void RegisterNode::RegisterAlloc(IRFunction &F){
     }
     AssignColors();
     if(!spilledNodes.empty()){
-        //RewriteProgram();
-        RegisterAlloc(F);
+        RewriteProgram();
+        RegisterAlloc(F, which);
     }
+}
+
+void RegisterNode::Build(IRFunction &F, WHICH which){
+    RegisterFactory::initReg();
+    RegisterNode::init(which);
+    LiveVariable::genLiveVariable(&F);
 }

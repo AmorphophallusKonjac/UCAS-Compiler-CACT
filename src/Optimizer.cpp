@@ -44,12 +44,13 @@ void Optimizer::build() {
 
     addPass(new A0MovePass("A0MovePass"));
 
-    addPass(new RenamePass("RenamePass"));
+    //addPass(new RenamePass("RenamePass"));
 
     addPass(new PHIdeletePass("PHIdeletePass"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
+    addPass(new RenamePass("RenamePass"));
 
     addPass(new RegisterPass("RegisterPass"));
 }
