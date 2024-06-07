@@ -16,7 +16,6 @@ grammar/*.tokens
 grammar/.antlr
 .antlr
 
-out
 scripts
 
 testbench
