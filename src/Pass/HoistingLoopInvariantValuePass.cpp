@@ -131,11 +131,11 @@ bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::se
     } else {
         /*!
          * 数组地址的条件：
-         * 1. 数组地址是循环不变量（注意：此条件仅针对 prj3 中的样例成立（?），是对特定程序的激进优化）
+         * 1. 数组地址是循环不变量（注意：此条件仅针对 prj3 中的性能样例成立（?），是对特定程序的激进优化）
          */
-        if (Set->find(ptr) != Set->end()) {
-            return true;
-        }
+//        if (Set->find(ptr) != Set->end()) {
+//            return true;
+//        }
     }
 
     return false;
