@@ -315,13 +315,14 @@ void IRInstruction::print(std::ostream &OS) const {
             break;
         case Memcpy:
             //instruction begin
+            OS << this->getOpcodeName() << " ";//打印memcpy
+
             // /******这里必然是IRPointerType******/
-            OS << " ";
             operand2 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getDestPointerOperand();
             operand2->getType()->print(OS);
             operand2->printPrefixName(OS);
 
-            OS << this->getOpcodeName() << " ";//打印memcpy
+            OS << " ";
 
             operand1 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getSrcPointerOperand();
             operand1->getType()->print(OS);

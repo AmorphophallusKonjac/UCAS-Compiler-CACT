@@ -111,8 +111,6 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             if(!dynamic_cast<IRConstant*>(inst->getOperand(1)))
                 usevec.push_back(inst->getOperand(1));
             defvec.push_back(inst);
-        }else if(inst->getOpcode() == IRInstruction::Alloca){
-            defvec.push_back(inst);
         }else if(inst->getOpcode() == IRInstruction::Call){
             defvec.push_back(inst);
             for(unsigned i=1; i<inst->getNumOperands(); i++){

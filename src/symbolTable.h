@@ -329,14 +329,11 @@ protected:
 
     SymbolTable symbolTable;
     BlockTable blockTable;
-    bool returnsign = false;//认定这个块是否满足returnpath都能满足
     //FuncTable funcTable;
     //这里我认为对于一个块而言只需要考虑他的符号表和他的subblock，函数表,对于函数表我的想法是可以做一个全局的，
 
 public:
     BlockInfo *getParentBlock() { return parentBlock; }
-    bool getReturnSign() { return returnsign; };
-    void setReturnSign(bool returnSign) { returnsign = returnSign; }
 
     SymbolInfo *lookUpSymbol(std::string symbolName);
 

@@ -133,7 +133,6 @@ void RegisterNode::init(IRFunction& F, WHICH which){
     for(auto BB: F.getBasicBlockList()){
         for(auto inst: BB->getInstList()){
             if((inst->isBinaryOp() ||
-                inst->getOpcode() == IRInstruction::Alloca ||
                 inst->getOpcode() == IRInstruction::Call ||
                 inst->getOpcode() == IRInstruction::Load ||
                 inst->getOpcode() == IRInstruction::Shl ||
@@ -156,7 +155,6 @@ void RegisterNode::init(IRFunction& F, WHICH which){
             for(auto BB: F.getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
-                        inst->getOpcode() == IRInstruction::Alloca ||
                         inst->getOpcode() == IRInstruction::Call ||
                         inst->getOpcode() == IRInstruction::Load ||
                         inst->getOpcode() == IRInstruction::Shl ||
@@ -203,7 +201,6 @@ void RegisterNode::init(IRFunction& F, WHICH which){
             for(auto BB: F.getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
-                        inst->getOpcode() == IRInstruction::Alloca ||
                         inst->getOpcode() == IRInstruction::Call ||
                         inst->getOpcode() == IRInstruction::Load ||
                         inst->getOpcode() == IRInstruction::Shl ||
