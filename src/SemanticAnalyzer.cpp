@@ -406,7 +406,7 @@ std::any SemanticAnalyzer::visitConstantDeclaration(
 std::any SemanticAnalyzer::visitConstantDefinition(CACTParser::ConstantDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
     for (auto size: context->IntegerConstant()) {
-        context->arraySize.push_back(stoi(size->getText()));
+        context->arraySize.push_back(stoi(size->getText(), nullptr, 0));
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
@@ -554,7 +554,7 @@ std::any SemanticAnalyzer::visitVariableDeclaration(
 std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
     for (auto size: context->IntegerConstant()) {
-        context->arraySize.push_back(stoi(size->getText()));
+        context->arraySize.push_back(stoi(size->getText(), nullptr, 0));
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
@@ -1007,13 +1007,13 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
 
         if (valid_size == dimension) {
             for (auto integetconstant: context->IntegerConstant()) {
-                param_array.push_back(stoi(integetconstant->getText()));
+                param_array.push_back(stoi(integetconstant->getText(), nullptr, 0));
             }
         } else if (valid_size == (dimension - 1)) {
             /******如果第一维是空的话那么给0******/
             param_array.push_back(0);
             for (auto integetconstant: context->IntegerConstant()) {
-                param_array.push_back(stoi(integetconstant->getText()));
+                param_array.push_back(stoi(integetconstant->getText(), nullptr, 0));
             }
         } else {
             ErrorHandler::printErrorContext(context, "array dimension error");

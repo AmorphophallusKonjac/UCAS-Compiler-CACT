@@ -539,7 +539,7 @@ std::any IRGenerator::visitFunctionFParam(CACTParser::FunctionFParamContext *con
 }
 
 std::any IRGenerator::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
-    return dynamic_cast<IRValue *>(IRConstantInt::get(std::stoi(context->getText())));
+    return dynamic_cast<IRValue *>(IRConstantInt::get(std::stoi(context->getText(), nullptr, 0)));
 }
 
 std::any IRGenerator::visitFloatingConstant(CACTParser::FloatingConstantContext *context) {
