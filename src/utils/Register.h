@@ -8,8 +8,8 @@
 #define GPRCallerSavedNUM 7
 #define GPRCalleeSavedNUM 12
 #define GPRPARAMNUM 8
-#define FPRCallerSavedNUM 16
-#define FPRCalleeSavedNUM 8
+#define FPRCallerSavedNUM 12
+#define FPRCalleeSavedNUM 12
 #define FPRPARAMNUM 8
 
 #define GPRNUM GPRCallerSavedNUM+GPRCalleeSavedNUM+GPRPARAMNUM
@@ -61,8 +61,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initTreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            CallerSavedvec.push_back(new CallerSavedRegister(i));
+        if(CallerSavedvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                CallerSavedvec.push_back(new CallerSavedRegister(i));
+            }
         }
     }
 
@@ -77,6 +79,7 @@ public:
 
     RegTy getRegty() { return regty; };
 
+    static CallerSavedRegister* Num2Reg(unsigned int num);
 };
 
 class CalleeSavedRegister : public Register {
@@ -90,8 +93,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initSreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            CalleeSavedvec.push_back(new CalleeSavedRegister(i));
+        if(CalleeSavedvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                CalleeSavedvec.push_back(new CalleeSavedRegister(i));
+            }
         }
     }
 
@@ -105,6 +110,8 @@ public:
     unsigned getRegSeq() { return regSeq; };
 
     RegTy getRegty() { return regty; };
+
+    static CalleeSavedRegister* Num2Reg(unsigned int num);
 };
 
 class ParamRegister : public Register {
@@ -117,8 +124,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initAreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            Paramvec.push_back(new ParamRegister(i));
+        if(Paramvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                Paramvec.push_back(new ParamRegister(i));
+            }
         }
     }
 
@@ -132,6 +141,8 @@ public:
     unsigned getRegSeq() { return regSeq; };
 
     RegTy getRegty() { return regty; };
+
+    static ParamRegister* Num2Reg(unsigned int num);
 };
 
 class FloatCallerSavedRegister : public Register {
@@ -144,8 +155,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFTreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            FloatCallerSavedvec.push_back(new FloatCallerSavedRegister(i));
+        if(FloatCallerSavedvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                FloatCallerSavedvec.push_back(new FloatCallerSavedRegister(i));
+            }
         }
     }
 
@@ -160,6 +173,8 @@ public:
 
     RegTy getRegty() { return regty; };
 
+    FloatCallerSavedRegister* Num2Reg(unsigned int num);
+
 };
 
 class FloatCalleeSavedRegister : public Register {
@@ -172,8 +187,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFSreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            FloatCalleeSavedvec.push_back(new FloatCalleeSavedRegister(i));
+        if(FloatCalleeSavedvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                FloatCalleeSavedvec.push_back(new FloatCalleeSavedRegister(i));
+            }
         }
     }
 
@@ -187,6 +204,8 @@ public:
     unsigned getRegSeq() { return regSeq; };
 
     RegTy getRegty() { return regty; };
+
+    static FloatCalleeSavedRegister* Num2Reg(unsigned int num);
 };
 
 class FloatParamRegister : public Register {
@@ -199,8 +218,10 @@ public:
 
     /*初始化静态reg对象，并获得静态reg对象List*/
     static void initFAreg() {
-        for (unsigned i = 0; i < RegMAXNum; i++) {
-            FloatParamvec.push_back(new FloatParamRegister(i));
+        if(FloatParamvec.empty()) {
+            for (unsigned i = 0; i < RegMAXNum; i++) {
+                FloatParamvec.push_back(new FloatParamRegister(i));
+            }
         }
     }
 
@@ -214,6 +235,8 @@ public:
     unsigned getRegSeq() { return regSeq; };
 
     RegTy getRegty() { return regty; };
+
+    static FloatParamRegister* Num2Reg(unsigned int num);
 };
 
 class RegisterFactory {
@@ -224,7 +247,10 @@ private:
 public:
 
     /*初始化所有静态reg对象*/
-    static void initReg();
+    static void initGReg();
+
+    /*初始化所有静态reg对象*/
+    static void initFReg();
 
     /*获得所有静态reg对象List*/
     static std::vector<Register *> &getGRegList() {

@@ -1,10 +1,14 @@
 #include "RegisterNode.h"
 #include "IR/IRInstruction.h"
+#include "IR/IRType.h"
 #include "IR/iOther.h"
 #include "utils/DominatorTree.h"
 #include "utils/LiveVariable.h"
 #include "utils/Register.h"
+#include "IR/IRConstant.h"
+#include "utils/RegisterMove.h"
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 #include <tuple>
 
@@ -21,11 +25,11 @@ std::list<RegisterNode*> RegisterNode::coalescedNodes {};
 std::list<RegisterNode*> RegisterNode::coloredNodes {};
 std::list<RegisterNode*> RegisterNode::selectStack {};
 
-std::vector<IRInstruction*> RegisterNode::coalescedMoves {};    
-std::vector<IRInstruction*> RegisterNode::constrainedMoves {};   
-std::vector<IRInstruction*> RegisterNode::frozenMoves {};        
-std::vector<IRInstruction*> RegisterNode::worklistMoves {};
-std::vector<IRInstruction*> RegisterNode::activeMoves {};                  
+std::vector<RegisterMove*> RegisterNode::coalescedMoves {};    
+std::vector<RegisterMove*> RegisterNode::constrainedMoves {};   
+std::vector<RegisterMove*> RegisterNode::frozenMoves {};        
+std::vector<RegisterMove*> RegisterNode::worklistMoves {};
+std::vector<RegisterMove*> RegisterNode::activeMoves {};                  
 
 std::vector<std::tuple<RegisterNode*, RegisterNode*>> RegisterNode::adjSet {};
 std::map<RegisterNode*, unsigned> RegisterNode::degree {};
@@ -46,13 +50,13 @@ std::vector<RegisterNode*> RegisterNode::Adjcent(RegisterNode* node){
 
 
 /*与这个结点相关的还没有合并的传送指令*/
-std::vector<IRInstruction*> RegisterNode::NodeMoves(RegisterNode* node){
-    std::vector<IRInstruction*> NodeMoves;
+std::vector<RegisterMove*> RegisterNode::NodeMoves(RegisterNode* node){
+    std::vector<RegisterMove*> NodeMoves;
     /*adjList[n]\(selectStack U coalescedNodes)*/
-    for(auto irinst: node->moveList){
-        if(std::find(activeMoves.begin(), activeMoves.end(), irinst) != activeMoves.end() ||
-           std::find(worklistMoves.begin(), worklistMoves.end(), irinst) != worklistMoves.end()){
-                NodeMoves.push_back(irinst);
+    for(auto irmove: node->moveList){
+        if(std::find(activeMoves.begin(), activeMoves.end(), irmove) != activeMoves.end() ||
+           std::find(worklistMoves.begin(), worklistMoves.end(), irmove) != worklistMoves.end()){
+                NodeMoves.push_back(irmove);
            }
     }
     return NodeMoves;
@@ -63,14 +67,16 @@ bool RegisterNode::MoveRelated(RegisterNode* node){
     else return false;
 };
 
-void RegisterNode::init(WHICH which){
+void RegisterNode::init(IRFunction& F, WHICH which){
     RegisterNode::which = which;
     if(which == GENERAL){ regNum = GPRNUM; }
     else if(which == FLOAT){ regNum = FPRNUM; }
+
     /*机器寄存器冲突图*/
     switch(which){
         case GENERAL:
             for(auto reg1: RegisterFactory::getGRegList()){
+                precolored.push_back(reg1->getRegNode());
                 for(auto reg2: RegisterFactory::getGRegList()){
                     RegisterNode::AddEdge(reg1->getRegNode(), reg2->getRegNode());
                 }
@@ -78,8 +84,165 @@ void RegisterNode::init(WHICH which){
             break;
         case FLOAT:
             for(auto reg1: RegisterFactory::getFRegList()){
+                precolored.push_back(reg1->getRegNode());
                 for(auto reg2: RegisterFactory::getFRegList()){
                     RegisterNode::AddEdge(reg1->getRegNode(), reg2->getRegNode());
+                }
+            }
+            break;
+    }
+
+    /*参数机器寄存器move指令*/
+    unsigned argcnt = 0;
+    switch(which){
+        case GENERAL:
+            for(auto arg: F.getArgumentList()){
+                if(!(arg->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                     arg->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        /*为参数创建regNode结点*/
+                        arg->setRegNode();
+                        initial.insert(arg->getRegNode());
+
+                        /*创建参数到寄存器的move指令*/
+                        auto move = new RegisterMove(arg, ParamRegister::Num2Reg(argcnt));
+                        worklistMoves.push_back(move);
+                        arg->getRegNode()->moveList.insert(move);
+                        argcnt++;
+                    }
+                }
+            break;
+        case FLOAT:
+            for(auto arg: F.getArgumentList()){
+                if((arg->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                    arg->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        /*为参数创建regNode结点*/
+                        arg->setRegNode();
+                        initial.insert(arg->getRegNode());
+
+                        /*创建参数到寄存器的move指令*/
+                        auto move = new RegisterMove(arg, FloatParamRegister::Num2Reg(argcnt));
+                        worklistMoves.push_back(move);
+                        arg->getRegNode()->moveList.insert(move);
+                        argcnt++;
+                    }
+                }
+            break;
+    }
+
+    /*这里是给每条指令都添加一个regNode*/
+    for(auto BB: F.getBasicBlockList()){
+        for(auto inst: BB->getInstList()){
+            if((inst->isBinaryOp() ||
+                inst->getOpcode() == IRInstruction::Alloca ||
+                inst->getOpcode() == IRInstruction::Call ||
+                inst->getOpcode() == IRInstruction::Load ||
+                inst->getOpcode() == IRInstruction::Shl ||
+                inst->getOpcode() == IRInstruction::Shr)){
+                inst->setRegNode();
+            }else if( inst->getOpcode() == IRInstruction::Move){
+                dynamic_cast<IRInstruction*>(inst->getOperand(0))->setRegNode();
+
+                if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
+                    dynamic_cast<IRInstruction*>(inst->getOperand(1))->setRegNode();
+                }
+            }
+        }
+    }
+
+    /*指令寄存器冲突图*/
+    std::vector<IRValue*> defvec;
+    switch(which){
+        case GENERAL:
+            for(auto BB: F.getBasicBlockList()){
+                for(auto inst: BB->getInstList()){
+                    if((inst->isBinaryOp() ||
+                        inst->getOpcode() == IRInstruction::Alloca ||
+                        inst->getOpcode() == IRInstruction::Call ||
+                        inst->getOpcode() == IRInstruction::Load ||
+                        inst->getOpcode() == IRInstruction::Shl ||
+                        inst->getOpcode() == IRInstruction::Shr) &&
+                      !(inst->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                        inst->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        defvec.push_back(inst);
+                    }else if( inst->getOpcode() == IRInstruction::Move &&
+                            !(inst->getOperand(0)->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                              inst->getOperand(0)->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        /*源操作数与目的操作数均与这条move指令相关*/
+                        defvec.push_back(inst->getOperand(0));
+
+                        if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
+                            auto move = new RegisterMove(dynamic_cast<IRMoveInst*>(inst));
+                            dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(move);
+                            dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                            /*有可能合并的传送指令,必须保证两边都不是常数才算一条传送指令*/
+                            RegisterNode::worklistMoves.push_back(move);
+                        }
+                    }
+
+                    for(auto ir:defvec){
+                        RegisterNode::initial.insert(dynamic_cast<IRInstruction*>(ir)->getRegNode());
+                        for(auto irlive:*inst->getLive()->getOUTLive()){
+                            /*这里要保证本身不是move指令；如果是move指令，那么def不会与use发生冲突*/
+                            if(!(inst->getOpcode() == IRInstruction::Move &&
+                                 irlive == dynamic_cast<IRMoveInst*>(inst)->getSrc())) {
+                                if(dynamic_cast<IRInstruction *>(irlive) == nullptr){
+                                    RegisterNode::AddEdge(dynamic_cast<IRInstruction *>(ir)->getRegNode(),
+                                                          dynamic_cast<IRArgument *>(irlive)->getRegNode());
+                                }else{
+                                    RegisterNode::AddEdge(dynamic_cast<IRInstruction *>(ir)->getRegNode(),
+                                                          dynamic_cast<IRInstruction *>(irlive)->getRegNode());
+                                }
+                            }
+                        }
+                    }
+                    defvec.clear();
+                }
+            }
+            break;
+        case FLOAT:
+            for(auto BB: F.getBasicBlockList()){
+                for(auto inst: BB->getInstList()){
+                    if((inst->isBinaryOp() ||
+                        inst->getOpcode() == IRInstruction::Alloca ||
+                        inst->getOpcode() == IRInstruction::Call ||
+                        inst->getOpcode() == IRInstruction::Load ||
+                        inst->getOpcode() == IRInstruction::Shl ||
+                        inst->getOpcode() == IRInstruction::Shr) &&
+                       (inst->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                        inst->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        defvec.push_back(inst);
+                    }else if( inst->getOpcode() == IRInstruction::Move &&
+                             (inst->getOperand(0)->getType()->getPrimitiveID() == IRType::FloatTyID ||
+                              inst->getOperand(0)->getType()->getPrimitiveID() == IRType::DoubleTyID)){
+                        /*源操作数与目的操作数均与这条move指令相关*/
+                        defvec.push_back(inst->getOperand(0));
+
+                        if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
+                            auto move = new RegisterMove(dynamic_cast<IRMoveInst*>(inst));
+                            dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(move);
+                            dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                            /*有可能合并的传送指令,必须保证两边都不是常数才算一条传送指令*/
+                            worklistMoves.push_back(move);
+                        }
+                    }
+
+                    for(auto ir:defvec){
+                        initial.insert(dynamic_cast<IRInstruction*>(ir)->getRegNode());
+                        for(auto irlive:*inst->getLive()->getOUTLive()){
+                            /*这里要保证本身不是move指令；如果是move指令，那么def不会与use发生冲突*/
+                            if(!(inst->getOpcode() == IRInstruction::Move &&
+                                 irlive == dynamic_cast<IRMoveInst*>(inst)->getSrc())) {
+                                if(dynamic_cast<IRInstruction *>(irlive) == nullptr){
+                                    RegisterNode::AddEdge(dynamic_cast<IRInstruction *>(ir)->getRegNode(),
+                                                          dynamic_cast<IRArgument *>(irlive)->getRegNode());
+                                }else{
+                                    RegisterNode::AddEdge(dynamic_cast<IRInstruction *>(ir)->getRegNode(),
+                                                          dynamic_cast<IRInstruction *>(irlive)->getRegNode());
+                                }
+                            }
+                        }
+                    }
+                    defvec.clear();
                 }
             }
             break;
@@ -131,7 +294,7 @@ void RegisterNode::simplify(){
 
     auto adjcent = Adjcent(simplifynode);
     for(auto adjnode: adjcent){
-
+        DecrementDegree(adjnode);
     }
 }
 
@@ -168,8 +331,8 @@ void RegisterNode::EnableMoves(std::vector<RegisterNode*> nodes){
 
 void RegisterNode::Coalesce(){
     auto move = *worklistMoves.begin();
-    RegisterNode* dst = GetAlias(dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode());
-    RegisterNode* src = GetAlias(dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode());
+    RegisterNode* dst = GetAlias(move->getDstNode());
+    RegisterNode* src = GetAlias(move->getSrcNode());
 
     /*构建unode,vnode*/
     RegisterNode* unode;
@@ -181,13 +344,13 @@ void RegisterNode::Coalesce(){
     if(unode == vnode){                                                                                                 //两个node一样
         coalescedMoves.push_back(move);
         AddWorkList(unode);
-    }else if(std::find(precolored.begin(), precolored.end(), vnode) != precolored.end() && 
-             std::find(adjSet.begin(), adjSet.end(), std::make_tuple(unode, vnode)) != adjSet.end()){   //vnode,unode都是机器寄存器
+    }else if(std::find(precolored.begin(), precolored.end(), vnode) != precolored.end() ||
+             std::find(adjSet.begin(), adjSet.end(), std::make_tuple(unode, vnode)) != adjSet.end()){   //vnode,unode都是机器寄存器或者unode,vnode冲突受到抑制
                 constrainedMoves.push_back(move);
                 AddWorkList(unode);
                 AddWorkList(vnode);
-    }else if((std::find(precolored.begin(), precolored.end(), unode) != precolored.end() && George(vnode, unode)) ||    //采用George保守合并策略
-             (std::find(precolored.begin(), precolored.end(), unode) == precolored.end() && Briggs(vnode, unode))       //采用Briggs保守合并策略
+    }else if((std::find(precolored.begin(), precolored.end(), unode) != precolored.end() && George(vnode, unode)) ||    //采用George保守合并策略(unode是机器寄存器)
+             (std::find(precolored.begin(), precolored.end(), unode) == precolored.end() && Briggs(vnode, unode))       //采用Briggs保守合并策略(两个都不是机器寄存器)
                 ){                                                                                                        
                     coalescedMoves.push_back(move);
                     Combine(unode, vnode);
@@ -297,8 +460,8 @@ void RegisterNode::FreezeMoves(RegisterNode* unode){
     RegisterNode* ynode;
     RegisterNode* vnode;
     for(auto move: NodeMoves(unode)){
-        xnode = dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getDest())->getRegNode();
-        ynode = dynamic_cast<IRInstruction*>(dynamic_cast<IRMoveInst*>(move)->getSrc())->getRegNode();
+        xnode = move->getDstNode();
+        ynode = move->getSrcNode();
 
         /*通过检查最终将vnode,unode表示为该move指令对应的两个node*/
         if(GetAlias(ynode) == GetAlias(unode)){
@@ -349,8 +512,9 @@ void RegisterNode::AssignColors(){
 
         /*若邻接结点已被染色，则选择数目减少*/
         for(auto wnode: nnode->adjList){
-            if( std::find(coloredNodes.begin(), coloredNodes.end(), GetAlias(wnode)) != coloredNodes.end() ||
-                std::find(precolored.begin(), precolored.end(), GetAlias(wnode)) != precolored.end()){
+            if((std::find(coloredNodes.begin(), coloredNodes.end(), GetAlias(wnode)) != coloredNodes.end() ||
+                std::find(precolored.begin(), precolored.end(), GetAlias(wnode)) != precolored.end()) &&
+                std::find(okColors.begin(), okColors.end(), GetAlias(wnode)->color) != okColors.end()){
                     okColors.erase(std::find(okColors.begin(), okColors.end(), GetAlias(wnode)->color));
                 }
         }
@@ -363,39 +527,36 @@ void RegisterNode::AssignColors(){
             nnode->color = *okColors.begin();                                                                                                                                                                                             nnode->color = *okColors.begin();
         }
 
-        switch(which){
-            case GENERAL:
-                for(auto reg: RegisterFactory::getGRegList()){
-                    if(nnode->color == reg->getRegNode()->getColor()){
-                        nnode->getParentInst()->setReg(reg);
-                    }
-                }
-                break;
-            case FLOAT:
-                for(auto reg: RegisterFactory::getFRegList()){
-                    if(nnode->color == reg->getRegNode()->getColor()){
-                        nnode->getParentInst()->setReg(reg);
-                    }
-                }
-                break;
-        }
-
+        /*根据颜色赋予指令reg*/
+        if(nnode->getParentInst() != nullptr)
+            nnode->getParentInst()->setReg(getColorReg(nnode->color));
+        if(nnode->getParentArg() != nullptr)
+            nnode->getParentArg()->setReg(getColorReg(nnode->color));
 
         okColors.clear();
     }
 
+    RegisterNode* coalesnode;
     /*已经被合并的结点采用与其合并的寄存器结点的颜色*/
-    for(auto nnode: coalescedNodes)
-        nnode->color = GetAlias(nnode)->color;
+    for(auto coalesnode: coalescedNodes) {
+        coalesnode->color = GetAlias(coalesnode)->color;
+        if(coalesnode->getParentInst() != nullptr)
+            coalesnode->getParentInst()->setReg(getColorReg(coalesnode->color));
+        if(coalesnode->getParentArg() != nullptr)
+            coalesnode->getParentArg()->setReg(getColorReg(coalesnode->color));
+    }
+
 }
 
 void RegisterNode::RewriteProgram(){
-    
+    spilledNodes.clear();
+    coloredNodes.clear();
+    coalescedNodes.clear();
 }
 
 void RegisterNode::RegisterAlloc(IRFunction &F, WHICH which){
     Build(F, which);
-    return;
+    //return;
     MakeWorklist();
     while(!(simplifyWorklist.empty() && worklistMoves.empty() && freezeWorklist.empty() && spillWorklist.empty())){
         if(!simplifyWorklist.empty()) simplify();
@@ -411,7 +572,51 @@ void RegisterNode::RegisterAlloc(IRFunction &F, WHICH which){
 }
 
 void RegisterNode::Build(IRFunction &F, WHICH which){
-    RegisterFactory::initReg();
-    RegisterNode::init(which);
-    LiveVariable::genLiveVariable(&F);
+    if(which == GENERAL) RegisterFactory::initGReg();
+    else if(which == FLOAT) RegisterFactory::initFReg();
+    RegisterNode::init(F,which);
+}
+
+void RegisterNode::End(){
+    precolored.clear();
+    simplifyWorklist.clear();
+    freezeWorklist.clear();
+    spillWorklist.clear();
+    spilledNodes.clear();
+    coalescedNodes.clear();
+    coloredNodes.clear();
+    selectStack.clear();
+
+    coalescedMoves.clear();
+    constrainedMoves.clear();
+    frozenMoves.clear();
+    activeMoves.clear();
+
+    adjSet.clear();
+    degree.clear();
+    alias.clear();
+    initial.clear();
+    worklistMoves.clear();
+}
+
+Register* RegisterNode::getColorReg(int color){
+    for(auto regnode: precolored){
+        if(color == regnode->getColor()){
+            return regnode->getParentReg();
+        }
+    }
+    /*switch(which) {
+        case GENERAL:
+            for(auto reg: RegisterFactory::getGRegList()){
+                if(color == reg->getRegNode()->getColor()){
+                    return reg;
+                }
+            }
+        case FLOAT:
+            for(auto reg: RegisterFactory::getFRegList()){
+                if(color == reg->getRegNode()->getColor()){
+                    return reg;
+                }
+            }
+    }*/
 }

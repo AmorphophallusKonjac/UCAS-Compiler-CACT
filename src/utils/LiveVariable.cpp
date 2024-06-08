@@ -121,7 +121,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             }
         }else if(inst->getOpcode() == IRInstruction::Load){
             if(inst->getOperand(0)->getValueType() == IRValue::InstructionVal){
-                if(!(dynamic_cast<IRInstruction*>(inst->getOperand(0))->getOpcode() == IRInstruction::Alloca))
+                if(dynamic_cast<IRInstruction *>(inst->getOperand(0))->getOpcode() != IRInstruction::Alloca)
                     usevec.push_back(inst->getOperand(0));
             }
             defvec.push_back(inst);
@@ -135,7 +135,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
                 usevec.push_back(inst->getOperand(0));
             
             if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal){
-                if(!(dynamic_cast<IRInstruction*>(inst->getOperand(1))->getOpcode() == IRInstruction::Alloca))
+                if(dynamic_cast<IRInstruction *>(inst->getOperand(1))->getOpcode() != IRInstruction::Alloca)
                     usevec.push_back(inst->getOperand(1));
             }
         }else if(inst->getOpcode() == IRInstruction::PHI){
@@ -154,24 +154,8 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
         }else if(inst->getOpcode() == IRInstruction::Move){
             /*源操作数与目的操作数均与这条move指令相关*/
             defvec.push_back(inst->getOperand(0));
-            dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(inst);
             if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
                 usevec.push_back(dynamic_cast<IRMoveInst*>(inst)->getOperand(1));
-                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(inst);
-            }
-
-            /*有可能合并的传送指令*/
-            RegisterNode::worklistMoves.push_back(inst);
-        }
-
-        for(auto ir:defvec){
-            for(auto irlive:*OUTLive){
-                /*是move并且usevec中找到了，那么将不予考虑*/
-                if(!(inst->getOpcode() == IRInstruction::Move && 
-                     std::find(usevec.begin(), usevec.end(), irlive) != usevec.end())){
-                        RegisterNode::AddEdge(dynamic_cast<IRInstruction*>(ir)->getRegNode(), dynamic_cast<IRInstruction*>(irlive)->getRegNode());
-                        RegisterNode::initial.insert(dynamic_cast<IRInstruction*>(ir)->getRegNode());
-                }
             }
         }
 

@@ -22,7 +22,7 @@ private:
     IRBasicBlock *Parent;
 
     LiveVariableInst *Live;
-    RegisterNode* regNode;
+    RegisterNode* regNode = nullptr;
     Register* reg;
 
 protected:
@@ -98,6 +98,8 @@ public:
     LiveVariableInst *getLive() { return Live; }
 
     RegisterNode* getRegNode(){ return regNode; };
+
+    void setRegNode(){ if( regNode == nullptr ) regNode = new RegisterNode(this->getName(), this); };
 
     void setReg(Register* reg){
         this->reg = reg;
