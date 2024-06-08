@@ -15,11 +15,11 @@ int dfs(int a, int b, int c, int d, int e, int last){
     if(a + b + c + d + e == 0)
         return 1;
     int ans = 0;
-    if (a) ans = (ans + (a - equal(last, 2)) * dfs(a - 1, b, c, d, e, 1)) % mod;
-    if (b) ans = (ans + (b - equal(last, 3)) * dfs(a + 1, b - 1, c, d, e, 2)) % mod;
-    if (c) ans = (ans + (c - equal(last, 4)) * dfs(a, b + 1, c - 1, d, e, 3)) % mod;
-    if (d) ans = (ans + (d - equal(last, 5)) * dfs(a, b, c + 1, d - 1, e, 4)) % mod;
-    if (e) ans = (ans + e * dfs(a, b, c, d + 1, e - 1, 5)) % mod;
+    if (a != 0) ans = (ans + (a - equal(last, 2)) * dfs(a - 1, b, c, d, e, 1)) % mod;
+    if (b != 0) ans = (ans + (b - equal(last, 3)) * dfs(a + 1, b - 1, c, d, e, 2)) % mod;
+    if (c != 0) ans = (ans + (c - equal(last, 4)) * dfs(a, b + 1, c - 1, d, e, 3)) % mod;
+    if (d != 0) ans = (ans + (d - equal(last, 5)) * dfs(a, b, c + 1, d - 1, e, 4)) % mod;
+    if (e != 0) ans = (ans + e * dfs(a, b, c, d + 1, e - 1, 5)) % mod;
     dp[a][b][c][d][e][last] = ans % mod;
     return dp[a][b][c][d][e][last];
 }
