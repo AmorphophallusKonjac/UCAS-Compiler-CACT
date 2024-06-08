@@ -11,24 +11,24 @@ PHIdeletePass::PHIdeletePass(std::string name, int level) : FunctionPass(std::mo
 
 void PHIdeletePass::runOnFunction(IRFunction &F) {
     for (auto BB: F.getBasicBlockList()) {
-        for (unsigned i=0; i<BB->getInstList().size();) {
-            auto inst = BB->getInstList()[i];
+        auto &instList = BB->getInstList();
+        for (auto &inst : instList) {
             if (inst->getOpcode() == IRInstruction::PHI) {
-                auto phiinst = dynamic_cast<IRPHINode *>(inst);
-                for (unsigned i = 0; i < phiinst->getNumIncomingValues(); i++) {
+                auto phiInst = dynamic_cast<IRPHINode *>(inst);
+                auto temp = new IRRegValue(phiInst->getType());
+                temp->dropAllReferences();
+                for (unsigned i = 0; i < phiInst->getNumIncomingValues(); i++) {
                     /*add move inst*/
-                    auto mvInst = new IRMoveInst(phiinst->getIncomingValue(i), inst);
-                    mvInst->setParent(phiinst->getIncomingBlock(i));
-                    phiinst->getIncomingBlock(i)->getInstList().insert(
-                            phiinst->getIncomingBlock(i)->getInstList().end() - 1,
+                    auto mvInst = new IRMoveInst(phiInst->getIncomingValue(i), temp);
+                    mvInst->setParent(phiInst->getIncomingBlock(i));
+                    phiInst->getIncomingBlock(i)->getInstList().insert(
+                            phiInst->getIncomingBlock(i)->getInstList().end() - 1,
                             mvInst);
                 }
-                /*delete phi inst*/
-                auto irinst = std::find(inst->getParent()->getInstList().begin(),
-                                        inst->getParent()->getInstList().end(), inst);
-                inst->getParent()->getInstList().erase(irinst);
-            }else{
-                i++;
+                /*chaneg phi to move*/
+                auto phi2Mv = new IRMoveInst(temp, phiInst);
+                phi2Mv->setParent(BB);
+                inst = phi2Mv;
             }
         }
     }
