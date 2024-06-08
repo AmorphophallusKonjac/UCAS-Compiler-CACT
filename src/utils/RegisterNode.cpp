@@ -1,6 +1,6 @@
 #include "RegisterNode.h"
 #include "IR/IRInstruction.h"
-#include "IR/IRvalue.h"
+#include "IR/IRValue.h"
 #include "IR/iOther.h"
 #include "utils/DominatorTree.h"
 #include "utils/Register.h"

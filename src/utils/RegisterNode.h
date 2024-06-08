@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-#include "IR/IRvalue.h"
+#include "IR/IRValue.h"
 #include "IR/IRInstruction.h"
 #include "Register.h"
 
