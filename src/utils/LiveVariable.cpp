@@ -129,8 +129,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
                  inst->getOpcode() == IRInstruction::Shr ){
             usevec.push_back(inst->getOperand(0));
             defvec.push_back(inst);
-        }else if(inst->getOpcode() == IRInstruction::Store ||
-                 inst->getOpcode() == IRInstruction::Memcpy){
+        }else if(inst->getOpcode() == IRInstruction::Store){
             if(!dynamic_cast<IRConstant*>(inst->getOperand(0)))
                 usevec.push_back(inst->getOperand(0));
             
