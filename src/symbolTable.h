@@ -78,7 +78,7 @@ public:
                 }
                 break;
             case INT:
-                irconst = IRConstantInt::get(stoi(valueStr)); 
+                irconst = IRConstantInt::get(stoi(valueStr, nullptr, 0));
                 break;
             case FLOAT:
                 irconst = IRConstantFloat::get(stof(valueStr)); 

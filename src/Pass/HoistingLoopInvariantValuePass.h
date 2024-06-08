@@ -16,7 +16,7 @@ private:
 
     static bool binaryOperandCondition(IRValue *op, std::set<IRValue *> *Set, LoopInfo *loop);
 
-    static bool loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set);
+    static bool loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set, LoopInfo *loop);
 
     static bool storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop,
                                    ControlFlowGraph *cfg);

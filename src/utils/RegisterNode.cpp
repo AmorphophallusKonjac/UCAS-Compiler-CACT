@@ -1,6 +1,10 @@
 #include "RegisterNode.h"
 #include "IR/IRInstruction.h"
+<<<<<<< HEAD
 #include "IR/IRType.h"
+=======
+#include "IR/IRValue.h"
+>>>>>>> dev
 #include "IR/iOther.h"
 #include "utils/DominatorTree.h"
 #include "utils/LiveVariable.h"

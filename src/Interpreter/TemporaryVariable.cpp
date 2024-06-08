@@ -85,7 +85,7 @@ void TemporaryVariable::print() {
 
 unsigned long TemporaryVariable::getTypeSize(TemporaryVariable::tempVarType ty) {
     switch (ty) {
-        case Bool :     return 4;
+        case Bool :     return 1;
         case Int :      return 4;
         case Float :    return 4;
         case Double :   return 8;

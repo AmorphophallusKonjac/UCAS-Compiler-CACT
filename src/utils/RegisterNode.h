@@ -8,6 +8,12 @@
 #include <list>
 #include <map>
 #include <set>
+<<<<<<< HEAD
+=======
+
+#include "IR/IRValue.h"
+#include "IR/IRInstruction.h"
+>>>>>>> dev
 #include "Register.h"
 
 class IRInstruction;
