@@ -109,6 +109,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                         auto move = new RegisterMove(arg, ParamRegister::Num2Reg(argcnt));
                         worklistMoves.push_back(move);
                         arg->getRegNode()->moveList.insert(move);
+                        arg->getRegNode()->nodemovenum++;
                         argcnt++;
                     }
                 }
@@ -125,6 +126,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                         auto move = new RegisterMove(arg, FloatParamRegister::Num2Reg(argcnt));
                         worklistMoves.push_back(move);
                         arg->getRegNode()->moveList.insert(move);
+                        arg->getRegNode()->nodemovenum++;
                         argcnt++;
                     }
                 }
@@ -177,12 +179,17 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                         if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
                             auto move = new RegisterMove(dynamic_cast<IRMoveInst*>(inst));
                             dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(move);
+                            dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->nodemovenum++;
 
                             /*考虑move指令op可能是arg或者指令*/
-                            if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal)
-                                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
-                            else if(inst->getOperand(1)->getValueType() == IRValue::ArgumentVal)
-                                dynamic_cast<IRArgument*>(inst->getOperand(1))->getRegNode()->moveList.insert(move); 
+                            if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal) {
+                                dynamic_cast<IRInstruction *>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                                dynamic_cast<IRInstruction *>(inst->getOperand(1))->getRegNode()->nodemovenum++;
+                            }
+                            else if(inst->getOperand(1)->getValueType() == IRValue::ArgumentVal) {
+                                dynamic_cast<IRArgument *>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                                dynamic_cast<IRArgument *>(inst->getOperand(1))->getRegNode()->nodemovenum++;
+                            }
                             /*有可能合并的传送指令,必须保证两边都不是常数才算一条传送指令*/
                             RegisterNode::worklistMoves.push_back(move);
                         }
@@ -274,11 +281,13 @@ void RegisterNode::AddEdge(RegisterNode* u, RegisterNode* v){
         if(std::find(precolored.begin(), precolored.end(), u) == precolored.end()){
             u->adjList.push_back(v);
             degree[u]++;
+            u->nodedegree++;
         }
 
         if(std::find(precolored.begin(), precolored.end(), v) == precolored.end()){
             v->adjList.push_back(u);
             degree[v]++;
+            v->nodedegree++;
         }
     }
 
@@ -314,6 +323,7 @@ void RegisterNode::simplify(){
 void RegisterNode::DecrementDegree(RegisterNode* node){
     //度数--
     degree[node]--;
+    node->nodedegree--;
     if(degree[node] == regNum-1){
         auto adjmove = Adjcent(node);
         adjmove.push_back(node);
@@ -354,6 +364,8 @@ void RegisterNode::Coalesce(){
     else{ unode = dst; vnode = src; }
 
     worklistMoves.erase(worklistMoves.begin());
+    unode->nodemovenum--;
+    vnode->nodemovenum--;
     if(unode == vnode){                                                                                                 //两个node一样
         coalescedMoves.push_back(move);
         AddWorkList(unode);
@@ -398,7 +410,7 @@ bool RegisterNode::OK(RegisterNode* tnode, RegisterNode* rnode){
             std::find(adjSet.begin(), adjSet.end(), std::make_tuple(tnode, rnode))!=adjSet.end();
 }
 
-/*临邻接高度数结点不能大于K*/
+/*邻接高度数结点不能大于K*/
 bool RegisterNode::Conservative(std::vector<RegisterNode*> nodes){
     unsigned k=0;
     for(auto nnode: nodes){
@@ -441,12 +453,14 @@ void RegisterNode::Combine(RegisterNode* unode, RegisterNode* vnode){
     alias[vnode]=unode;
     for(auto move: vnode->moveList){
         unode->moveList.insert(move);
+        unode->nodemovenum++;
     }
+    unode->nodemovenum--;       //这里--的原因，是因为需要把当前的这条move指令排除在外
     EnableMoves({vnode});
 
     /*vnode的邻接结点处理到unode上*/
     for(auto tnode:Adjcent(vnode)){
-        AddEdge(tnode, vnode);
+        AddEdge(tnode, unode);
         DecrementDegree(tnode);
     }
 

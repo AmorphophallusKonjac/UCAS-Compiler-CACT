@@ -73,7 +73,9 @@ private:
     static Register* getColorReg(int color);
 
     /*对象私有*/
-    std::list<RegisterNode*> adjList;                                       //图的邻接表表示
+    int nodedegree = 0;                                                    //结点私有的度数(当前图上)
+    int nodemovenum = 0;                                                   //结点相关的move指令(当前图上)
+    std::list<RegisterNode*> adjList;                                      //图的邻接表表示
     std::set<RegisterMove*> moveList;                                      //与该结点相关的传送指令表的映射
 
     /*可对外展示的*/
