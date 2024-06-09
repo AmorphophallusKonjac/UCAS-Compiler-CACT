@@ -1,5 +1,6 @@
 #ifndef COMPILER_IRFUNCTION_H
 #define COMPILER_IRFUNCTION_H
+#include "utils/Register.h"
 #pragma once
 
 #include "IRArgument.h"
@@ -9,6 +10,7 @@
 
 class IRFunctionType;
 class FuncSymbolInfo;
+class Register;
 
 class IRFunction : public IRGlobalValue {
 public:
@@ -20,6 +22,8 @@ public:
 private:
     std::vector<IRArgument *> ArgumentList;
     std::vector<IRBasicBlock *> BasicBlocks;
+    std::set<Register *> CalleeSavedRegisters;   //s,fs系列寄存器
+    std::set<Register *> CallerSavedRegisters;   //t,ft,a,fa系列寄存器
     IRModule *Parent;
     unsigned IRSymbolCount = 0;
     FuncTy fTy;
@@ -45,6 +49,10 @@ public:
     void addBasicBlock(IRBasicBlock * block);
 
     IRBasicBlock *getEntryBlock() { return BasicBlocks.front(); }
+    std::set<Register*>& getCalleeSavedRegList() { return CalleeSavedRegisters; };
+    std::set<Register*>& getCallerSavedRegList() { return CallerSavedRegisters; };
+    void setCalleeSavedReg(Register* reg) { CalleeSavedRegisters.insert(reg); };
+    void setCallerSavedReg(Register* reg) { CallerSavedRegisters.insert(reg); };
 
     /******IRFunction的print方法******/
     void printPrefixName(std::ostream &OS) const override;

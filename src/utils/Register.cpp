@@ -118,6 +118,18 @@ FloatParamRegister* FloatParamRegister::Num2Reg(unsigned int num) {
 
 
 void RegisterFactory::print(std::ostream& OS, IRFunction& F){
+
+    /*打印F中需要保存的寄存器*/
+    OS << F.getName() << ":" << std::endl;
+    OS << "CalleeSaved: ";
+    for(auto reg: F.getCalleeSavedRegList())
+        OS << reg->getRegName() <<", ";
+    OS << std::endl;
+
+    OS << "CallerSaved: ";
+    for(auto reg: F.getCallerSavedRegList())
+        OS << reg->getRegName() <<", ";
+    OS << std::endl << std::endl;
     
     /*打印整型寄存器*/
     for(auto reg: getGRegList()){
