@@ -1,6 +1,7 @@
 #include "Value.h"
 #include "IR/IRValue.h"
 #include "BasicBlock.h"
+#include "utils/Register.h"
 
 namespace RISCV {
     Register *Value::getReg() const {

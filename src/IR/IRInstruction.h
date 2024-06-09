@@ -22,8 +22,8 @@ private:
     IRBasicBlock *Parent;
 
     LiveVariableInst *Live;
-    RegisterNode* regNode = nullptr;
-    Register* reg;
+    RegisterNode *regNode = nullptr;
+    Register *reg;
 
 protected:
 
@@ -97,15 +97,15 @@ public:
 
     LiveVariableInst *getLive() { return Live; }
 
-    RegisterNode* getRegNode(){ return regNode; };
+    RegisterNode *getRegNode() { return regNode; };
 
-    void setRegNode(){ if( regNode == nullptr ) regNode = new RegisterNode(this->getName(), this); };
+    void setRegNode() { if (regNode == nullptr) regNode = new RegisterNode(this->getName(), this); };
 
-    void setReg(Register* reg){
+    void setReg(Register *reg) {
         this->reg = reg;
     };
 
-    Register* getReg(){ return reg; };
+    Register *getReg() override { return reg; };
 
     static inline bool classof(const IRInstruction *I) { return true; }
 
