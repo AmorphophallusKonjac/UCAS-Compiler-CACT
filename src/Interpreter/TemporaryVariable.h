@@ -37,6 +37,12 @@ private:
 
     unsigned long  arraySize;
 
+    IRValue* irValue;
+public:
+    IRValue *getIrValue() const;
+
+    void setIrValue(IRValue *irValue);
+
 public:
 
     TemporaryVariable(std::any value, tempVarType type, tempVarType elementType = Void, unsigned long arraySize = 0);

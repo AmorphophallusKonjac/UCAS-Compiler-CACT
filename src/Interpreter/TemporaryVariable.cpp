@@ -110,3 +110,11 @@ void TemporaryVariable::setArraySize(unsigned long  arraySize) {
     TemporaryVariable::arraySize = arraySize;
 }
 
+IRValue *TemporaryVariable::getIrValue() const {
+    return irValue;
+}
+
+void TemporaryVariable::setIrValue(IRValue *irValue) {
+    TemporaryVariable::irValue = irValue;
+}
+

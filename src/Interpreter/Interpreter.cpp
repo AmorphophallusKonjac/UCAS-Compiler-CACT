@@ -34,6 +34,7 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *> &varVector
                                               tempVar->getElementType(), tempVar->getArraySize()));
         TempVarVector.push_back(new TemporaryVariable(Stack.size() - 1, TemporaryVariable::Pointer, varType));
         var->setTempVar(TempVarVector.back());
+        TempVarVector.back()->setIrValue(var);
         if (debugOpt)
             tempVar->print();
     }
@@ -44,6 +45,7 @@ void Interpreter::initFuncArg(const std::vector<IRArgument *> &argVector) {
     auto stackSize = Stack.size();
     for (int i = 0; i < argNum; ++i) {
         argVector[i]->setTempVar(Stack[stackSize - argNum + i]);
+        Stack[stackSize - argNum + i]->setIrValue(argVector[i]);
     }
 }
 
@@ -89,31 +91,53 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
         }
         switch (opcode) {
             case IRInstruction::Ret : {
+                TemporaryVariable* ret;
+                if (operandNum == 0) {
+                    ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
+                    if (debugOpt) {
+                        ret->print();
+                    }
+                } else if (operandNum == 1) {
+                    auto operand = inst->getOperand(0);
+                    ret = change_Operand_To_TemporaryVariable(operand);
+                    if (debugOpt) {
+                        ret->print();
+                    }
+                }
+
+                int funcLabelOffset = (int)TempVarVector.size() - 1;
+                while(TempVarVector[funcLabelOffset]->getType() != TemporaryVariable::Func) {
+                    --funcLabelOffset;
+                }
                 while (TempVarVector.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
+                    auto backVar = TempVarVector.back();
                     TempVarVector.pop_back();
+                    int i = funcLabelOffset - 1;
+                    while(i >= 0 && TempVarVector[i]->getIrValue() != backVar->getIrValue()) {
+                        --i;
+                    }
+                    if(i >= 0)
+                        backVar->getIrValue()->setTempVar(TempVarVector[i]);
                 }
                 TempVarVector.pop_back();   // 弹出函数标识符
 
+                funcLabelOffset = (int)Stack.size() - 1;
+                while(Stack[funcLabelOffset]->getType() != TemporaryVariable::Func) {
+                    --funcLabelOffset;
+                }
                 while (Stack.back()->getType() != TemporaryVariable::Func) {   // 弹出局部变量和参数，直到遇到函数标识符
+                    auto backVar = Stack.back();
                     Stack.pop_back();
+                    int i = funcLabelOffset - 1;
+                    while(i >= 0 && Stack[i]->getIrValue() != backVar->getIrValue()) {
+                        --i;
+                    }
+                    if(i >= 0)
+                        backVar->getIrValue()->setTempVar(Stack[i]);
                 }
                 Stack.pop_back();   // 弹出函数标识符
 
-                if (operandNum == 0) {
-                    auto ret = new TemporaryVariable(nullptr, TemporaryVariable::Void);
-                    if (debugOpt) {
-                        ret->print();
-                    }
-                    return ret;
-                } else if (operandNum == 1) {
-                    auto operand = inst->getOperand(0);
-                    auto ret = change_Operand_To_TemporaryVariable(operand);
-                    if (debugOpt) {
-                        ret->print();
-                    }
-                    return ret;
-                }
-                break;
+                return ret;
             }
             case IRInstruction::Br : {
                 if (operandNum == 1) {
@@ -156,6 +180,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -168,6 +193,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -180,6 +206,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -192,6 +219,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -204,6 +232,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -216,6 +245,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -228,6 +258,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -240,6 +271,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -252,6 +284,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -264,6 +297,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -276,6 +310,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -288,6 +323,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -300,6 +336,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -312,6 +349,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -326,6 +364,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                                                       tempVar->getElementType(), tempVar->getArraySize()));
                 TempVarVector.push_back(new TemporaryVariable(Stack.size() - 1, TemporaryVariable::Pointer, varType));
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     tempVar->print();
                 break;
@@ -343,6 +382,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType(),
                                                               loadVar->getElementType(), loadVar->getArraySize()));
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     loadVar->print();
                 break;
@@ -400,6 +440,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                                                                       tempVar->getElementType(),
                                                                       tempVar->getArraySize()});
                         inst->setTempVar(TempVarVector.back());
+                        TempVarVector.back()->setIrValue(inst);
                         foundLabel = true;
                         break;
                     }
@@ -435,9 +476,16 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     auto callFunc = dynamic_cast<IRFunction *>(operand0);    // 函数指针
                     ret = interpretFunction(callFunc);
                 }
-                TempVarVector.push_back(new TemporaryVariable{ret->getValue(), ret->getType(),
-                                                              ret->getElementType(), ret->getArraySize()});
+                auto funcRet = new TemporaryVariable{ret->getValue(), ret->getType(),
+                                                    ret->getElementType(), ret->getArraySize()};
+
+                TempVarVector.push_back(funcRet);
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
+                if(debugOpt) {
+                    printf("return Value of Call: ");
+                    ret->print();
+                }
                 break;
             }
 
@@ -448,6 +496,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -460,6 +509,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
                                                               result.getElementType(), result.getArraySize()});
                 inst->setTempVar(TempVarVector.back());
+                TempVarVector.back()->setIrValue(inst);
                 if (debugOpt)
                     result.print();
                 break;
@@ -492,6 +542,7 @@ TemporaryVariable *Interpreter::change_Operand_To_TemporaryVariable(IRValue *irV
             auto newTempVar = new TemporaryVariable(0, TemporaryVariable::Void);
             TempVarVector.push_back(newTempVar);
             irValue->setTempVar(newTempVar);
+            newTempVar->setIrValue(irValue);
         }
         return irValue->getTempVar();
     } else if (valueType == IRValue::ConstantVal) {
