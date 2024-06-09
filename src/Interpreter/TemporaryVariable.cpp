@@ -23,7 +23,9 @@ void TemporaryVariable::setType(TemporaryVariable::tempVarType type) {
 
 TemporaryVariable::TemporaryVariable(std::any value, TemporaryVariable::tempVarType type,
                                      TemporaryVariable::tempVarType elementType, unsigned long arraySize) :
-                                     value(std::move(value)), type(type), elementType(elementType), arraySize(arraySize){}
+                                     value(std::move(value)), type(type), elementType(elementType), arraySize(arraySize){
+    irValue = nullptr;
+}
 
 std::string TemporaryVariable::getTypeString(tempVarType ty) {
     switch (ty) {

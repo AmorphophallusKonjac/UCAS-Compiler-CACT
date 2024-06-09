@@ -128,6 +128,8 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 while (Stack.back()->getType() != TemporaryVariable::Func) {   // 弹出局部变量和参数，直到遇到函数标识符
                     auto backVar = Stack.back();
                     Stack.pop_back();
+                    if(!backVar->getIrValue())
+                        continue;
                     int i = funcLabelOffset - 1;
                     while(i >= 0 && Stack[i]->getIrValue() != backVar->getIrValue()) {
                         --i;
