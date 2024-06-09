@@ -201,6 +201,10 @@ void GlobalSubExpPass::runOnFunction(IRFunction &F) {
     ControlFlowGraph cfg(&F);
     DominatorTree::getDominatorTree(&cfg);
     auto rootBB = F.getEntryBlock();
+    
+    /*多跑几次进行迭代*/
+    childrenSubExp(*rootBB, &cfg);
+    childrenldst(*rootBB, &cfg);
     childrenSubExp(*rootBB, &cfg);
     childrenldst(*rootBB, &cfg);
 

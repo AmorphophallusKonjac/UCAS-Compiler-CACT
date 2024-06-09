@@ -166,7 +166,7 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand1;
     IRValue *operand2;
 
-    LiveVariableInst::print(OS, const_cast<IRInstruction*>(this));
+    //LiveVariableInst::print(OS, const_cast<IRInstruction*>(this));
 
     OS << "    ";
     switch (getOpcode()) {
