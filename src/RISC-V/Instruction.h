@@ -24,7 +24,7 @@ namespace RISCV {
     public:
         virtual void print(std::ostream &O) const = 0;
 
-        enum TermOps {// These terminate basic blocks
+        enum TermOps {
 #define FIRST_TERM_INST(N) TermOpsBegin = N,
 #define HANDLE_TERM_INST(N, OPC, CLASS) OPC = N,
 #define LAST_TERM_INST(N) TermOpsEnd = N + 1,

@@ -9,7 +9,7 @@ namespace RISCV {
     public:
         BranchInst(unsigned iType, BasicBlock *dest, Value *op1, Value *op2 = nullptr, BasicBlock *parent = nullptr);
 
-        void print(std::ostream &O) const override
+        void print(std::ostream &O) const override;
     };
 
 } // RISCV

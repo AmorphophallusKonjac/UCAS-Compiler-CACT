@@ -1,3 +1,59 @@
+#ifndef FIRST_TERM_INST
+#define FIRST_TERM_INST(num)
+#endif
+#ifndef HANDLE_TERM_INST
+#ifndef HANDLE_INST
+#define HANDLE_TERM_INST(num, opcode, Class)
+#else
+#define HANDLE_TERM_INST(num, opcode, Class) HANDLE_INST(num, opcode, Class)
+#endif
+#endif
+#ifndef LAST_TERM_INST
+#define LAST_TERM_INST(num)
+#endif
+
+#ifndef FIRST_BINARY_INST
+#define FIRST_BINARY_INST(num)
+#endif
+#ifndef HANDLE_BINARY_INST
+#ifndef HANDLE_INST
+#define HANDLE_BINARY_INST(num, opcode, instclass)
+#else
+#define HANDLE_BINARY_INST(num, opcode, Class) HANDLE_INST(num, opcode, Class)
+#endif
+#endif
+#ifndef LAST_BINARY_INST
+#define LAST_BINARY_INST(num)
+#endif
+
+#ifndef FIRST_MEMORY_INST
+#define FIRST_MEMORY_INST(num)
+#endif
+#ifndef HANDLE_MEMORY_INST
+#ifndef HANDLE_INST
+#define HANDLE_MEMORY_INST(num, opcode, Class)
+#else
+#define HANDLE_MEMORY_INST(num, opcode, Class) HANDLE_INST(num, opcode, Class)
+#endif
+#endif
+#ifndef LAST_MEMORY_INST
+#define LAST_MEMORY_INST(num)
+#endif
+
+#ifndef FIRST_OTHER_INST
+#define FIRST_OTHER_INST(num)
+#endif
+#ifndef HANDLE_OTHER_INST
+#ifndef HANDLE_INST
+#define HANDLE_OTHER_INST(num, opcode, Class)
+#else
+#define HANDLE_OTHER_INST(num, opcode, Class) HANDLE_INST(num, opcode, Class)
+#endif
+#endif
+#ifndef LAST_OTHER_INST
+#define LAST_OTHER_INST(num)
+#endif
+
 FIRST_TERM_INST(1)
 HANDLE_TERM_INST(1, Ret, ReturnInst)
 HANDLE_TERM_INST(2, J, JumpInst)
@@ -55,3 +111,7 @@ LAST_OTHER_INST(17)
 #undef FIRST_OTHER_INST
 #undef HANDLE_OTHER_INST
 #undef LAST_OTHER_INST
+
+#ifdef HANDLE_INST
+#undef HANDLE_INST
+#endif
