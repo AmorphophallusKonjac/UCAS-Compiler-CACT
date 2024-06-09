@@ -4,6 +4,7 @@
 #include "IR/IRBasicBlock.h"
 #include "IR/iOther.h"
 #include "utils/ErrorHandler.h"
+#include <cstddef>
 #include <cstdlib>
 #include <ostream>
 #include <vector>
@@ -187,7 +188,7 @@ void RegisterFactory::check(IRFunction& F){
                     else if(ir->getValueType() == IRValue::ArgumentVal)
                         Livereg = dynamic_cast<IRArgument*>(ir)->getReg();
 
-                    if(Livereg == instreg && ir != inst){
+                    if((Livereg == instreg && ir != inst) || Livereg == nullptr || instreg == nullptr){
                         ErrorHandler::printErrorMessage("Register check fail at Function:" + F.getName() + " BasicBlock:" + BB->getName() + " Instruction:" +
                                                             inst->getName() + ", " +
                                                             "conflict Register is " + Livereg->getRegName() + " between " +
@@ -205,7 +206,7 @@ void RegisterFactory::check(IRFunction& F){
                         Livereg = dynamic_cast<IRArgument*>(ir)->getReg();
                     
                     /*这里如果是move的use，可以冲突*/
-                    if(Livereg == instreg && ir != inst->getOperand(1) && ir != inst->getOperand(0)){
+                    if((Livereg == instreg && ir != inst->getOperand(1) && ir != inst->getOperand(0)) || Livereg == nullptr || instreg == nullptr){
                         ErrorHandler::printErrorMessage("Register check fail at Function:" + F.getName() + " BasicBlock:" + BB->getName() + " Instruction:" + 
                                                             inst->getOperand(0)->getName() + ", " +
                                                             "conflict Register is " + Livereg->getRegName() + " between " +
