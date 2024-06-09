@@ -262,6 +262,8 @@ public:
     }
 
     static void print(std::ostream& OS,  IRFunction& F);
+
+    static void check(IRFunction& F);
 };
 
 #endif //COMPILER_REGISTER_H

@@ -3,6 +3,8 @@
 #include "IR/IRFunction.h"
 #include "IR/IRBasicBlock.h"
 #include "IR/iOther.h"
+#include "utils/ErrorHandler.h"
+#include <cstdlib>
 #include <ostream>
 #include <vector>
 #include <algorithm>
@@ -162,6 +164,57 @@ void RegisterFactory::print(std::ostream& OS, IRFunction& F){
             }
         }
         OS << std::endl;
+    }
+}
+
+void RegisterFactory::check(IRFunction& F){
+    Register* Livereg;
+    Register* instreg;
+
+    for(auto BB: F.getBasicBlockList()){
+        for(auto inst: BB->getInstList()){
+            if((inst->isBinaryOp() ||
+                inst->getOpcode() == IRInstruction::Call ||
+                inst->getOpcode() == IRInstruction::Load ||
+                inst->getOpcode() == IRInstruction::Shl ||
+                inst->getOpcode() == IRInstruction::Shr)){
+                instreg = inst->getReg();
+
+                /*针对每一条指令，比较其与OUTLive的冲突*/
+                for(auto ir: *inst->getLive()->getOUTLive()){
+                    if(ir->getValueType() == IRValue::InstructionVal)
+                        Livereg = dynamic_cast<IRInstruction*>(ir)->getReg();
+                    else if(ir->getValueType() == IRValue::ArgumentVal)
+                        Livereg = dynamic_cast<IRArgument*>(ir)->getReg();
+
+                    if(Livereg == instreg && ir != inst){
+                        ErrorHandler::printErrorMessage("Register check fail at Function:" + F.getName() + " BasicBlock:" + BB->getName() + " Instruction:" +
+                                                            inst->getName() + ", " +
+                                                            "conflict Register is " + Livereg->getRegName() + " between " +
+                                                            inst->getName() + " and " + ir->getName());
+                        exit(1);
+                    }
+                }
+            }else if( inst->getOpcode() == IRInstruction::Move){
+                instreg = dynamic_cast<IRInstruction*>(inst->getOperand(0))->getReg();
+
+                for(auto ir: *inst->getLive()->getOUTLive()){
+                    if(ir->getValueType() == IRValue::InstructionVal)
+                        Livereg = dynamic_cast<IRInstruction*>(ir)->getReg();
+                    else if(ir->getValueType() == IRValue::ArgumentVal)
+                        Livereg = dynamic_cast<IRArgument*>(ir)->getReg();
+                    
+                    /*这里如果是move的use，可以冲突*/
+                    if(Livereg == instreg && ir != inst->getOperand(1) && ir != inst->getOperand(0)){
+                        ErrorHandler::printErrorMessage("Register check fail at Function:" + F.getName() + " BasicBlock:" + BB->getName() + " Instruction:" + 
+                                                            inst->getOperand(0)->getName() + ", " +
+                                                            "conflict Register is " + Livereg->getRegName() + " between " +
+                                                            inst->getOperand(0)->getName() + " and " + ir->getName());
+                        exit(1);
+                    }
+                }
+            }
+        }
     }
 }
 
