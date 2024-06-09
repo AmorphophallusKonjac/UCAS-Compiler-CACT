@@ -5,13 +5,21 @@
 #include <any>
 #include <map>
 
+#include "IR/IRType.h"
 #include "IRDerivedTypes.h"
 #include "IRUser.h"
 
 /******这里是一系列IRConstant的子类，如果往里面传入一个val值，那么可以直接获得一个IRConstant子类的静态对象******/
 class IRConstant : public IRUser {
+public:
+    enum constType{
+        normal = 0,
+        init,
+    };
+
 protected:
     inline explicit IRConstant(IRType *Ty) : IRUser(Ty, IRValue::ConstantVal) {}
+    constType constTy = normal;
 
 public:
     static IRConstant *getNullValue(const IRType *Ty);
@@ -21,6 +29,7 @@ public:
     void printPrefixName(std::ostream &OS) const override;
     bool jugdeZero(IRConstant* irconst) const;
     void zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const;
+    constType getConstTy() { return constTy; };
 
     static inline bool classof(IRConstant *) {return true;}
 
@@ -110,6 +119,42 @@ public:
     static IRConstantDouble *get(double V);
     /******返回val******/
     inline double getRawValue() const { return Val; }
+};
+
+class IRConstantinitializer : public IRConstant {
+private:
+    IRConstant* initconst;
+
+    /*记录init size的大小*/
+    unsigned initsize;
+
+protected:
+
+public:
+    /******构造******/
+    explicit IRConstantinitializer(unsigned size, IRConstant* val) : initsize(size), IRConstant(val->getType()) { 
+        /*switch (val->getType()->getPrimitiveID()) {
+            case IRType::IntTyID:
+                initconst = IRConstantInt::get(dynamic_cast<IRConstantInt*>(val)->getRawValue());
+                break;
+            case IRType::FloatTyID:
+                initconst = IRConstantInt::get(dynamic_cast<IRConstantFloat*>(val)->getRawValue());
+                break;
+            case IRType::DoubleTyID:
+                initconst = IRConstantInt::get(dynamic_cast<IRConstantDouble*>(val)->getRawValue());
+                break;
+            case IRType::BoolTyID:
+                initconst = IRConstantInt::get(dynamic_cast<IRConstantBool*>(val)->getRawValue());
+                break;
+        }*/
+        initconst = val;
+        constTy=init; 
+    };
+
+    inline unsigned getInitSize() const { return initsize; };
+
+    /******返回内部的IRConstant******/
+    inline IRConstant* getInitconst() const { return initconst; };
 };
 
 class IRConstantArray : public IRConstant {
