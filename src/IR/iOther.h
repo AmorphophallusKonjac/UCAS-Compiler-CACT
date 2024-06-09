@@ -99,4 +99,15 @@ public:
 };
 
 
+class IRRegValue : public IRInstruction {
+public:
+    explicit IRRegValue(IRType *ty, const std::string &name = "")
+            : IRInstruction(ty, Reg, name) {
+
+    }
+
+    IRInstruction *clone() const override { return new IRRegValue(getType()); }
+};
+
+
 #endif//COMPILER_IOTHER_H

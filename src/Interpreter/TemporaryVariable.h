@@ -37,6 +37,12 @@ private:
 
     unsigned long  arraySize;
 
+    IRValue* irValue;
+public:
+    IRValue *getIrValue() const;
+
+    void setIrValue(IRValue *irValue);
+
 public:
 
     TemporaryVariable(std::any value, tempVarType type, tempVarType elementType = Void, unsigned long arraySize = 0);
@@ -140,7 +146,7 @@ public:
 
     TemporaryVariable operator % (const TemporaryVariable& other) {
         if(type == Int && other.type == Int){
-            return {std::any_cast<int>(value) / std::any_cast<int>(other.value), Int};
+            return {std::any_cast<int>(value) % std::any_cast<int>(other.value), Int};
         }
         else{
             printf("Undefined Temporary Variable Operation: ");

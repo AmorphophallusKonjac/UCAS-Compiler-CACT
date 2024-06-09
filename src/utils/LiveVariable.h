@@ -39,6 +39,8 @@ public:
     ~LiveVariableBB() = default;
 
     static void genLiveVariableBB(IRFunction *F);
+
+    static void print(std::ostream& OS, IRBasicBlock* BB);
 };
 
 class LiveVariableInst : public LiveVariable {
@@ -51,6 +53,8 @@ public:
     ~LiveVariableInst() = default;
     
     static void genLiveVariableInst(IRBasicBlock *BB);
+
+    static void print(std::ostream& OS, IRInstruction* inst);
 };
 
 

@@ -1,5 +1,6 @@
 #include "FrontEnd.h"
 #include <filesystem>
+#include "utils/ControlFlowGraph.h"
 
 FrontEnd::FrontEnd(std::ifstream *stream, IRModule *ir)
         : input(*stream), lexer(&input), tokens(&lexer), parser(&tokens), ir(ir), root(parser.compilationUnit()),
@@ -24,6 +25,12 @@ void FrontEnd::analyze() {
 
     //! 进行第二遍 visit, 添加各个指令
     generator.generate();
+
+    //! 在流图上检查是否所有的路径都 return 了
+    for (auto func: ir->getFuncList()) {
+        if (func->getFuntTy() == IRFunction::Declared)
+            ControlFlowGraph cfg(func);
+    }
 }
 
 void FrontEnd::print() {

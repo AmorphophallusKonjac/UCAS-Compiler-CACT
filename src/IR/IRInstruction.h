@@ -6,14 +6,24 @@
 #include "IRUser.h"
 #include "IRBasicBlock.h"
 #include "utils/LiveVariable.h"
+#include "utils/RegisterNode.h"
+#include "utils/Register.h"
 
 class LiveVariableInst;
+
+class IRUser;
+
+class RegisterNode;
+
+class Register;
 
 class IRInstruction : public IRUser {
 private:
     IRBasicBlock *Parent;
 
     LiveVariableInst *Live;
+    RegisterNode* regNode = nullptr;
+    Register* reg;
 
 protected:
 
@@ -86,6 +96,16 @@ public:
     void print(std::ostream &OS) const override;
 
     LiveVariableInst *getLive() { return Live; }
+
+    RegisterNode* getRegNode(){ return regNode; };
+
+    void setRegNode(){ if( regNode == nullptr ) regNode = new RegisterNode(this->getName(), this); };
+
+    void setReg(Register* reg){
+        this->reg = reg;
+    };
+
+    Register* getReg(){ return reg; };
 
     static inline bool classof(const IRInstruction *I) { return true; }
 

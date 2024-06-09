@@ -78,7 +78,7 @@ public:
                 }
                 break;
             case INT:
-                irconst = IRConstantInt::get(stoi(valueStr)); 
+                irconst = IRConstantInt::get(stoi(valueStr, nullptr, 0));
                 break;
             case FLOAT:
                 irconst = IRConstantFloat::get(stof(valueStr)); 
@@ -308,10 +308,7 @@ public:
     std::string curSymbol = "$";
     int stackSymbol_size = 0;
 
-    ~SymbolTable() {
-        for (auto it = symbolList.begin(); it != symbolList.end(); ++it) { delete it->second; }
-        symbolList.clear();
-    };
+    ~SymbolTable() = default;
 };
 
 class BlockTable {
@@ -334,14 +331,11 @@ protected:
 
     SymbolTable symbolTable;
     BlockTable blockTable;
-    bool returnsign = false;//认定这个块是否满足returnpath都能满足
     //FuncTable funcTable;
     //这里我认为对于一个块而言只需要考虑他的符号表和他的subblock，函数表,对于函数表我的想法是可以做一个全局的，
 
 public:
     BlockInfo *getParentBlock() { return parentBlock; }
-    bool getReturnSign() { return returnsign; };
-    void setReturnSign(bool returnSign) { returnsign = returnSign; }
 
     SymbolInfo *lookUpSymbol(std::string symbolName);
 

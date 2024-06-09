@@ -406,7 +406,7 @@ std::any SemanticAnalyzer::visitConstantDeclaration(
 std::any SemanticAnalyzer::visitConstantDefinition(CACTParser::ConstantDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
     for (auto size: context->IntegerConstant()) {
-        context->arraySize.push_back(stoi(size->getText()));
+        context->arraySize.push_back(stoi(size->getText(), nullptr, 0));
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
@@ -554,7 +554,7 @@ std::any SemanticAnalyzer::visitVariableDeclaration(
 std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitionContext *context) {
     size_t line = context->Identifier()->getSymbol()->getLine();
     for (auto size: context->IntegerConstant()) {
-        context->arraySize.push_back(stoi(size->getText()));
+        context->arraySize.push_back(stoi(size->getText(), nullptr, 0));
     }
     size_t dimension = context->arraySize.size();
     std::string name = context->Identifier()->getText();
@@ -659,20 +659,6 @@ std::any SemanticAnalyzer::visitCompoundStatement(CACTParser::CompoundStatementC
 std::any SemanticAnalyzer::visitBlockItemList(CACTParser::BlockItemListContext *context) {
     for (auto blockitem: context->blockItem()) {
         this->visit(blockitem);
-
-        if (blockitem->statement() != nullptr) {
-            if (blockitem->statement()->selectionStatement() != nullptr) {
-                currentBlock->setReturnSign(
-                        (blockitem->statement()->selectionStatement()->thisblockinfo->getReturnSign() &&
-                         blockitem->statement()->selectionStatement()->ifelseType) ||
-                        currentBlock->getReturnSign());
-            }
-        }
-        /*这里因为blockitemlist始终是只为compoundstatement服务的，因此这里的的作用是每次遇到一条blockitem就对当前块，
-      也就是compoundstatement对应的块进行returnsign的操作，在compoundstatement的视角中，相当于是顺序的一条路径，
-      在这条路径上只要存在一个地方有return(直接的return，或者if-else满足returnpath)那么他就算是满足returnpath*/
-        /*这里还要去考虑ifelse有没有，之前在selection你那个地方只用一层就能挖出来，这里要多挖几层*/
-        // context->lastblockitem = blockitem;
     }
     return {};
 }
@@ -778,28 +764,11 @@ std::any SemanticAnalyzer::visitSelectionStatement(CACTParser::SelectionStatemen
     currentBlock = context->thisblockinfo;  // 更新currentBlock
     this->visit(context->condition());
 
-    bool returnFlag = true;  // 计数，必须保证下面的每个statement都能有返回
     for (auto statement: context->statement()) {
         this->visit(statement);
-        if (statement->compoundStatement() != nullptr) {
-            currentBlock->setReturnSign(
-                    statement->compoundStatement()->thisblockinfo->getReturnSign());
-            // 考虑下面的compound是否满足returnpath
-        } else if (statement->selectionStatement() != nullptr) {
-            currentBlock->setReturnSign(
-                    statement->selectionStatement()->ifelseType &&
-                    statement->selectionStatement()->thisblockinfo->getReturnSign());
-            // 考虑下面既要是if-else Type，同时还得满足returnpath
-        } else { ;
-        }
-
-        returnFlag = returnFlag && currentBlock->getReturnSign();
-        currentBlock->setReturnSign(false);  // 把这个块的returnsign给清空，为下一次循环做准备
     }
 
-    currentBlock->setReturnSign(returnFlag);
     currentBlock = context->thisblockinfo->getParentBlock();  // currentBlock回溯
-    // return visitChildren(context);
     return {};
 }
 
@@ -836,7 +805,6 @@ std::any SemanticAnalyzer::visitJumpStatement(CACTParser::JumpStatementContext *
             }
         }
 
-        currentBlock->setReturnSign(true);  // 当前块returnpath检查没有问题
     } else {
     }
     return {};
@@ -937,15 +905,6 @@ std::any SemanticAnalyzer::visitFunctionDefinition(CACTParser::FunctionDefinitio
     this->visit(context->compoundStatement());  // 进入函数体
     context->thisblockinfo =
             context->compoundStatement()->thisblockinfo;  // 接收compoundstatement创建的新的blockinfo
-    if (context->thisblockinfo->getReturnSign() == false &&
-        currentFunc->getDataType() != DataType::VOID) {//保证不是void类型，void可以不返回
-        ErrorHandler::printErrorContext(
-                context,
-                "not all path for return");  // 每个函数退出的时候检查是否可以满足所有路径都有返回
-        throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" +
-                                 std::to_string(__LINE__));
-    }
-    // irGen->enterFunc(ctx->Ident()->getText());
     return {nullptr};
 }
 
@@ -1008,13 +967,13 @@ std::any SemanticAnalyzer::visitFunctionFParam(CACTParser::FunctionFParamContext
 
         if (valid_size == dimension) {
             for (auto integetconstant: context->IntegerConstant()) {
-                param_array.push_back(stoi(integetconstant->getText()));
+                param_array.push_back(stoi(integetconstant->getText(), nullptr, 0));
             }
         } else if (valid_size == (dimension - 1)) {
             /******如果第一维是空的话那么给0******/
             param_array.push_back(0);
             for (auto integetconstant: context->IntegerConstant()) {
-                param_array.push_back(stoi(integetconstant->getText()));
+                param_array.push_back(stoi(integetconstant->getText(), nullptr, 0));
             }
         } else {
             ErrorHandler::printErrorContext(context, "array dimension error");

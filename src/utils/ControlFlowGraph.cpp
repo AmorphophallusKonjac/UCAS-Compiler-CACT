@@ -8,15 +8,20 @@ ControlFlowGraph::ControlFlowGraph(IRFunction *F) {
     auto &BBList = F->getBasicBlockList();
 
     std::vector<IRBasicBlock *> bin;
-    for (auto BB: BBList) {
-        if (BB == F->getEntryBlock())
-            continue;
-        auto &instList = BB->getInstList();
-        if (BB->getUses().empty()) {
-            for (auto inst: instList)
-                inst->dropAllReferences();
-            instList.clear();
-            bin.push_back(BB);
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for (auto BB: BBList) {
+            if (BB == F->getEntryBlock())
+                continue;
+            auto &instList = BB->getInstList();
+            if (BB->getUses().empty() && std::find(bin.begin(), bin.end(), BB) == bin.end()) {
+                for (auto inst: instList)
+                    inst->dropAllReferences();
+                instList.clear();
+                bin.push_back(BB);
+                changed = true;
+            }
         }
     }
 
@@ -32,8 +37,18 @@ ControlFlowGraph::ControlFlowGraph(IRFunction *F) {
 
     for (auto BB: BBList) {
         auto terminator = BB->getTerminator();
+        if (terminator == nullptr) {
+            std::cerr << "Function " << F->getName() << " not full path return." << std::endl;
+            throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" +
+                                     std::to_string(__LINE__));
+        }
         auto v = vertexMap[BB];
         for (unsigned idx = 0, E = terminator->getNumSuccessors(); idx < E; ++idx) {
+            if (std::find(BBList.begin(), BBList.end(), terminator->getSuccessor(idx)) == BBList.end()) {
+                std::cerr << "Function " << F->getName() << " not full path return." << std::endl;
+                throw std::runtime_error("Semantic analysis failed at " + std::string(__FILE__) + ":" +
+                                         std::to_string(__LINE__));
+            }
             v->addSuccessor(vertexMap[terminator->getSuccessor(idx)]);
         }
     }

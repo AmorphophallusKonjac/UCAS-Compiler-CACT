@@ -1,4 +1,5 @@
 #include "LiveVariable.h"
+#include "RegisterNode.h"
 #include "IR/IRBasicBlock.h"
 #include "IR/IRConstant.h"
 #include "IR/IRGlobalVariable.h"
@@ -8,13 +9,49 @@
 #include "IR/iTerminators.h"
 #include "IR/iOther.h"
 #include <algorithm>
+#include <ostream>
 #include <vector>
+#include <iomanip>
 
 void LiveVariable::genLiveVariable(IRFunction *F) {
     
     /*先生成数据流的活跃变量，然后是块内的活跃变量*/
     LiveVariableBB::genLiveVariableBB(F);
 };
+
+void LiveVariableInst::print(std::ostream& OS, IRInstruction* inst){
+    std::string INLiveString;
+    std::string OUTLiveString;
+    
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(inst)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
+
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRInstruction *>(inst)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
+
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+}
+
+void LiveVariableBB::print(std::ostream& OS, IRBasicBlock* BB){
+    std::string INLiveString;
+    std::string OUTLiveString;
+
+    INLiveString = "INLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(BB)->getLive()->getINLive())
+        INLiveString = INLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(200) << std::setfill(' ') << INLiveString;
+
+    OUTLiveString +=  "     OUTLive: ";
+    for(auto irval: *const_cast<IRBasicBlock *>(BB)->getLive()->getOUTLive())
+        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
+    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
+
+    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+}
 
 void LiveVariableBB::genLiveVariableBB(IRFunction *F) {
     /*IN[BB]=O*/
@@ -74,8 +111,6 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             if(!dynamic_cast<IRConstant*>(inst->getOperand(1)))
                 usevec.push_back(inst->getOperand(1));
             defvec.push_back(inst);
-        }else if(inst->getOpcode() == IRInstruction::Alloca){
-            defvec.push_back(inst);
         }else if(inst->getOpcode() == IRInstruction::Call){
             defvec.push_back(inst);
             for(unsigned i=1; i<inst->getNumOperands(); i++){
@@ -84,7 +119,7 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             }
         }else if(inst->getOpcode() == IRInstruction::Load){
             if(inst->getOperand(0)->getValueType() == IRValue::InstructionVal){
-                if(!(dynamic_cast<IRInstruction*>(inst->getOperand(0))->getOpcode() == IRInstruction::Alloca))
+                if(dynamic_cast<IRInstruction *>(inst->getOperand(0))->getOpcode() != IRInstruction::Alloca)
                     usevec.push_back(inst->getOperand(0));
             }
             defvec.push_back(inst);
@@ -92,13 +127,12 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
                  inst->getOpcode() == IRInstruction::Shr ){
             usevec.push_back(inst->getOperand(0));
             defvec.push_back(inst);
-        }else if(inst->getOpcode() == IRInstruction::Store ||
-                 inst->getOpcode() == IRInstruction::Memcpy){
+        }else if(inst->getOpcode() == IRInstruction::Store){
             if(!dynamic_cast<IRConstant*>(inst->getOperand(0)))
                 usevec.push_back(inst->getOperand(0));
             
             if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal){
-                if(!(dynamic_cast<IRInstruction*>(inst->getOperand(1))->getOpcode() == IRInstruction::Alloca))
+                if(dynamic_cast<IRInstruction *>(inst->getOperand(1))->getOpcode() != IRInstruction::Alloca)
                     usevec.push_back(inst->getOperand(1));
             }
         }else if(inst->getOpcode() == IRInstruction::PHI){
@@ -115,9 +149,11 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
             if(inst->getNumOperands() != 0 && !dynamic_cast<IRConstant*>(inst->getOperand(0)))
                 usevec.push_back(dynamic_cast<IRReturnInst*>(inst)->getOperand(0));
         }else if(inst->getOpcode() == IRInstruction::Move){
+            /*源操作数与目的操作数均与这条move指令相关*/
             defvec.push_back(inst->getOperand(0));
-            if(!dynamic_cast<IRConstant*>(inst->getOperand(1)))
+            if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
                 usevec.push_back(dynamic_cast<IRMoveInst*>(inst)->getOperand(1));
+            }
         }
 
         /*OUT[i-1]*/

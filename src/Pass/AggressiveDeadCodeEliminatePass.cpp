@@ -134,6 +134,7 @@ bool AggressiveDeadCodeEliminatePass::isNaturalActiveInst(IRInstruction *inst) {
         case IRInstruction::Call:
         case IRInstruction::Store:
         case IRInstruction::Ret:
+        case IRInstruction::Memcpy:
             return true;
     }
     return false;

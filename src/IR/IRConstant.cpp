@@ -1,9 +1,12 @@
 #include "IRConstant.h"
 
+#include <cstdio>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
+
+#define initThreshold 10000
 
 IRConstantBool::IRConstantBool(bool V) : IRConstant(IRType::BoolTy) {
     Val = V;
@@ -34,17 +37,6 @@ bool IRConstant::jugdeZero(IRConstant* irconst) const {
     }
 }
 
-void IRConstant::zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const {
-    if(zeroArray.size() >= 10)
-        OS << "zeroinitializer(" << zeroArray.size() << "), ";
-    else if(!zeroArray.empty()){
-        for (auto zeroconst : zeroArray) {
-            zeroconst->print(OS);
-            OS << ", ";
-        }
-    }
-}
-
 void IRConstant::printPrefixName(std::ostream &OS) const {
     /******根据IRConstant中的type类型来打印出它的value值******/
     switch (this->getType()->getPrimitiveID()) {
@@ -62,23 +54,10 @@ void IRConstant::printPrefixName(std::ostream &OS) const {
             break;
         case IRType::ArrayTyID:
             OS << "[";
-            std::vector<IRConstant*> zeroArray;
             for(auto iruse: dynamic_cast<const IRConstantArray *>(this)->getValues()){
-                /***遇到0先压进vector不处理***/
-                if(jugdeZero(dynamic_cast<IRConstant*>(iruse.get()))){
-                    zeroArray.push_back(dynamic_cast<IRConstant*>(iruse.get()));
-                }
-                /***没有0了则进行处理***/
-                else{
-                    zeroProcess(zeroArray,OS);
-                    zeroArray.clear();//清空vector
-
-                    dynamic_cast<IRConstant*>(iruse.get())->print(OS);
-                    OS << ", ";
-                }
+                dynamic_cast<IRConstant*>(iruse.get())->print(OS);
+                OS << ", ";
             }
-            zeroProcess(zeroArray,OS);
-            zeroArray.clear();//清空vector
 
             // 回退2个字符
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
@@ -87,11 +66,16 @@ void IRConstant::printPrefixName(std::ostream &OS) const {
 }
 
 void IRConstant::print(std::ostream &OS) const {
-    static int print_cnt = 0;
-    this->getType()->print(OS);
-    this->printPrefixName(OS);
-    print_cnt++;
-    //OS << print_cnt << std::endl;
+    switch (constTy) {
+        case normal:
+            this->getType()->print(OS);
+            this->printPrefixName(OS);
+            break;
+        case init:
+            dynamic_cast<const IRConstantinitializer*>(this)->getInitconst()->getType()->print(OS);
+            dynamic_cast<const IRConstantinitializer*>(this)->getInitconst()->printPrefixName(OS);
+            OS << "(initialize size: " << dynamic_cast<const IRConstantinitializer*>(this)->getInitSize() << ")";
+    }
 }
 
 IRConstant *IRConstant::getNullValue(const IRType *Ty) {
@@ -168,7 +152,26 @@ IRConstantDouble *IRConstantDouble::get(double V) {
 IRConstantArray::IRConstantArray(IRArrayType *ty, const std::vector<IRConstant *> &V)
     : IRConstant(dynamic_cast<IRType *>(ty)) {
     arrayTy = ty;
-    for (auto val: V) {
-        Operands.emplace_back(val, this);
+    if(V.size() > initThreshold){
+        /*从末尾开始数，看连续的const有多少个*/
+        auto constNum = V.back();
+        unsigned initsize = 0;
+        for (auto Vit = V.rbegin(); Vit != V.rend(); ++Vit) {
+            if(*Vit != constNum)
+                break;
+            initsize++;
+        }
+
+        /*从头开始向operands中间压值，最后一个压initializer*/
+        for(unsigned i=0; i<V.size()-initsize; i++){
+            Operands.emplace_back(V[i], this);
+        }
+        auto irinit = new IRConstantinitializer(initsize, constNum);
+        Operands.emplace_back(irinit,this);
+
+    }else{
+        for (auto val: V) {
+            Operands.emplace_back(val, this);
+        }
     }
 }

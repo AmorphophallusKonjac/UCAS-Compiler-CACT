@@ -46,20 +46,7 @@ void IRBasicBlock::printPrefixName(std::ostream &OS) const {
 
 void IRBasicBlock::print(std::ostream &OS) const {
 
-    std::string INLiveString;
-    std::string OUTLiveString;
-
-    INLiveString = "INLive: ";
-    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getINLive())
-        INLiveString = INLiveString + "%" + irval->getName() + ", ";
-    OS << std::setw(200) << std::setfill(' ') << INLiveString;
-
-    OUTLiveString +=  "     OUTLive: ";
-    for(auto irval: *const_cast<IRBasicBlock *>(this)->getLive()->getOUTLive())
-        OUTLiveString = OUTLiveString + "%" + irval->getName() + ", ";
-    OS << std::setw(100) << std::setfill(' ') << OUTLiveString;
-
-    OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 300));
+    LiveVariableBB::print(OS, const_cast<IRBasicBlock*>(this));
 
     //打印每条指令
     this->printPrefixName(OS);

@@ -14,6 +14,7 @@
 #include "Pass/RegisterPass.h"
 #include "Pass/AggressiveDeadCodeEliminatePass.h"
 #include "Pass/PHIdeletePass.h"
+#include "Pass/A0MovePass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -41,11 +42,15 @@ void Optimizer::build() {
 
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new RenamePass("RenamePass"));
+    addPass(new A0MovePass("A0MovePass"));
+
+    //addPass(new RenamePass("RenamePass"));
 
     addPass(new PHIdeletePass("PHIdeletePass"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
+
+    addPass(new RenamePass("RenamePass"));
 
     addPass(new RegisterPass("RegisterPass"));
 }

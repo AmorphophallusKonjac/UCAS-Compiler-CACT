@@ -310,7 +310,7 @@ std::any IRGenerator::visitVariableDefinition(CACTParser::VariableDefinitionCont
                      dynamic_cast<IRConstant *>(dynamic_cast<VarArraySymbolInfo *>(symbol)->getirInitailizer()),
                      "__" + symbol->getName() + std::to_string(currentIRFunc->getCount()) + "_" + "global" + "_" +
                      currentFunc->getName(), ir);
-            new IRMemcpyInst(srcGlobalVar, dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(),
+            new IRMemcpyInst(dynamic_cast<VarArraySymbolInfo *>(symbol)->getIRValue(), srcGlobalVar, 
                              currentIRBasicBlock);
         }
     }
@@ -443,6 +443,7 @@ std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementCont
 
     context->preheader = new IRBasicBlock();
     context->nextBlock = new IRBasicBlock();
+    context->latch = new IRBasicBlock();
     context->condition()->trueBlock = context->preheader;
     context->condition()->falseBlock = context->nextBlock;
     visit(context->condition());
@@ -456,8 +457,11 @@ std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementCont
     new IRBranchInst(context->bodyBlock, nullptr, nullptr, context->preheader);
     currentIRBasicBlock = context->bodyBlock;
     visit(context->statement());
-    context->latch = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+//    context->latch = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
+    context->latch->setParent(currentIRFunc);
+    context->latch->setName(std::to_string(currentIRFunc->getCount()));
     currentIRFunc->addCount();
+    currentIRFunc->addBasicBlock(context->latch);
     new IRBranchInst(context->latch, nullptr, nullptr, currentIRBasicBlock);
 
     context->condition()->trueBlock = context->bodyBlock;
@@ -470,32 +474,6 @@ std::any IRGenerator::visitIterationStatement(CACTParser::IterationStatementCont
     currentIRFunc->addCount();
     currentIRFunc->addBasicBlock(context->nextBlock);
     currentIRBasicBlock = context->nextBlock;
-
-//    context->bodyBlock = new IRBasicBlock();
-//    context->nextBlock = new IRBasicBlock();
-//
-//    context->beginBlock = new IRBasicBlock(std::to_string(currentIRFunc->getCount()), currentIRFunc);
-//    currentIRFunc->addCount();
-//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
-//    currentIRBasicBlock = context->beginBlock;
-//
-//    context->condition()->trueBlock = context->bodyBlock;
-//    context->condition()->falseBlock = context->nextBlock;
-//    visit(context->condition());
-//
-//    context->bodyBlock->setParent(currentIRFunc);
-//    context->bodyBlock->setName(std::to_string(currentIRFunc->getCount()));
-//    currentIRFunc->addCount();
-//    currentIRFunc->addBasicBlock(context->bodyBlock);
-//    currentIRBasicBlock = context->bodyBlock;
-//    visit(context->statement());
-//    new IRBranchInst(context->beginBlock, nullptr, nullptr, currentIRBasicBlock);
-//
-//    context->nextBlock->setParent(currentIRFunc);
-//    context->nextBlock->setName(std::to_string(currentIRFunc->getCount()));
-//    currentIRFunc->addCount();
-//    currentIRFunc->addBasicBlock(context->nextBlock);
-//    currentIRBasicBlock = context->nextBlock;
 
     currentBlock = currentBlock->getParentBlock();
     return {};
@@ -561,7 +539,7 @@ std::any IRGenerator::visitFunctionFParam(CACTParser::FunctionFParamContext *con
 }
 
 std::any IRGenerator::visitIntegerConstant(CACTParser::IntegerConstantContext *context) {
-    return dynamic_cast<IRValue *>(IRConstantInt::get(std::stoi(context->getText())));
+    return dynamic_cast<IRValue *>(IRConstantInt::get(std::stoi(context->getText(), nullptr, 0)));
 }
 
 std::any IRGenerator::visitFloatingConstant(CACTParser::FloatingConstantContext *context) {

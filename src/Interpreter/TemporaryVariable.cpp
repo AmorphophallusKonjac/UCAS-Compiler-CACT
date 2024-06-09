@@ -23,7 +23,9 @@ void TemporaryVariable::setType(TemporaryVariable::tempVarType type) {
 
 TemporaryVariable::TemporaryVariable(std::any value, TemporaryVariable::tempVarType type,
                                      TemporaryVariable::tempVarType elementType, unsigned long arraySize) :
-                                     value(std::move(value)), type(type), elementType(elementType), arraySize(arraySize){}
+                                     value(std::move(value)), type(type), elementType(elementType), arraySize(arraySize){
+    irValue = nullptr;
+}
 
 std::string TemporaryVariable::getTypeString(tempVarType ty) {
     switch (ty) {
@@ -85,7 +87,7 @@ void TemporaryVariable::print() {
 
 unsigned long TemporaryVariable::getTypeSize(TemporaryVariable::tempVarType ty) {
     switch (ty) {
-        case Bool :     return 4;
+        case Bool :     return 1;
         case Int :      return 4;
         case Float :    return 4;
         case Double :   return 8;
@@ -108,5 +110,13 @@ unsigned long TemporaryVariable::getArraySize() const {
 
 void TemporaryVariable::setArraySize(unsigned long  arraySize) {
     TemporaryVariable::arraySize = arraySize;
+}
+
+IRValue *TemporaryVariable::getIrValue() const {
+    return irValue;
+}
+
+void TemporaryVariable::setIrValue(IRValue *irValue) {
+    TemporaryVariable::irValue = irValue;
 }
 
