@@ -15,7 +15,7 @@ class Register;
 class IRArgument : public IRValue {
 private:
     IRFunction *Parent = nullptr;
-    RegisterNode* regNode;
+    RegisterNode* regNode = nullptr;
     Register* reg;
 
 public:
