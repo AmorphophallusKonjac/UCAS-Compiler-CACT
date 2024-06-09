@@ -1,6 +1,8 @@
 #include "RegisterNode.h"
+#include "IR/IRArgument.h"
 #include "IR/IRInstruction.h"
 #include "IR/IRType.h"
+#include "IR/IRValue.h"
 #include "IR/iOther.h"
 #include "utils/DominatorTree.h"
 #include "utils/LiveVariable.h"
@@ -142,7 +144,11 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                 dynamic_cast<IRInstruction*>(inst->getOperand(0))->setRegNode();
 
                 if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
-                    dynamic_cast<IRInstruction*>(inst->getOperand(1))->setRegNode();
+                    /*考虑move指令op可能是arg或者指令*/
+                    if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal)
+                        dynamic_cast<IRInstruction*>(inst->getOperand(1))->setRegNode();
+                    else if(inst->getOperand(1)->getValueType() == IRValue::ArgumentVal)
+                        dynamic_cast<IRArgument*>(inst->getOperand(1))->setRegNode();    
                 }
             }
         }
@@ -171,7 +177,12 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                         if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
                             auto move = new RegisterMove(dynamic_cast<IRMoveInst*>(inst));
                             dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(move);
-                            dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+
+                            /*考虑move指令op可能是arg或者指令*/
+                            if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal)
+                                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                            else if(inst->getOperand(1)->getValueType() == IRValue::ArgumentVal)
+                                dynamic_cast<IRArgument*>(inst->getOperand(1))->getRegNode()->moveList.insert(move); 
                             /*有可能合并的传送指令,必须保证两边都不是常数才算一条传送指令*/
                             RegisterNode::worklistMoves.push_back(move);
                         }
@@ -217,7 +228,12 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                         if(!dynamic_cast<IRConstant*>(inst->getOperand(1))){
                             auto move = new RegisterMove(dynamic_cast<IRMoveInst*>(inst));
                             dynamic_cast<IRInstruction*>(inst->getOperand(0))->getRegNode()->moveList.insert(move);
-                            dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                            
+                            /*考虑move指令op可能是arg或者指令*/
+                            if(inst->getOperand(1)->getValueType() == IRValue::InstructionVal)
+                                dynamic_cast<IRInstruction*>(inst->getOperand(1))->getRegNode()->moveList.insert(move);
+                            else if(inst->getOperand(1)->getValueType() == IRValue::ArgumentVal)
+                                dynamic_cast<IRArgument*>(inst->getOperand(1))->getRegNode()->moveList.insert(move); 
                             /*有可能合并的传送指令,必须保证两边都不是常数才算一条传送指令*/
                             worklistMoves.push_back(move);
                         }
