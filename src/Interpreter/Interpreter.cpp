@@ -589,18 +589,37 @@ TemporaryVariable *Interpreter::change_ConstantVal_to_TemporaryVariable(IRValue 
     if (irValue->getType()->getPrimitiveID() == IRType::ArrayTyID) {
         auto arrayType = dynamic_cast<IRConstantArray *>(irValue);
         auto elementList = arrayType->getValues();
-        auto arraySize = elementList.size();
+        auto arraySize = 0;
         TemporaryVariable::tempVarType elementTy;
         for (const auto &element: elementList) {
             auto val = element.get();
-            auto elementType = getTempVarType(val->getType());
-            elementTy = elementType;
-            auto tempVar = change_ConstantVal_to_TemporaryVariable(val);
-            Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
-                                                  tempVar->getElementType(), tempVar->getArraySize()));
+            auto constValue = dynamic_cast<IRConstant *>(val);
+            if(constValue->getConstTy() == IRConstant::init) {
+                auto initializer = dynamic_cast<IRConstantinitializer *>(constValue);
+                auto initSize = initializer->getInitSize();
+                auto initConst = initializer->getInitconst();
+                arraySize += initSize;
+                for(auto i = 0; i < initSize; ++i){
+                    auto elementType = getTempVarType(val->getType());
+                    elementTy = elementType;
+                    auto tempVar = change_ConstantVal_to_TemporaryVariable(initConst);
+                    Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
+                                                          tempVar->getElementType(), tempVar->getArraySize()));
+                }
+            }
+            else {
+                arraySize += 1;
+                auto elementType = getTempVarType(val->getType());
+                elementTy = elementType;
+                auto tempVar = change_ConstantVal_to_TemporaryVariable(val);
+                Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
+                                                      tempVar->getElementType(), tempVar->getArraySize()));
+            }
         }
         return new TemporaryVariable(Stack.size() - arraySize, TemporaryVariable::Pointer, elementTy, arraySize);
     }
+
+
 
     auto ty = getTempVarType(irValue->getType());
     switch (ty) {
