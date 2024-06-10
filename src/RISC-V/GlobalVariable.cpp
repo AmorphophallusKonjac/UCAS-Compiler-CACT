@@ -41,7 +41,7 @@ namespace RISCV {
         O << "\t.align\t" << align << std::endl;
         O << "\t.type\t" << name << "_obj" << ", @object" << std::endl;
         O << "\t.size\t" << size << std::endl;
-        O << name << "_obj" << ":" << std::endl;
+        O << name << "_obj:" << std::endl;
         printInitVal(O);
         O << std::endl;
     }
@@ -75,34 +75,26 @@ namespace RISCV {
                 O << "\t.byte " << dynamic_cast<IRConstantBool *>(initializer)->getRawValue() << std::endl;
                 break;
             case IRType::ArrayTyID:
-                unsigned zeroCount = 0;
-                bool firstVal = true;
-                auto size = dynamic_cast<IRConstantArray *>(initializer)->getValues()[0].get()->getType()->getPrimitiveSize();
-                for (const auto &irUse: dynamic_cast<IRConstantArray *>(initializer)->getValues()) {
+                auto initVec = dynamic_cast<IRConstantArray *>(initializer)->getValues();
+                auto ty = initVec.front().get()->getType();
+                auto size = ty->getPrimitiveSize();
+                if (dynamic_cast<IRConstantinitializer *>(initVec.front().get()) == nullptr) {
+                    printType(O, ty);
+                }
+                for (const auto &irUse: initVec) {
                     auto val = dynamic_cast<IRConstant *>(irUse.get());
-                    if (val->jugdeZero(val)) {
-                        if (zeroCount == 0 && !firstVal) {
-                            // 回退2个字符
+                    if (dynamic_cast<IRConstantinitializer *>(val) == nullptr) {
+                        printVal(O, val);
+                    } else {
+                        if (irUse != initVec.front()) {
                             O.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(O.tellp()) - 2));
                             O << std::endl;
                         }
-                        ++zeroCount;
-                    } else {
-                        // process zero
-                        if (zeroCount) {
-                            O << "\t.zero " << size * zeroCount << std::endl;
-                            zeroCount = 0;
-                            printType(O, val->getType());
-                        } else if (firstVal) {
-                            printType(O, val->getType());
-                        }
-                        printVal(O, val);
+                        auto zeroInit = dynamic_cast<IRConstantinitializer *>(irUse.get());
+                        O << "\t.zero " << zeroInit->getInitSize() * size << std::endl;
                     }
-                    firstVal = false;
                 }
-                if (zeroCount) {
-                    O << "\t.zero " << size * zeroCount << std::endl;
-                } else {
+                if (dynamic_cast<IRConstantinitializer *>(initVec.back().get()) == nullptr) {
                     O.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(O.tellp()) - 2));
                     O << std::endl;
                 }
