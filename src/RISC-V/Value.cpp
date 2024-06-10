@@ -2,6 +2,7 @@
 #include "IR/IRValue.h"
 #include "BasicBlock.h"
 #include "utils/Register.h"
+#include "Function.h"
 
 namespace RISCV {
     Register *Value::getReg() const {
@@ -12,16 +13,15 @@ namespace RISCV {
         return irValue;
     }
 
-    Value::Value(Register *Reg) : irValue(nullptr), reg(Reg), val(0), BB(nullptr) {
+    Value::Value(Register *Reg) : reg(Reg) {
     }
 
-    Value::Value(IRValue *irV) : irValue(irV), reg(irV->getReg()), val(0), BB(nullptr) {
-
+    Value::Value(IRValue *irV) : irValue(irV), reg(irV->getReg()) {
     }
 
-    Value::Value(int val) : irValue(nullptr), reg(nullptr), val(val), BB(nullptr) {
-
+    Value::Value(int val) : val(val) {
     }
+
 
     int Value::getVal() const {
         return val;
@@ -32,12 +32,24 @@ namespace RISCV {
             O << reg->getRegName();
         } else if (BB) {
             O << BB->getName();
+        } else if (F) {
+            O << F->getName();
         } else {
             O << val;
         }
     }
 
-    Value::Value(BasicBlock *BB) : irValue(nullptr), reg(nullptr), val(0), BB(BB) {
+    Value::Value(BasicBlock *BB) : BB(BB) {
+    }
 
+    Value::Value(Function *F) : F(F) {
+    }
+
+    Pointer::Pointer(int offset) : Value(), offset(offset) {
+
+    }
+
+    void Pointer::print(std::ostream &O) {
+        O << offset << "(sp)";
     }
 } // RISCV

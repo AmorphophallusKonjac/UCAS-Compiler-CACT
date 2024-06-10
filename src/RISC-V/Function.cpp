@@ -47,4 +47,8 @@ namespace RISCV {
     BasicBlock *Function::findBasicBlock(IRBasicBlock *irBasicBlock) {
         return BasicBlockSet[irBasicBlock];
     }
+
+    const std::string &Function::getName() const {
+        return name;
+    }
 } // RISCV

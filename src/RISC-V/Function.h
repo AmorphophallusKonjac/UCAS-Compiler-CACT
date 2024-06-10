@@ -38,6 +38,9 @@ namespace RISCV {
         void generateEntryBlock();
 
         BasicBlock *findBasicBlock(IRBasicBlock *irBasicBlock);
+
+    public:
+        const std::string &getName() const;
     };
 
 } // RISCV

@@ -11,20 +11,27 @@ namespace RISCV {
 
     class BasicBlock;
 
+    class Function;
+
     class Value {
     private:
-        IRValue *irValue;
-        Register *reg;
-        int val;
-        BasicBlock *BB;
+        IRValue *irValue = nullptr;
+        Register *reg = nullptr;
+        int val = 0;
+        BasicBlock *BB = nullptr;
+        Function *F = nullptr;
     public:
+        Value() = default;
+
         explicit Value(IRValue *irV);
 
         explicit Value(Register *Reg);
 
         explicit Value(int val);
 
-        explicit Value(BasicBlock * BB);
+        explicit Value(BasicBlock *BB);
+
+        explicit Value(Function *F);
 
         Register *getReg() const;
 
@@ -32,7 +39,16 @@ namespace RISCV {
 
         int getVal() const;
 
-        void print(std::ostream &O);
+        virtual void print(std::ostream &O);
+    };
+
+    class Pointer : public Value {
+    private:
+        int offset;
+    public:
+        explicit Pointer(int offset);
+
+        void print(std::ostream &O) override;
     };
 
 } // RISCV
