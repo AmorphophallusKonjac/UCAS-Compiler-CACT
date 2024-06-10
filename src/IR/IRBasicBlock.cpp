@@ -46,7 +46,7 @@ void IRBasicBlock::printPrefixName(std::ostream &OS) const {
 
 void IRBasicBlock::print(std::ostream &OS) const {
 
-    LiveVariableBB::print(OS, const_cast<IRBasicBlock*>(this));
+    //LiveVariableBB::print(OS, const_cast<IRBasicBlock*>(this));
 
     //打印每条指令
     this->printPrefixName(OS);

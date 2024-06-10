@@ -2,6 +2,7 @@
 #include "utils/ControlFlowGraph.h"
 #include "utils/ControlFlowGraphVertex.h"
 #include "utils/ReachingDefinition.h"
+#include "IR/iOperators.h"
 
 #include <utility>
 
@@ -43,6 +44,8 @@ std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopIn
                     continue;
                 }
                 if (inst->isBinaryOp()) {
+                    if (IRSetCondInst::classof(inst))
+                        continue;
                     auto op0 = inst->getOperand(0);
                     auto op1 = inst->getOperand(1);
                     if (binaryOperandCondition(op0, &invariantValueSet, loop) &&
@@ -107,11 +110,12 @@ bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::se
          * 所以只需要考虑第一种情况（注意：此条件仅针对 prj3 中的样例成立，是对特定程序的激进优化）
          */
 
-        auto reachingDefinitions = ReachingDefinition::getReachingDefinitions(dynamic_cast<IRGlobalVariable *>(ptr), inst);
+        auto reachingDefinitions = ReachingDefinition::getReachingDefinitions(dynamic_cast<IRGlobalVariable *>(ptr),
+                                                                              inst);
         // 1. 循环中没有到达定值
         auto loopBBList = loop->getBasicBlockList();
         bool hasDefinitionInLoop = false;
-        for (auto stInst : reachingDefinitions) {
+        for (auto stInst: reachingDefinitions) {
             if (std::find(loopBBList.begin(), loopBBList.end(), stInst->getParent()) != loopBBList.end()) {
                 hasDefinitionInLoop = true;
                 break;
@@ -124,7 +128,7 @@ bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::se
         if (reachingDefinitions.size() == 1) {
             auto definition = *reachingDefinitions.begin();
             if (std::find(loopBBList.begin(), loopBBList.end(), definition->getParent()) == loopBBList.end()
-            || Set->find(definition->getOperand(0)) != Set->end()) {
+                || Set->find(definition->getOperand(0)) != Set->end()) {
                 inst->replaceAllUsesWith(definition->getOperand(0));
             }
         }

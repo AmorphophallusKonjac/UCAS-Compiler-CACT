@@ -26,6 +26,7 @@ public:
 private:
     static unsigned regNum;
     static WHICH which;     //记录现在是对通用寄存器进行分配还是浮点寄存器进行分配
+    static IRFunction* curF;//记录现在是在对哪个函数进行寄存器分配
 
     static std::list<RegisterNode*> precolored;       //机器寄存器集合
     static std::list<RegisterNode*> simplifyWorklist; //低度数传送无关结点
@@ -47,7 +48,7 @@ private:
     static std::map<RegisterNode*, RegisterNode*> alias;                    //当一条传送指令被合并，有alias(v)=u
     static std::set<RegisterNode*> initial;          //临时寄存器集合
 
-    static void init(IRFunction& F, WHICH which);
+    static void init();
     static void MakeWorklist();
     static std::vector<RegisterNode*> Adjcent(RegisterNode* node);
     static std::vector<RegisterMove*> NodeMoves(RegisterNode* node);
@@ -68,7 +69,7 @@ private:
     static void SelectSpill();
     static void AssignColors();
     static void RewriteProgram();
-    static void Build(IRFunction &F, WHICH which);
+    static void Build();
     static void AddEdge(RegisterNode* u, RegisterNode* v);
     static Register* getColorReg(int color);
 

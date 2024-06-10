@@ -16,6 +16,7 @@
 
 unsigned RegisterNode::regNum = 0;
 RegisterNode::WHICH RegisterNode::which = RegisterNode::GENERAL;
+IRFunction* RegisterNode::curF = nullptr;
 
 std::list<RegisterNode*> RegisterNode::precolored {};
 std::set<RegisterNode*> RegisterNode::initial {};
@@ -69,8 +70,7 @@ bool RegisterNode::MoveRelated(RegisterNode* node){
     else return false;
 };
 
-void RegisterNode::init(IRFunction& F, WHICH which){
-    RegisterNode::which = which;
+void RegisterNode::init(){
     if(which == GENERAL){ regNum = GPRNUM; }
     else if(which == FLOAT){ regNum = FPRNUM; }
 
@@ -98,7 +98,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
     unsigned argcnt = 0;
     switch(which){
         case GENERAL:
-            for(auto arg: F.getArgumentList()){
+            for(auto arg: curF->getArgumentList()){
                 if(!(arg->getType()->getPrimitiveID() == IRType::FloatTyID ||
                      arg->getType()->getPrimitiveID() == IRType::DoubleTyID)){
                         /*为参数创建regNode结点*/
@@ -115,7 +115,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
                 }
             break;
         case FLOAT:
-            for(auto arg: F.getArgumentList()){
+            for(auto arg: curF->getArgumentList()){
                 if((arg->getType()->getPrimitiveID() == IRType::FloatTyID ||
                     arg->getType()->getPrimitiveID() == IRType::DoubleTyID)){
                         /*为参数创建regNode结点*/
@@ -134,7 +134,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
     }
 
     /*这里是给每条指令都添加一个regNode*/
-    for(auto BB: F.getBasicBlockList()){
+    for(auto BB: curF->getBasicBlockList()){
         for(auto inst: BB->getInstList()){
             if((inst->isBinaryOp() ||
                 inst->getOpcode() == IRInstruction::Call ||
@@ -160,7 +160,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
     std::vector<IRValue*> defvec;
     switch(which){
         case GENERAL:
-            for(auto BB: F.getBasicBlockList()){
+            for(auto BB: curF->getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
                         inst->getOpcode() == IRInstruction::Call ||
@@ -216,7 +216,7 @@ void RegisterNode::init(IRFunction& F, WHICH which){
             }
             break;
         case FLOAT:
-            for(auto BB: F.getBasicBlockList()){
+            for(auto BB: curF->getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
                         inst->getOpcode() == IRInstruction::Call ||
@@ -555,10 +555,24 @@ void RegisterNode::AssignColors(){
         }
 
         /*根据颜色赋予指令reg*/
+        auto colorReg = getColorReg(nnode->color);
         if(nnode->getParentInst() != nullptr)
-            nnode->getParentInst()->setReg(getColorReg(nnode->color));
+            nnode->getParentInst()->setReg(colorReg);
         if(nnode->getParentArg() != nullptr)
-            nnode->getParentArg()->setReg(getColorReg(nnode->color));
+            nnode->getParentArg()->setReg(colorReg);
+        /*相应的函数记录下对应的reg*/
+        switch (colorReg->getRegty()) {
+            case Register::CallerSaved:           
+            case Register::Param:
+            case Register::FloatCallerSaved:
+            case Register::FloatParam:
+                curF->setCallerSavedReg(colorReg);
+                break;
+            case Register::CalleeSaved:      
+            case Register::FloatCalleeSaved:       
+                curF->setCalleeSavedReg(colorReg);
+                break;
+        }
 
         okColors.clear();
     }
@@ -567,10 +581,25 @@ void RegisterNode::AssignColors(){
     /*已经被合并的结点采用与其合并的寄存器结点的颜色*/
     for(auto coalesnode: coalescedNodes) {
         coalesnode->color = GetAlias(coalesnode)->color;
+
+        auto colorReg = getColorReg(coalesnode->color);
         if(coalesnode->getParentInst() != nullptr)
-            coalesnode->getParentInst()->setReg(getColorReg(coalesnode->color));
+            coalesnode->getParentInst()->setReg(colorReg);
         if(coalesnode->getParentArg() != nullptr)
-            coalesnode->getParentArg()->setReg(getColorReg(coalesnode->color));
+            coalesnode->getParentArg()->setReg(colorReg);
+        /*相应的函数记录下对应的reg*/
+        switch (colorReg->getRegty()) {
+            case Register::CallerSaved:           
+            case Register::Param:
+            case Register::FloatCallerSaved:
+            case Register::FloatParam:
+                curF->setCallerSavedReg(colorReg);
+                break;
+            case Register::CalleeSaved:      
+            case Register::FloatCalleeSaved:       
+                curF->setCalleeSavedReg(colorReg);
+                break;
+        }
     }
 
 }
@@ -582,8 +611,12 @@ void RegisterNode::RewriteProgram(){
 }
 
 void RegisterNode::RegisterAlloc(IRFunction &F, WHICH which){
-    Build(F, which);
-    //return;
+    /*初始化寄存器分配需要的静态变量*/
+    curF = &F;
+    RegisterNode::which = which;
+
+    /*开始寄存器分配*/
+    Build();
     MakeWorklist();
     while(!(simplifyWorklist.empty() && worklistMoves.empty() && freezeWorklist.empty() && spillWorklist.empty())){
         if(!simplifyWorklist.empty()) simplify();
@@ -598,10 +631,10 @@ void RegisterNode::RegisterAlloc(IRFunction &F, WHICH which){
     }
 }
 
-void RegisterNode::Build(IRFunction &F, WHICH which){
+void RegisterNode::Build(){
     if(which == GENERAL) RegisterFactory::initGReg();
     else if(which == FLOAT) RegisterFactory::initFReg();
-    RegisterNode::init(F,which);
+    RegisterNode::init();
 }
 
 void RegisterNode::End(){
@@ -632,18 +665,4 @@ Register* RegisterNode::getColorReg(int color){
             return regnode->getParentReg();
         }
     }
-    /*switch(which) {
-        case GENERAL:
-            for(auto reg: RegisterFactory::getGRegList()){
-                if(color == reg->getRegNode()->getColor()){
-                    return reg;
-                }
-            }
-        case FLOAT:
-            for(auto reg: RegisterFactory::getFRegList()){
-                if(color == reg->getRegNode()->getColor()){
-                    return reg;
-                }
-            }
-    }*/
 }

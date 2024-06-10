@@ -42,10 +42,6 @@ void Optimizer::build() {
 
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new A0MovePass("A0MovePass"));
-
-    //addPass(new RenamePass("RenamePass"));
-
     addPass(new PHIdeletePass("PHIdeletePass"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
