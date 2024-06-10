@@ -15,6 +15,7 @@
 #include "Pass/AggressiveDeadCodeEliminatePass.h"
 #include "Pass/PHIdeletePass.h"
 #include "Pass/A0MovePass.h"
+#include "Pass/DeleteNonepredsPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
@@ -36,13 +37,15 @@ void Optimizer::build() {
     addPass(new MemToRegPass("Mem2Reg"));
 
     addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
+    addPass(new ConstantPass("ConstantPass"));
     addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
-    addPass(new ConstantPass("ConstantPass"));
 
-    addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
+    addPass(new DeleteNonePredsPass("DeleteNonepredsPass"));
+    //addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
     addPass(new PHIdeletePass("PHIdeletePass"));
+    addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 

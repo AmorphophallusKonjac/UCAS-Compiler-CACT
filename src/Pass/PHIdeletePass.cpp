@@ -18,14 +18,17 @@ void PHIdeletePass::runOnFunction(IRFunction &F) {
                 auto temp = new IRRegValue(phiInst->getType());
                 temp->dropAllReferences();
                 for (unsigned i = 0; i < phiInst->getNumIncomingValues(); i++) {
-                    /*add move inst*/
-                    auto mvInst = new IRMoveInst(phiInst->getIncomingValue(i), temp);
-                    mvInst->setParent(phiInst->getIncomingBlock(i));
-                    phiInst->getIncomingBlock(i)->getInstList().insert(
-                            phiInst->getIncomingBlock(i)->getInstList().end() - 1,
-                            mvInst);
+                    /*必须保证这个块还是存在的*/
+                    if(std::find(F.getBasicBlockList().begin(), F.getBasicBlockList().end(), phiInst->getIncomingBlock(i)) != F.getBasicBlockList().end()){
+                        /*add move inst*/
+                        auto mvInst = new IRMoveInst(phiInst->getIncomingValue(i), temp);
+                        mvInst->setParent(phiInst->getIncomingBlock(i));
+                        phiInst->getIncomingBlock(i)->getInstList().insert(
+                                phiInst->getIncomingBlock(i)->getInstList().end() - 1,
+                                mvInst);
+                    }
                 }
-                /*chaneg phi to move*/
+                /*change phi to move*/
                 auto phi2Mv = new IRMoveInst(temp, phiInst);
                 phi2Mv->setParent(BB);
                 inst = phi2Mv;
