@@ -37,6 +37,10 @@ namespace RISCV {
 
         void generateEntryBlock();
 
+        IRFunction *irFunction;
+
+        unsigned allocSize = 0;
+
         BasicBlock *findBasicBlock(IRBasicBlock *irBasicBlock);
 
     public:
