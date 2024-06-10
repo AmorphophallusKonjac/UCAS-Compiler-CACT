@@ -1,4 +1,4 @@
-const int maxn = 18;
+const int maxn = 6;
 const int mod = 1000000007;
 int dp[18][18][18][18][18][7];
 int list[200];
