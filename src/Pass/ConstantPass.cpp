@@ -54,10 +54,12 @@ bool setge(unsigned iType, IRConstant* const1, IRConstant* const2){
             if(tyID == IRType::IntTyID){ return dynamic_cast<IRConstantInt*>(const1)->getRawValue() == dynamic_cast<IRConstantInt*>(const2)->getRawValue(); }
             else if(tyID == IRType::FloatTyID){ return dynamic_cast<IRConstantFloat*>(const1)->getRawValue() == dynamic_cast<IRConstantFloat*>(const2)->getRawValue(); }
             else if(tyID == IRType::DoubleTyID){ return dynamic_cast<IRConstantDouble*>(const1)->getRawValue() == dynamic_cast<IRConstantDouble*>(const2)->getRawValue(); }
+            else if(tyID == IRType::BoolTyID){ return dynamic_cast<IRConstantBool*>(const1)->getRawValue() == dynamic_cast<IRConstantBool*>(const2)->getRawValue(); }
         case IRInstruction::BinaryOps::SetNE:
             if(tyID == IRType::IntTyID){ return dynamic_cast<IRConstantInt*>(const1)->getRawValue() != dynamic_cast<IRConstantInt*>(const2)->getRawValue(); }
             else if(tyID == IRType::FloatTyID){ return dynamic_cast<IRConstantFloat*>(const1)->getRawValue() != dynamic_cast<IRConstantFloat*>(const2)->getRawValue(); }
             else if(tyID == IRType::DoubleTyID){ return dynamic_cast<IRConstantDouble*>(const1)->getRawValue() != dynamic_cast<IRConstantDouble*>(const2)->getRawValue(); }
+            else if(tyID == IRType::BoolTyID){ return dynamic_cast<IRConstantBool*>(const1)->getRawValue() != dynamic_cast<IRConstantBool*>(const2)->getRawValue(); }
         case IRInstruction::BinaryOps::SetLE:
             if(tyID == IRType::IntTyID){ return dynamic_cast<IRConstantInt*>(const1)->getRawValue() <= dynamic_cast<IRConstantInt*>(const2)->getRawValue(); }
             else if(tyID == IRType::FloatTyID){ return dynamic_cast<IRConstantFloat*>(const1)->getRawValue() <= dynamic_cast<IRConstantFloat*>(const2)->getRawValue(); }
@@ -106,7 +108,7 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
                     flag = false;
                 }
                 else{
-                    bool ret = setge(inst->getOpcode(), dynamic_cast<IRConstantInt*>(inst->getOperand(0)), dynamic_cast<IRConstantInt*>(inst->getOperand(1)));
+                    bool ret = setge(inst->getOpcode(), dynamic_cast<IRConstant*>(inst->getOperand(0)), dynamic_cast<IRConstant*>(inst->getOperand(1)));
 
                     /*删除掉原先的br指令并获取所有的信息*/
                     instIterator = BB.getInstList().erase(instIterator);

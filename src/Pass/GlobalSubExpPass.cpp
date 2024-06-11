@@ -1,6 +1,7 @@
 #include "GlobalSubExpPass.h"
 #include "IR/IRFunction.h"
 #include "IR/IRInstruction.h"
+#include "IR/IRType.h"
 #include "IR/IRValue.h"
 #include "Pass/Pass.h"
 #include "utils/DominatorTree.h"
@@ -157,13 +158,20 @@ void childrenSubExp(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                         flag = true;
                     }
                 } else {
-                    /*按顺序进行检验*/
-                    for (unsigned k = 0; k < childinst->getNumOperands(); k++) {
-                        if (childinst->getOperand(k) == parentinst->getOperand(k)) {
-                            flag = true;
-                        } else {
+                    /*如果opcode是比较并且是两个整型之间的比较，则不能进行删除*/
+                    if((childinst->getOpcode() >= IRInstruction::SetEQ &&
+                        childinst->getOpcode() <= IRInstruction::SetGT)&&
+                        childinst->getOperand(0)->getType()->getPrimitiveID() == IRType::IntTyID ){
                             flag = false;
-                            break;
+                        }else{
+                        /*按顺序进行检验*/
+                        for (unsigned k = 0; k < childinst->getNumOperands(); k++) {
+                            if (childinst->getOperand(k) == parentinst->getOperand(k)) {
+                                flag = true;
+                            } else {
+                                flag = false;
+                                break;
+                            }
                         }
                     }
                 }
