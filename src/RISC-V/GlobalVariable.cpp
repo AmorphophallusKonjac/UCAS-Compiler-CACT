@@ -10,23 +10,27 @@ namespace RISCV {
         this->irGV = irGV;
         name = irGV->getName();
         initializer = irGV->getInitializer();
-        if (irGV->isConstant()) {
-            section = Section::RODATA;
-        } else {
-            if (irGV->isIsinitial()) {
-                section = Section::DATA;
-            } else {
-                section = Section::BSS;
-            }
-        }
+        IRType *ty = nullptr;
         if (IRArrayType::classof(irGV->getType()->getElementType())) {
             // 是数组
             auto arrayType = dynamic_cast<IRArrayType *>(irGV->getType()->getElementType());
             size = arrayType->getNumElements() * (arrayType->getElementType()->getPrimitiveSize());
+            ty = arrayType->getElementType();
         } else {
             // 不是数组
             auto varType = irGV->getType()->getElementType();
             size = varType->getPrimitiveSize();
+            ty = varType;
+        }
+        assert(ty->isPrimitiveType() && "Error ty");
+        if (irGV->isConstant()) {
+            section = Section::RODATA;
+        } else {
+            if (irGV->isIsinitial() || ty == IRType::FloatTy || ty == IRType::DoubleTy) {
+                section = Section::DATA;
+            } else {
+                section = Section::BSS;
+            }
         }
         if (module)
             module->addGlobalVariable(this);
