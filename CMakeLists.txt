@@ -63,6 +63,11 @@ add_test(
 )
 
 add_test(
+        NAME codegen_test_spike
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_spike.sh
+)
+
+add_test(
         NAME codegen_count
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_count.sh
 )
