@@ -7,7 +7,7 @@ namespace RISCV {
 
     class LiInst : public Instruction {
     public:
-        LiInst(int val, BasicBlock *parent = nullptr);
+        LiInst(Value *rd, int val, BasicBlock *parent = nullptr);
 
         void print(std::ostream &O) const override;
     };

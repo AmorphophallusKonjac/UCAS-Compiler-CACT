@@ -3,6 +3,7 @@
 #include "BasicBlock.h"
 #include "utils/Register.h"
 #include "Function.h"
+#include "IR/IRType.h"
 
 namespace RISCV {
     Register *Value::getReg() const {
@@ -13,13 +14,13 @@ namespace RISCV {
         return irValue;
     }
 
-    Value::Value(Register *Reg) : reg(Reg) {
+    Value::Value(Register *Reg, IRType *type) : reg(Reg), ty(type) {
     }
 
-    Value::Value(IRValue *irV) : irValue(irV), reg(irV->getReg()) {
+    Value::Value(IRValue *irV) : irValue(irV), reg(irV->getReg()), ty(irV->getType()) {
     }
 
-    Value::Value(int val) : val(val) {
+    Value::Value(int val) : val(val), ty(IRType::IntTy) {
     }
 
 
@@ -39,17 +40,43 @@ namespace RISCV {
         }
     }
 
-    Value::Value(BasicBlock *BB) : BB(BB) {
+    Value::Value(BasicBlock *BB) : BB(BB), ty(IRType::VoidTy) {
     }
 
-    Value::Value(Function *F) : F(F) {
+    Value::Value(Function *F) : F(F), ty(IRType::VoidTy) {
     }
 
-    Pointer::Pointer(int offset) : Value(), offset(offset) {
+    IRType *Value::getTy() const {
+        return ty;
+    }
 
+    Pointer::Pointer(int offset, Register *reg) : Value(), offset(offset) {
+        ty = IRType::IntTy;
+        base = reg;
     }
 
     void Pointer::print(std::ostream &O) {
-        O << offset << "(sp)";
+        if (var) {
+            O << var->getName() << "_obj";
+        } else {
+            O << offset << "(" << base->getRegName() << ")";
+        }
     }
+
+    int Pointer::getOffset() const {
+        return offset;
+    }
+
+    Pointer::Pointer(GlobalVariable *var) : Value(), var(var) {
+        isSymbol = true;
+    }
+
+    bool Pointer::isSymbol1() const {
+        return isSymbol;
+    }
+
+    Register *Pointer::getBase() const {
+        return base;
+    }
+
 } // RISCV

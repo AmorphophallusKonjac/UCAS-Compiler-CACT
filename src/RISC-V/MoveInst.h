@@ -9,7 +9,7 @@ namespace RISCV {
     private:
         IRType *ty;
     public:
-        MoveInst(unsigned iType, IRType *ty, Value *dest, Value *src, BasicBlock *parent = nullptr);
+        MoveInst(IRType *ty, Value *dest, Value *src, BasicBlock *parent = nullptr);
 
         void print(std::ostream &O) const override;
     };

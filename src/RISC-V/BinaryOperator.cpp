@@ -6,15 +6,14 @@
 
 namespace RISCV {
 
-    BinaryOperator::BinaryOperator(unsigned int iType, Value *rd, Value *op1, Value *op2, BasicBlock *parent)
-            : Instruction(IRType::VoidTy, iType, parent) {
+    BinaryOperator::BinaryOperator(unsigned int iType, IRType *ty, Value *rd, Value *op1, Value *op2, BasicBlock *parent)
+            : Instruction(IRType::VoidTy, iType, parent), ty(ty) {
         Operands.push_back(rd);
         Operands.push_back(op1);
         Operands.push_back(op2);
     }
 
     void BinaryOperator::print(std::ostream &O) const {
-        auto ty = Operands[1]->getIrValue()->getType();
         assert(ty == IRType::IntTy || ty == IRType::FloatTy || ty == IRType::DoubleTy && "Error type");
         if (ty != IRType::IntTy) {
             O << "f";

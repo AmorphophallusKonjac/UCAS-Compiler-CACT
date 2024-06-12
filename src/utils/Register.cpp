@@ -24,6 +24,7 @@ std::vector<FloatParamRegister *> FloatParamRegister::FloatParamvec = {};
 
 CalleeSavedRegister *CalleeSavedRegister::sp = new CalleeSavedRegister("sp");
 CallerSavedRegister *CallerSavedRegister::ra = new CallerSavedRegister("ra");
+ZeroRegister *ZeroRegister::zero = new ZeroRegister("zero");
 
 CallerSavedRegister::CallerSavedRegister(unsigned int num) {
     regNum = num;
@@ -284,4 +285,8 @@ void RegisterFactory::initFReg() {
                   std::back_inserter(FloatRegList));
     }
 
+}
+
+ZeroRegister::ZeroRegister(std::string name) {
+    regName = std::move(name);
 }

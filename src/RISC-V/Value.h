@@ -2,10 +2,15 @@
 #define COMPILER_VALUE_H
 
 #include <iostream>
+#include "IR/IRType.h"
+#include "utils/Register.h"
+#include "GlobalVariable.h"
 
 class Register;
 
 class IRValue;
+
+class IRType;
 
 namespace RISCV {
 
@@ -20,12 +25,14 @@ namespace RISCV {
         int val = 0;
         BasicBlock *BB = nullptr;
         Function *F = nullptr;
+    protected:
+        IRType *ty;
     public:
         Value() = default;
 
         explicit Value(IRValue *irV);
 
-        explicit Value(Register *Reg);
+        Value(Register *Reg, IRType *type = IRType::IntTy);
 
         explicit Value(int val);
 
@@ -39,16 +46,33 @@ namespace RISCV {
 
         int getVal() const;
 
+        IRType *getTy() const;
+
         virtual void print(std::ostream &O);
     };
 
     class Pointer : public Value {
     private:
-        int offset;
+        int offset = 0;
+
+        GlobalVariable *var = nullptr;
+
+        Register *base = nullptr;
+
+        bool isSymbol = false;
     public:
-        explicit Pointer(int offset);
+
+        explicit Pointer(int offset, Register *reg = CalleeSavedRegister::sp);
+
+        explicit Pointer(GlobalVariable *var);
 
         void print(std::ostream &O) override;
+
+        int getOffset() const;
+
+        bool isSymbol1() const;
+
+        Register *getBase() const;
     };
 
 } // RISCV

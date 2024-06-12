@@ -6,8 +6,10 @@
 namespace RISCV {
 
     class BinaryOperator : public Instruction {
+    private:
+        IRType *ty;
     public:
-        BinaryOperator(unsigned iType, Value* rd, Value *op1, Value *op2, BasicBlock *parent = nullptr);
+        BinaryOperator(unsigned iType, IRType* ty, Value* rd, Value *op1, Value *op2, BasicBlock *parent = nullptr);
 
         void print(std::ostream &O) const override;
     };

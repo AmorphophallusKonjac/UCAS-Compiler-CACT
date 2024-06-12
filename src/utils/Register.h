@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cassert>
 
 #define GPRCallerSavedNUM 7
 #define GPRCalleeSavedNUM 12
@@ -49,6 +50,20 @@ public:
     virtual RegTy getRegty() = 0;
 
     RegisterNode *getRegNode() { return regNode; };
+};
+
+class ZeroRegister : public Register {
+public:
+
+    explicit ZeroRegister(std::string name);
+
+    static ZeroRegister *zero;
+
+    const std::string &getRegName() override { return regName; };
+
+    unsigned getRegSeq() override { return regSeq; };
+
+    RegTy getRegty() override { return regty; };
 };
 
 class CallerSavedRegister : public Register {
@@ -271,6 +286,18 @@ public:
 
     static std::vector<Register *> &getFRegList() {
         return FloatRegList;
+    }
+
+    static Register *getReg(std::string name) {
+        for (auto reg : GeneralRegList) {
+            if (reg->getRegName() == name)
+                return reg;
+        }
+        for (auto reg : FloatRegList) {
+            if (reg->getRegName() == name)
+                return reg;
+        }
+        assert(0 && "wrong reg name");
     }
 
     static void print(std::ostream &OS, IRFunction &F);

@@ -15,15 +15,9 @@ namespace RISCV {
 
     class BasicBlock;
 
+    class Pointer;
+
     class Function {
-    public:
-        explicit Function(IRFunction *irFunc, Module *parent = nullptr);
-
-        void addBasicBlock(BasicBlock *BB);
-
-        Module *getParent() const;
-
-        void print(std::ostream &O);
     private:
         std::string name;
         Module *parent;
@@ -33,18 +27,42 @@ namespace RISCV {
         unsigned align;
         BasicBlock *entryBlock;
 
-        void genEntryBlock();
-
         void generateEntryBlock();
 
         IRFunction *irFunction;
 
         unsigned allocSize = 0;
 
-        BasicBlock *findBasicBlock(IRBasicBlock *irBasicBlock);
+        std::map<IRAllocaInst *, Pointer *> allocPtrMap;
+
+        std::map<Register *, Pointer *> regPtrMap;
 
     public:
+        explicit Function(IRFunction *irFunc, Module *parent = nullptr);
+
+        explicit Function(std::string name);
+
+        BasicBlock *getNextBlock(BasicBlock *block);
+
+        void addBasicBlock(BasicBlock *BB);
+
+        Module *getParent() const;
+
+        void print(std::ostream &O);
+
+        Pointer *getPointer(IRAllocaInst *alloc);
+
+        Pointer *getPointer(Register *reg);
+
+        BasicBlock *findBasicBlock(IRBasicBlock *irBasicBlock);
+
         const std::string &getName() const;
+
+        static int alignSize(unsigned long i);
+
+        IRFunction *getIrFunction() const;
+
+        unsigned int getAllocSize() const;
     };
 
 } // RISCV

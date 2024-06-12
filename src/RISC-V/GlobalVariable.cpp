@@ -9,6 +9,7 @@ namespace RISCV {
     GlobalVariable::GlobalVariable(IRGlobalVariable *irGV, Module *module) {
         this->irGV = irGV;
         name = irGV->getName();
+        initializer = irGV->getInitializer();
         if (irGV->isConstant()) {
             section = Section::RODATA;
         } else {
@@ -60,7 +61,6 @@ namespace RISCV {
     }
 
     void GlobalVariable::printInitVal(std::ostream &O) {
-        auto initializer = irGV->getInitializer();
         switch (initializer->getType()->getPrimitiveID()) {
             case IRType::IntTyID:
                 O << "\t.word " << dynamic_cast<IRConstantInt *>(initializer)->getRawValue() << std::endl;
@@ -137,5 +137,18 @@ namespace RISCV {
             default:
                 assert(0 && "wtf");
         }
+    }
+
+    const std::string &GlobalVariable::getName() const {
+        return name;
+    }
+
+    GlobalVariable::GlobalVariable(IRConstant *irConstant, Module *module) {
+        irGV = nullptr;
+        initializer = irConstant;
+        name = "Constant" + std::to_string(module->getLabelCount());
+        section = Section::RODATA;
+        size = irConstant->getType()->getPrimitiveSize();
+        module->addGlobalVariable(this);
     }
 } // RISCV

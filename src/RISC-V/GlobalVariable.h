@@ -18,11 +18,15 @@ namespace RISCV {
     public:
         explicit GlobalVariable(IRGlobalVariable *irGV, Module *module = nullptr);
 
+        GlobalVariable(IRConstant *irConstant, Module *module);
+
         IRGlobalVariable *getIrGv() const;
 
         std::string getSectionName();
 
         void print(std::ostream &O);
+
+        const std::string &getName() const;
 
     private:
         std::string name;
@@ -30,6 +34,7 @@ namespace RISCV {
         unsigned align = 3;
         unsigned size;
         IRGlobalVariable *irGV;
+        IRConstant *initializer;
 
         void printInitVal(std::ostream &O);
 

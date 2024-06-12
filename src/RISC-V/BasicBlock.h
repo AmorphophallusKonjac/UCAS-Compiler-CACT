@@ -31,6 +31,8 @@ namespace RISCV {
 
         void print(std::ostream &O);
 
+        const std::vector<Instruction *> &getInstList() const;
+
         IRBasicBlock *getIrBb() const;
     };
 

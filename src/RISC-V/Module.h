@@ -9,6 +9,8 @@ class IRGlobalVariable;
 
 class IRModule;
 
+class IRFunction;
+
 namespace RISCV {
 
     class GlobalVariable;
@@ -27,10 +29,15 @@ namespace RISCV {
 
         unsigned int getLabelCount();
 
+        GlobalVariable *findGlobalVariable(IRGlobalVariable *irGV);
+
+        Function *findFunction(IRFunction *irF);
+
     private:
         std::vector<GlobalVariable *> globalVariableList;
         std::map<IRGlobalVariable *, GlobalVariable *> globalVariableMap;
         std::vector<Function *> functionList;
+        std::vector<Function *> IOFunctionList;
         unsigned labelCount;
     };
 

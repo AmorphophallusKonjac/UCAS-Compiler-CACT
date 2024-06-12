@@ -3,14 +3,16 @@
 #include "Value.h"
 
 namespace RISCV {
-    MoveInst::MoveInst(unsigned int iType, IRType *ty, Value *dest, Value *src, BasicBlock *parent)
-            : Instruction(IRType::VoidTy, iType, parent), ty(ty) {
+    MoveInst::MoveInst(IRType *ty, Value *dest, Value *src, BasicBlock *parent)
+            : Instruction(IRType::VoidTy, Mv, parent), ty(ty) {
+        if (ty == IRType::FloatTy || ty == IRType::DoubleTy)
+            iType = Fmv;
         Operands.push_back(dest);
         Operands.push_back(src);
     }
 
     void MoveInst::print(std::ostream &O) const {
-        if (ty == IRType::IntTy) {
+        if (ty == IRType::IntTy || ty == IRType::BoolTy || ty->isDerivedType()) {
             O << "mv ";
         } else if (ty == IRType::FloatTy) {
             O << "fmv.s ";
