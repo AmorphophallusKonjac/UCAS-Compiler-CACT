@@ -14,6 +14,7 @@
 #include "iOther.h"
 #include "iPHINdoe.h"
 #include "iTerminators.h"
+#include "utils/Register.h"
 
 IRInstruction::IRInstruction(IRType *Ty, unsigned int iType, const std::string &Name, IRBasicBlock *parent)
         : IRUser(Ty, InstructionVal, Name) {
@@ -459,5 +460,6 @@ void IRInstruction::print(std::ostream &OS) const {
 
     OS.seekp(0, std::ios::end);
     OS << std::endl;
+    RegisterFactory::printInst(OS, *const_cast<IRInstruction*>(this));
     // TODO
 }

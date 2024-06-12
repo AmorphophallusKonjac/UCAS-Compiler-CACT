@@ -1,4 +1,5 @@
 #include "Register.h"
+#include "IR/IRValue.h"
 #include "RegisterNode.h"
 #include "IR/IRFunction.h"
 #include "IR/IRBasicBlock.h"
@@ -116,6 +117,17 @@ FloatParamRegister* FloatParamRegister::Num2Reg(unsigned int num) {
     }
 }
 
+void RegisterFactory::printInst(std::ostream& OS, IRInstruction& inst){
+    /*打印inst中需要保存的寄存器*/
+    OS << "CalleeSaved: ";
+    for(auto reg: inst.getCalleeSavedLiveRegList())
+        OS << reg->getRegName() <<", ";
+
+    OS << "CallerSaved: ";
+    for(auto reg: inst.getCallerSavedLiveRegList())
+        OS << reg->getRegName() <<", ";
+    OS << std::endl;
+}
 
 void RegisterFactory::print(std::ostream& OS, IRFunction& F){
 

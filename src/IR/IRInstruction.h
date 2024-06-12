@@ -1,6 +1,7 @@
 #ifndef COMPILER_IRINSTRUCTION_H
 #define COMPILER_IRINSTRUCTION_H
 
+#include <vector>
 #pragma once
 
 #include "IRUser.h"
@@ -24,6 +25,8 @@ private:
     LiveVariableInst *Live;
     RegisterNode* regNode = nullptr;
     Register* reg;
+    std::set<Register*> CallerSavedLiveRegList;
+    std::set<Register*> CalleeSavedLiveRegList;
 
 protected:
 
@@ -106,6 +109,14 @@ public:
     };
 
     Register* getReg(){ return reg; };
+
+    void setCalleeSavedLiveReg(Register* reg){ CalleeSavedLiveRegList.insert(reg); };
+
+    void setCallerSavedLiveReg(Register* reg){ CallerSavedLiveRegList.insert(reg); };
+
+    const std::set<Register*>& getCallerSavedLiveRegList(){ return CallerSavedLiveRegList; };
+
+    const std::set<Register*>& getCalleeSavedLiveRegList(){ return CalleeSavedLiveRegList; };
 
     static inline bool classof(const IRInstruction *I) { return true; }
 
