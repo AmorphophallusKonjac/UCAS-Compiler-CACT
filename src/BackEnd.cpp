@@ -38,8 +38,6 @@ void BackEnd::print() {
 
     internalPrint(outputFile, inputFilePath.filename().string());
 
-//    internalPrint(std::cout, inputFilePath.filename().string());
-
     outputFile.close();
 }
 

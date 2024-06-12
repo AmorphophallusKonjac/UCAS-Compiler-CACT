@@ -3,6 +3,7 @@
 #include "IR/IRGlobalVariable.h"
 #include <iostream>
 #include <cassert>
+#include <iomanip>
 #include "IR/IRConstant.h"
 
 namespace RISCV {
@@ -70,10 +71,12 @@ namespace RISCV {
                 O << "\t.word " << dynamic_cast<IRConstantInt *>(initializer)->getRawValue() << std::endl;
                 break;
             case IRType::FloatTyID:
-                O << "\t.float " << dynamic_cast<IRConstantFloat *>(initializer)->getRawValue() << std::endl;
+                O << "\t.float " << std::fixed << std::setprecision(6)
+                  << dynamic_cast<IRConstantFloat *>(initializer)->getRawValue() << std::endl;
                 break;
             case IRType::DoubleTyID:
-                O << "\t.double " << dynamic_cast<IRConstantDouble *>(initializer)->getRawValue() << std::endl;
+                O << "\t.double " << std::fixed << std::setprecision(15)
+                  << dynamic_cast<IRConstantDouble *>(initializer)->getRawValue() << std::endl;
                 break;
             case IRType::BoolTyID:
                 O << "\t.byte " << dynamic_cast<IRConstantBool *>(initializer)->getRawValue() << std::endl;
@@ -130,10 +133,12 @@ namespace RISCV {
                 O << dynamic_cast<IRConstantInt *>(val)->getRawValue() << ", ";
                 break;
             case IRType::FloatTyID:
-                O << dynamic_cast<IRConstantFloat *>(val)->getRawValue() << ", ";
+                O << std::fixed << std::setprecision(6)
+                  << dynamic_cast<IRConstantFloat *>(val)->getRawValue() << ", ";
                 break;
             case IRType::DoubleTyID:
-                O << dynamic_cast<IRConstantDouble *>(val)->getRawValue() << ", ";
+                O << std::fixed << std::setprecision(15)
+                  << dynamic_cast<IRConstantDouble *>(val)->getRawValue() << ", ";
                 break;
             case IRType::BoolTyID:
                 O << dynamic_cast<IRConstantBool *>(val)->getRawValue() << ", ";
