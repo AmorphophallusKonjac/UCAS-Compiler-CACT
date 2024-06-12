@@ -494,8 +494,10 @@ namespace RISCV {
                     // 恢复 caller 寄存器
                     index = 0;
                     for (auto reg: callerRegList) {
-                        if (callInst->getReg() == reg)
+                        if (callInst->getReg() == reg) {
+                            index += 8;
                             continue;
+                        }
                         if (reg->getRegty() == Register::FloatCalleeSaved)
                             new LoadInst(new Value(reg), new Pointer(index), this, IRType::DoubleTy);
                         else

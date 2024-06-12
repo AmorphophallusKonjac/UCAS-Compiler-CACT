@@ -41,7 +41,7 @@ namespace RISCV {
         O << "\t" << getSectionName() << std::endl;
         O << "\t.align\t" << align << std::endl;
         O << "\t.type\t" << name << "_obj" << ", @object" << std::endl;
-        O << "\t.size\t" << size << std::endl;
+        O << "\t.size\t" << name << "_obj, " << size << std::endl;
         O << name << "_obj:" << std::endl;
         printInitVal(O);
         O << std::endl;
@@ -54,7 +54,7 @@ namespace RISCV {
             case DATA:
                 return ".data";
             case RODATA:
-                return ".rodata";
+                return ".section .rodata";
             default:
                 assert(0 && "error section");
         }
