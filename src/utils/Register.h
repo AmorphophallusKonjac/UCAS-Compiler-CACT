@@ -1,6 +1,7 @@
 #ifndef COMPILER_REGISTER_H
 #define COMPILER_REGISTER_H
 
+#include "IR/IRValue.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -19,6 +20,8 @@
 class RegisterNode;
 
 class IRFunction;
+
+class IRInstruction;
 
 class Register {
 public:
@@ -301,6 +304,8 @@ public:
     }
 
     static void print(std::ostream &OS, IRFunction &F);
+
+    static void printInst(std::ostream& OS, IRInstruction& inst);
 
     static void check(IRFunction &F);
 };
