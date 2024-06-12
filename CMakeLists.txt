@@ -76,6 +76,12 @@ add_test(
         NAME codegen_test_functional
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_functional.sh
 )
+
+add_test(
+        NAME codegen_test_functional_spike
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testbench/codegen_test_functional_spike.sh
+)
+
 set_tests_properties(syntax_test PROPERTIES TIMEOUT 10)
 set_tests_properties(semantic_test PROPERTIES TIMEOUT 60)
 set_tests_properties(semantic_interpret_test PROPERTIES TIMEOUT 20)
