@@ -448,7 +448,7 @@ namespace RISCV {
                     // 存储caller寄存器
                     int index = 0;
                     for (auto reg: callerRegList) {
-                        if (reg->getRegty() == Register::FloatCalleeSaved)
+                        if (reg->getRegty() == Register::FloatCallerSaved)
                             new StoreInst(new Value(reg), new Pointer(index), this, IRType::DoubleTy);
                         else
                             new StoreInst(new Value(reg), new Pointer(index), this);
@@ -498,7 +498,7 @@ namespace RISCV {
                             index += 8;
                             continue;
                         }
-                        if (reg->getRegty() == Register::FloatCalleeSaved)
+                        if (reg->getRegty() == Register::FloatCallerSaved)
                             new LoadInst(new Value(reg), new Pointer(index), this, IRType::DoubleTy);
                         else
                             new LoadInst(new Value(reg), new Pointer(index), this);
