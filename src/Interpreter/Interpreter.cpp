@@ -66,6 +66,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
         std::cout << "Block Name: " << currentBlock->getName() << std::endl;
 
     for (auto inst: instList) {
+//        getchar();
         auto opcode = inst->getOpcode();
         ++inst_cnt;
 
@@ -112,6 +113,8 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 while (TempVarVector.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
                     auto backVar = TempVarVector.back();
                     TempVarVector.pop_back();
+                    if(!backVar->getIrValue())
+                        continue;
                     int i = funcLabelOffset - 1;
                     while(i >= 0 && TempVarVector[i]->getIrValue() != backVar->getIrValue()) {
                         --i;
@@ -518,7 +521,10 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
             }
 
             case IRInstruction::Move : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
+                auto tempVar0 = new TemporaryVariable{0, TemporaryVariable::Void};
+                TempVarVector.push_back(tempVar0);
+                inst->getOperand(0)->setTempVar(tempVar0);
+                tempVar0->setIrValue(inst->getOperand(0));
                 auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
                 tempVar0->setValue(tempVar1->getValue());
                 tempVar0->setType(tempVar1->getType());
@@ -541,10 +547,7 @@ TemporaryVariable *Interpreter::change_Operand_To_TemporaryVariable(IRValue *irV
     if (valueType == IRValue::ArgumentVal || valueType == IRValue::InstructionVal
         || valueType == IRValue::GlobalVariableVal) {
         if (irValue->getTempVar() == nullptr) {
-            auto newTempVar = new TemporaryVariable(0, TemporaryVariable::Void);
-            TempVarVector.push_back(newTempVar);
-            irValue->setTempVar(newTempVar);
-            newTempVar->setIrValue(irValue);
+            printf("tempVar of irValue is NULL!");
         }
         return irValue->getTempVar();
     } else if (valueType == IRValue::ConstantVal) {
@@ -762,10 +765,17 @@ TemporaryVariable *Interpreter::runBuildInFunction(const std::string &funcName) 
         std::cin >> val;
         ret = new TemporaryVariable(val, TemporaryVariable::Double);
     }
-    while (Stack.back()->getType() != TemporaryVariable::Func) {
+
+    while (TempVarVector.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
+        TempVarVector.pop_back();
+    }
+    TempVarVector.pop_back();   // 弹出函数标识符
+
+    while (Stack.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
         Stack.pop_back();
     }
-    Stack.pop_back();
+    Stack.pop_back();   // 弹出函数标识符
+
     return ret;
 }
 
