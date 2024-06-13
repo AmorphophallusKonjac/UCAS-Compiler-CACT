@@ -38,7 +38,7 @@ public:
         this->reg = reg;
     };
 
-    Register* getReg(){ return reg; };
+    Register* getReg() override{ return reg; };
 
     /******classof方法，判断从父类下来的子类是不是对应的IRArgument类******/
     static inline bool classof(const IRArgument *) { return true; }

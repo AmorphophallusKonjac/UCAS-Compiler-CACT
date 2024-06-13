@@ -1,4 +1,5 @@
 #include "LiveVariable.h"
+#include "IR/IRType.h"
 #include "RegisterNode.h"
 #include "IR/IRBasicBlock.h"
 #include "IR/IRConstant.h"
@@ -112,7 +113,8 @@ void LiveVariableInst::genLiveVariableInst(IRBasicBlock *BB) {
                 usevec.push_back(inst->getOperand(1));
             defvec.push_back(inst);
         }else if(inst->getOpcode() == IRInstruction::Call){
-            defvec.push_back(inst);
+            if(inst->getType()->getPrimitiveID() != IRType::VoidTyID)
+                defvec.push_back(inst);
             for(unsigned i=1; i<inst->getNumOperands(); i++){
                 if(!dynamic_cast<IRConstant*>(inst->getOperand(i)))
                     usevec.push_back(inst->getOperand(i));

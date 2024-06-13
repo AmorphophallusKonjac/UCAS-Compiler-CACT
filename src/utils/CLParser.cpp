@@ -22,7 +22,7 @@ void CLParser::parse(int argc, const char **argv) {
         std::string st(argv[i]);
         if (st[0] == '-') {
             st = st.substr(1);
-            if (argTable.count(st) == 0)
+            if (argTable.count(st) == 0 && st[0] != 'O')
                 assert(0 && "arg does not exist");
             if (st[0] == 'O') {
                 if (level != -1)
@@ -44,7 +44,6 @@ void CLParser::parse(int argc, const char **argv) {
                 assert(0 && "too many files");
         }
     }
-    level = 0;
 }
 
 const std::string &CLParser::getFilePath() const {

@@ -163,7 +163,7 @@ void RegisterNode::init(){
             for(auto BB: curF->getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
-                        inst->getOpcode() == IRInstruction::Call ||
+                       (inst->getOpcode() == IRInstruction::Call && inst->getType()->getPrimitiveID() != IRType::VoidTyID) ||
                         inst->getOpcode() == IRInstruction::Load ||
                         inst->getOpcode() == IRInstruction::Shl ||
                         inst->getOpcode() == IRInstruction::Shr) &&
@@ -219,7 +219,7 @@ void RegisterNode::init(){
             for(auto BB: curF->getBasicBlockList()){
                 for(auto inst: BB->getInstList()){
                     if((inst->isBinaryOp() ||
-                        inst->getOpcode() == IRInstruction::Call ||
+                       (inst->getOpcode() == IRInstruction::Call && inst->getType()->getPrimitiveID() != IRType::VoidTyID) ||
                         inst->getOpcode() == IRInstruction::Load ||
                         inst->getOpcode() == IRInstruction::Shl ||
                         inst->getOpcode() == IRInstruction::Shr) &&

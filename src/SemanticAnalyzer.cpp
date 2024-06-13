@@ -581,6 +581,7 @@ std::any SemanticAnalyzer::visitVariableDefinition(CACTParser::VariableDefinitio
         } else {
             loop = std::accumulate(context->arraySize.begin(), context->arraySize.end(), 1,
                                    std::multiplies());
+            dynamic_cast<VarArraySymbolInfo*>(currentSymbol)->isinitial = false;
         }
 
         for (int i = 0; i < loop; i++) {
