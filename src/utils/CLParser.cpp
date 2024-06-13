@@ -44,6 +44,8 @@ void CLParser::parse(int argc, const char **argv) {
                 assert(0 && "too many files");
         }
     }
+    if (level == -1)
+        level = 0;
 }
 
 const std::string &CLParser::getFilePath() const {
