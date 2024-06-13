@@ -16,6 +16,7 @@
 
 std::vector<IRInstruction *> irdomiinstArray;
 std::vector<IRInstruction *> irloadstoreArray;
+bool global_optflag;
 
 /*我认为这两个函数是解耦的：一个负责消除除了ldst之外其他的公共子表达式，另一个负责在此基础上进行ld
  * st指令的尽可能消除
@@ -74,6 +75,7 @@ void childrenldst(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                     childinst->replaceAllUsesWith(parentinst);
 
                     flag = true;
+                    global_optflag = true;
                     break;
                 } else if ((childinst->getOpcode() == IRInstruction::Store) &&
                            (parentinst->getOpcode() == IRInstruction::Store) &&
@@ -87,6 +89,7 @@ void childrenldst(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                     /*？
                      *这里的store指令其实是可以考虑子指令替换父指令的，需要进行这个操作吗？
                      */
+                    flag = true;
                     i++;
                     break;
                 }
@@ -156,6 +159,7 @@ void childrenSubExp(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                         (childinst->getOperand(0) == parentinst->getOperand(1) &&
                          childinst->getOperand(1) == parentinst->getOperand(0))) {
                         flag = true;
+                        global_optflag = true;
                     }
                 } else {
                     /*如果opcode是比较并且是两个整型之间的比较，则不能进行删除*/
@@ -168,6 +172,7 @@ void childrenSubExp(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                         for (unsigned k = 0; k < childinst->getNumOperands(); k++) {
                             if (childinst->getOperand(k) == parentinst->getOperand(k)) {
                                 flag = true;
+                                global_optflag = true;
                             } else {
                                 flag = false;
                                 break;
@@ -210,11 +215,18 @@ void GlobalSubExpPass::runOnFunction(IRFunction &F) {
     DominatorTree::getDominatorTree(&cfg);
     auto rootBB = F.getEntryBlock();
     
-    /*多跑几次进行迭代*/
-    childrenSubExp(*rootBB, &cfg);
-    childrenldst(*rootBB, &cfg);
-    childrenSubExp(*rootBB, &cfg);
-    childrenldst(*rootBB, &cfg);
+    //判断当前优化迭代后是否还有可优化的空间
+    global_optflag = true;
+    while(global_optflag){
+        global_optflag = false;
+        /*多跑几次进行迭代*/
+        childrenSubExp(*rootBB, &cfg);
+        childrenldst(*rootBB, &cfg);
+    }
+    // childrenSubExp(*rootBB, &cfg);
+    // childrenldst(*rootBB, &cfg);
+    // childrenSubExp(*rootBB, &cfg);
+    // childrenldst(*rootBB, &cfg);
 
     irdomiinstArray.clear();
     irloadstoreArray.clear();

@@ -41,17 +41,17 @@ void Optimizer::build() {
     addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
 
-    addPass(new DeleteNonePredsPass("DeleteNonepredsPass"));
+    // addPass(new DeleteNonePredsPass("DeleteNonepredsPass"));
 
-    addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
+    // addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new PHIdeletePass("PHIdeletePass"));
+    // addPass(new PHIdeletePass("PHIdeletePass"));
 
-    addPass(new CutDeadBlockPass("CutDeadBLock"));
+    // addPass(new CutDeadBlockPass("CutDeadBLock"));
 
-    addPass(new RenamePass("RenamePass"));
+    // addPass(new RenamePass("RenamePass"));
 
-    addPass(new RegisterPass("RegisterPass"));
+    // addPass(new RegisterPass("RegisterPass"));
 }
 
 void Optimizer::setLevel(int level) {
