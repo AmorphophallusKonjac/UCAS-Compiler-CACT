@@ -6,7 +6,7 @@
 #include "IR/IRConstant.h"
 #include "IR/iMemory.h"
 
-std::vector<TemporaryVariable *> Interpreter::TempVarVector;
+std::map<IRValue *, TemporaryVariable *> Interpreter::GlobalVarMap;
 std::vector<TemporaryVariable *> Interpreter::Stack;
 bool Interpreter::debugOpt;
 int Interpreter::inst_cnt;
@@ -18,7 +18,6 @@ int Interpreter::interpret() {
     auto mainFunc = ir->getMainFunction();
     auto varList = ir->getVarList();
     initGlobalVar(varList);
-    TempVarVector.push_back(new TemporaryVariable(0, TemporaryVariable::Func));   // 把函数标识符放入临时变量栈
     Stack.push_back(new TemporaryVariable(0, TemporaryVariable::Func));   // 把函数标识符放入栈
     TemporaryVariable *ret = interpretFunction(mainFunc);
     return std::any_cast<int>(ret->getValue());
@@ -32,20 +31,19 @@ void Interpreter::initGlobalVar(const std::vector<IRGlobalVariable *> &varVector
         auto tempVar = change_ConstantVal_to_TemporaryVariable(initializer);
         Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
                                               tempVar->getElementType(), tempVar->getArraySize()));
-        TempVarVector.push_back(new TemporaryVariable(Stack.size() - 1, TemporaryVariable::Pointer, varType));
-        var->setTempVar(TempVarVector.back());
-        TempVarVector.back()->setIrValue(var);
+        GlobalVarMap[var] = new TemporaryVariable(Stack.size() - 1,
+                                                  TemporaryVariable::Pointer,
+                                                  varType);
         if (debugOpt)
             tempVar->print();
     }
 }
 
-void Interpreter::initFuncArg(const std::vector<IRArgument *> &argVector) {
+void Interpreter::initFuncArg(const std::vector<IRArgument *> &argVector, std::map<IRValue *, TemporaryVariable *> &tempVarMap) {
     auto argNum = argVector.size();
     auto stackSize = Stack.size();
     for (int i = 0; i < argNum; ++i) {
-        argVector[i]->setTempVar(Stack[stackSize - argNum + i]);
-        Stack[stackSize - argNum + i]->setIrValue(argVector[i]);
+        tempVarMap[argVector[i]] = Stack[stackSize - argNum + i];
     }
 }
 
@@ -53,8 +51,11 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
     if (debugOpt)
         std::cout << "Func Name: " << func->getName() << std::endl;
 
+    std::map<IRValue *, TemporaryVariable *> tempVarMap;
+    tempVarMap.clear();
+
     auto argList = func->getArgumentList(); // 函数参数列表
-    initFuncArg(argList);   // 初始化参数列表
+    initFuncArg(argList, tempVarMap);   // 初始化参数列表
     auto entryBlock = func->getEntryBlock();
     auto currentBlock = entryBlock;
     IRBasicBlock *lastBlock = currentBlock;
@@ -86,8 +87,8 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     continue;
                 printf("Operand ");
                 std::cout << inst->getOperand(i)->getName() << ": ";
-                if (change_Operand_To_TemporaryVariable(inst->getOperand(i)))
-                    change_Operand_To_TemporaryVariable(inst->getOperand(i))->print();
+                if (change_Operand_To_TemporaryVariable(inst->getOperand(i), tempVarMap))
+                    change_Operand_To_TemporaryVariable(inst->getOperand(i), tempVarMap)->print();
             }
         }
         switch (opcode) {
@@ -100,45 +101,14 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     }
                 } else if (operandNum == 1) {
                     auto operand = inst->getOperand(0);
-                    ret = change_Operand_To_TemporaryVariable(operand);
+                    ret = change_Operand_To_TemporaryVariable(operand, tempVarMap);
                     if (debugOpt) {
                         ret->print();
                     }
                 }
 
-                int funcLabelOffset = (int)TempVarVector.size() - 1;
-                while(TempVarVector[funcLabelOffset]->getType() != TemporaryVariable::Func) {
-                    --funcLabelOffset;
-                }
-                while (TempVarVector.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
-                    auto backVar = TempVarVector.back();
-                    TempVarVector.pop_back();
-                    if(!backVar->getIrValue())
-                        continue;
-                    int i = funcLabelOffset - 1;
-                    while(i >= 0 && TempVarVector[i]->getIrValue() != backVar->getIrValue()) {
-                        --i;
-                    }
-                    if(i >= 0)
-                        backVar->getIrValue()->setTempVar(TempVarVector[i]);
-                }
-                TempVarVector.pop_back();   // 弹出函数标识符
-
-                funcLabelOffset = (int)Stack.size() - 1;
-                while(Stack[funcLabelOffset]->getType() != TemporaryVariable::Func) {
-                    --funcLabelOffset;
-                }
                 while (Stack.back()->getType() != TemporaryVariable::Func) {   // 弹出局部变量和参数，直到遇到函数标识符
-                    auto backVar = Stack.back();
                     Stack.pop_back();
-                    if(!backVar->getIrValue())
-                        continue;
-                    int i = funcLabelOffset - 1;
-                    while(i >= 0 && Stack[i]->getIrValue() != backVar->getIrValue()) {
-                        --i;
-                    }
-                    if(i >= 0)
-                        backVar->getIrValue()->setTempVar(Stack[i]);
                 }
                 Stack.pop_back();   // 弹出函数标识符
 
@@ -160,7 +130,7 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     auto destTrue = inst->getOperand(0);
                     auto destFalse = inst->getOperand(1);
                     auto cond = inst->getOperand(2);
-                    auto tempVarCond = change_Operand_To_TemporaryVariable(cond);
+                    auto tempVarCond = change_Operand_To_TemporaryVariable(cond, tempVarMap);
 
                     if (tempVarCond->getType() != TemporaryVariable::Bool) {
                         printf("Cannot Branch With Condition Type: ");
@@ -179,182 +149,182 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
             }
 
             case IRInstruction::Add : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 + *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Sub : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 - *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Mul : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 * *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Div : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 / *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Rem : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 % *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::And : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 && *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Or : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 || *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Xor : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 ^ *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetLE : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 <= *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetGE : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 >= *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetLT : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 < *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetGT : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 > *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetEQ : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 == *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::SetNE : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 != *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
@@ -365,11 +335,11 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 auto operand = inst->getOperand(0);
                 auto varType = getTempVarType(seqType->getElementType());
                 auto tempVar = allocaOnStack(operand, varType);
-                Stack.push_back(new TemporaryVariable(tempVar->getValue(), tempVar->getType(),
-                                                      tempVar->getElementType(), tempVar->getArraySize()));
-                TempVarVector.push_back(new TemporaryVariable(Stack.size() - 1, TemporaryVariable::Pointer, varType));
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                Stack.push_back(new TemporaryVariable(tempVar->getValue(),
+                                                      tempVar->getType(),
+                                                      tempVar->getElementType(),
+                                                      tempVar->getArraySize()));
+                tempVarMap[inst] = new TemporaryVariable{Stack.size() - 1, TemporaryVariable::Pointer, varType};
                 if (debugOpt)
                     tempVar->print();
                 break;
@@ -377,17 +347,17 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
 
             case IRInstruction::Load : {
                 auto operand = inst->getOperand(0);
-                auto tempVar = change_Operand_To_TemporaryVariable(operand);
+                auto tempVar = change_Operand_To_TemporaryVariable(operand, tempVarMap);
                 if (tempVar->getType() != TemporaryVariable::Pointer) {
                     printf("Error: Load operand is not Pointer type!");
                 }
                 auto offset = std::any_cast<unsigned long>(tempVar->getValue());
                 TemporaryVariable *loadVar;
                 loadVar = Stack[offset];
-                TempVarVector.push_back(new TemporaryVariable(loadVar->getValue(), loadVar->getType(),
-                                                              loadVar->getElementType(), loadVar->getArraySize()));
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{loadVar->getValue(),
+                                                         loadVar->getType(),
+                                                         loadVar->getElementType(),
+                                                         loadVar->getArraySize()};
                 if (debugOpt)
                     loadVar->print();
                 break;
@@ -396,8 +366,8 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
             case IRInstruction::Store : {
                 auto operand0 = inst->getOperand(0);
                 auto operand1 = inst->getOperand(1);
-                auto tempVar0 = change_Operand_To_TemporaryVariable(operand0);
-                auto tempVar1 = change_Operand_To_TemporaryVariable(operand1);
+                auto tempVar0 = change_Operand_To_TemporaryVariable(operand0, tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(operand1, tempVarMap);
                 if (tempVar1->getType() != TemporaryVariable::Pointer) {
                     printf("Error: Store destination is not Pointer type!");
                 }
@@ -413,9 +383,9 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
 
             case IRInstruction::Memcpy : {
                 auto tempVar0 = change_Operand_To_TemporaryVariable(
-                        dynamic_cast<IRMemcpyInst *>(inst)->getSrcPointerOperand());
+                        dynamic_cast<IRMemcpyInst *>(inst)->getSrcPointerOperand(), tempVarMap);
                 auto tempVar1 = change_Operand_To_TemporaryVariable(
-                        dynamic_cast<IRMemcpyInst *>(inst)->getDestPointerOperand());
+                        dynamic_cast<IRMemcpyInst *>(inst)->getDestPointerOperand(), tempVarMap);
                 auto pointer_offset0 = std::any_cast<unsigned long>(tempVar0->getValue());
                 auto pointer_offset1 = std::any_cast<unsigned long>(tempVar1->getValue());
                 auto array0 = Stack[pointer_offset0];
@@ -437,15 +407,12 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                 auto foundLabel = false;
                 for (auto i = 0; i < labelNum; ++i) {
                     auto label = inst->getOperand(2 * i + 1);
-//                    std::cout << label->getName() << ' ' << lastBlock->getName() << std::endl;
                     if (label->getName() == lastBlock->getName()) {
-                        auto tempVar = change_Operand_To_TemporaryVariable(inst->getOperand(2 * i));
-                        TempVarVector.push_back(new TemporaryVariable{tempVar->getValue(),
-                                                                      tempVar->getType(),
-                                                                      tempVar->getElementType(),
-                                                                      tempVar->getArraySize()});
-                        inst->setTempVar(TempVarVector.back());
-                        TempVarVector.back()->setIrValue(inst);
+                        auto tempVar = change_Operand_To_TemporaryVariable(inst->getOperand(2 * i), tempVarMap);
+                        tempVarMap[inst] = new TemporaryVariable{tempVar->getValue(),
+                                                                 tempVar->getType(),
+                                                                 tempVar->getElementType(),
+                                                                 tempVar->getArraySize()};
                         foundLabel = true;
                         break;
                     }
@@ -464,14 +431,15 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     printf("Call Operand0 is not FunctionVal valueType\n");
                 }
 
-                TempVarVector.push_back(new TemporaryVariable(0, TemporaryVariable::Func));   // 把函数标识符放入临时变量栈
                 Stack.push_back(new TemporaryVariable(0, TemporaryVariable::Func));   // 把函数标识符放入栈
 
                 for (int i = 1; i < operandNum; ++i) {    // 把参数放入栈里
                     auto operand_i = inst->getOperand(i);
-                    auto arg_i = change_Operand_To_TemporaryVariable(operand_i);
-                    Stack.push_back(new TemporaryVariable(arg_i->getValue(), arg_i->getType(),
-                                                          arg_i->getElementType(), arg_i->getArraySize()));
+                    auto arg_i = change_Operand_To_TemporaryVariable(operand_i, tempVarMap);
+                    Stack.push_back(new TemporaryVariable{arg_i->getValue(),
+                                                          arg_i->getType(),
+                                                          arg_i->getElementType(),
+                                                          arg_i->getArraySize()});
                 }
 
                 TemporaryVariable *ret = nullptr;
@@ -481,12 +449,11 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
                     auto callFunc = dynamic_cast<IRFunction *>(operand0);    // 函数指针
                     ret = interpretFunction(callFunc);
                 }
-                auto funcRet = new TemporaryVariable{ret->getValue(), ret->getType(),
-                                                    ret->getElementType(), ret->getArraySize()};
+                tempVarMap[inst] = new TemporaryVariable{ret->getValue(),
+                                                         ret->getType(),
+                                                         ret->getElementType(),
+                                                         ret->getArraySize()};
 
-                TempVarVector.push_back(funcRet);
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
                 if(debugOpt) {
                     printf("return Value of Call: ");
                     ret->print();
@@ -495,26 +462,26 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
             }
 
             case IRInstruction::Shl : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 << *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
             }
 
             case IRInstruction::Shr : {
-                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                auto tempVar0 = change_Operand_To_TemporaryVariable(inst->getOperand(0), tempVarMap);
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 TemporaryVariable result = *tempVar0 >> *tempVar1;
-                TempVarVector.push_back(new TemporaryVariable{result.getValue(), result.getType(),
-                                                              result.getElementType(), result.getArraySize()});
-                inst->setTempVar(TempVarVector.back());
-                TempVarVector.back()->setIrValue(inst);
+                tempVarMap[inst] = new TemporaryVariable{result.getValue(),
+                                                         result.getType(),
+                                                         result.getElementType(),
+                                                         result.getArraySize()};
                 if (debugOpt)
                     result.print();
                 break;
@@ -522,10 +489,8 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
 
             case IRInstruction::Move : {
                 auto tempVar0 = new TemporaryVariable{0, TemporaryVariable::Void};
-                TempVarVector.push_back(tempVar0);
-                inst->getOperand(0)->setTempVar(tempVar0);
-                tempVar0->setIrValue(inst->getOperand(0));
-                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1));
+                tempVarMap[inst->getOperand(0)] = tempVar0;
+                auto tempVar1 = change_Operand_To_TemporaryVariable(inst->getOperand(1), tempVarMap);
                 tempVar0->setValue(tempVar1->getValue());
                 tempVar0->setType(tempVar1->getType());
                 tempVar0->setElementType(tempVar1->getElementType());
@@ -542,14 +507,16 @@ TemporaryVariable *Interpreter::interpretFunction(IRFunction *func) {
     }
 }
 
-TemporaryVariable *Interpreter::change_Operand_To_TemporaryVariable(IRValue *irValue) {
+TemporaryVariable *Interpreter::change_Operand_To_TemporaryVariable(IRValue *irValue, std::map<IRValue *, TemporaryVariable *> &tempVarMap) {
     auto valueType = irValue->getValueType();
-    if (valueType == IRValue::ArgumentVal || valueType == IRValue::InstructionVal
-        || valueType == IRValue::GlobalVariableVal) {
-        if (irValue->getTempVar() == nullptr) {
+    if (valueType == IRValue::GlobalVariableVal) {
+        return GlobalVarMap[irValue];
+    }
+    if (valueType == IRValue::ArgumentVal || valueType == IRValue::InstructionVal) {
+        if (!tempVarMap[irValue]) {
             printf("tempVar of irValue is NULL!");
         }
-        return irValue->getTempVar();
+        return tempVarMap[irValue];
     } else if (valueType == IRValue::ConstantVal) {
         return change_ConstantVal_to_TemporaryVariable(irValue);
     } else {
@@ -765,11 +732,6 @@ TemporaryVariable *Interpreter::runBuildInFunction(const std::string &funcName) 
         std::cin >> val;
         ret = new TemporaryVariable(val, TemporaryVariable::Double);
     }
-
-    while (TempVarVector.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
-        TempVarVector.pop_back();
-    }
-    TempVarVector.pop_back();   // 弹出函数标识符
 
     while (Stack.back()->getType() != TemporaryVariable::Func) {   // 弹出临时变量，直到遇到函数标识符
         Stack.pop_back();
