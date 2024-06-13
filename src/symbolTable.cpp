@@ -49,7 +49,7 @@ int SizeOfDataType(DataType x) {
 
 /***********符号表***********/
 SymbolInfo::SymbolInfo(const std::string &name, int line)
-    : name(name), operand(nullptr), line(line) {}
+        : name(name), operand(nullptr), line(line) {}
 
 void SymbolInfo::setOp(IROperand *op) {
     operand = op;
@@ -62,68 +62,73 @@ IROperand *SymbolInfo::getOp() {
     return operand;
 }
 
-void ConstSymbolInfo::setIRValue(){
+void ConstSymbolInfo::setIRValue() {
     irValue = initValueArray[0];
 }
 
-void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer, IRModule* irmodule){
+void VarSymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock *parent, IRValue *IRinitializer,
+                               IRModule *irmodule) {
 
     /******对一个var而言,所有显式和非显式的初始化全部都在外面做好之后压到initvaluearray里面******/
-    if(!initValueArray.empty()){
+    if (!initValueArray.empty()) {
         irinitializer = initValueArray[0];
-    }else{
+    } else {
         irinitializer = IRinitializer;
     }
     assert(irinitializer);
 
     switch (vTy) {
         case IRValue::GlobalVariableVal :
-            irValue = new IRGlobalVariable  
-                (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
-                 dynamic_cast<IRConstant*>(irinitializer), 
-                 this->getName(), irmodule);
+            irValue = new IRGlobalVariable
+                    (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
+                     dynamic_cast<IRConstant *>(irinitializer),
+                     this->getName(), irmodule, isinitial);
             break;
 
         case IRValue::InstructionVal :
-            irValue = new IRAllocaInst 
-                (irinitializer->getType(), nullptr, this->getName()+std::to_string(SymbolCount), parent);
+            irValue = new IRAllocaInst
+                    (irinitializer->getType(), nullptr, this->getName() + std::to_string(SymbolCount), parent);
             break;
     }
 }
 
 /******const的initArray必须有数据，var可以没有，因为可能是参数******/
 /******constArray我添加到irmodule的globalvariablelist中去******/
-void ConstArraySymbolInfo::setIRValue(IRModule* irmodule, unsigned SymbolCount, const std::string& FuncName){
+void ConstArraySymbolInfo::setIRValue(IRModule *irmodule, unsigned SymbolCount, const std::string &FuncName) {
 
-    if(!initValueArray.empty()){
-        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
+    if (!initValueArray.empty()) {
+        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()),
+                                            initValueArray);
     }
     assert(irinitializer);
-            
-    if(!FuncName.empty()){//如果不是空串，则是函数内的constArray
+
+    if (!FuncName.empty()) {//如果不是空串，则是函数内的constArray
         irValue = new IRGlobalVariable
-        (irinitializer->getType(), true, IRGlobalValue::ExternalLinkage,
-        dynamic_cast<IRConstant*>(irinitializer),
-        this->getName()+std::to_string(SymbolCount)+"_"+FuncName, irmodule);
-    }else{
+                (irinitializer->getType(), true, IRGlobalValue::ExternalLinkage,
+                 dynamic_cast<IRConstant *>(irinitializer),
+                 this->getName() + std::to_string(SymbolCount) + "_" + FuncName, irmodule);
+    } else {
         irValue = new IRGlobalVariable
-        (irinitializer->getType(), true, IRGlobalValue::InternalLinkage,
-        dynamic_cast<IRConstant*>(irinitializer),
-        this->getName(), irmodule);
+                (irinitializer->getType(), true, IRGlobalValue::InternalLinkage,
+                 dynamic_cast<IRConstant *>(irinitializer),
+                 this->getName(), irmodule);
     }
 }
 
 /******VarArray:如果是globalVar,那么new一个globalVar就行；如果不是，那么就new一个instruction和一个globalVar，然后memcpy;******/
 /******注意，如果是后者，那么new的globalVar在第一次******/
-void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock* parent, IRValue* IRinitializer, IRModule* irmodule){
+void
+VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, IRBasicBlock *parent, IRValue *IRinitializer,
+                               IRModule *irmodule) {
 
     /******两种可能性
     1.有initial，那么就可以直接从initValueArray中取;
     2.没有，那么就传进来一个已经写在funcsymbol里面的arg来作为参数init******/
-    
-    if(!initValueArray.empty()){
-        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()), initValueArray);
-    }else{
+
+    if (!initValueArray.empty()) {
+        irinitializer = new IRConstantArray(new IRArrayType(initValueArray[0]->getType(), initValueArray.size()),
+                                            initValueArray);
+    } else {
         irinitializer = IRinitializer;
     }
     assert(irinitializer);
@@ -133,21 +138,21 @@ void VarArraySymbolInfo::setIRValue(IRValue::ValueTy vTy, unsigned SymbolCount, 
     switch (vTy) {
         case IRValue::GlobalVariableVal : //数组类型
             irValue = new IRGlobalVariable
-                (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
-                 dynamic_cast<IRConstant*>(irinitializer),
-                this->getName(),irmodule);
+                    (irinitializer->getType(), false, IRGlobalValue::InternalLinkage,
+                     dynamic_cast<IRConstant *>(irinitializer),
+                     this->getName(), irmodule, isinitial);
             break;
 
         case IRValue::InstructionVal :
-            irValue = new IRAllocaInst 
-                (irinitializer->getType(), irinitializer,
-                this->getName()+std::to_string(SymbolCount), parent);
+            irValue = new IRAllocaInst
+                    (irinitializer->getType(), irinitializer,
+                     this->getName() + std::to_string(SymbolCount), parent);
             break;
     }
 }
 
 
-void FuncSymbolInfo::setIRValue(IRModule* irModule, IRFunction::FuncTy functy){
+void FuncSymbolInfo::setIRValue(IRModule *irModule, IRFunction::FuncTy functy) {
 
     /******通过这个类自己的属性Result来构建IR需要的Result******/
     const IRType *IRResult;
@@ -169,45 +174,46 @@ void FuncSymbolInfo::setIRValue(IRModule* irModule, IRFunction::FuncTy functy){
             break;
     }
 
-    irValue = new IRFunction(new IRFunctionType(const_cast<IRType *>(IRResult), IRParams), IRGlobalValue::InternalLinkage, 
-                            this->getName(), irModule, functy);
+    irValue = new IRFunction(new IRFunctionType(const_cast<IRType *>(IRResult), IRParams),
+                             IRGlobalValue::InternalLinkage,
+                             this->getName(), irModule, functy);
     /******将已经分配出的参数个数算进去******/
 
     /******arg与函数的双向奔赴******/
-    for(auto arg :getIRArgs()){
-        arg->setParent(dynamic_cast<IRFunction*>(irValue));
-        dynamic_cast<IRFunction*>(irValue)->addArgument(arg);
+    for (auto arg: getIRArgs()) {
+        arg->setParent(dynamic_cast<IRFunction *>(irValue));
+        dynamic_cast<IRFunction *>(irValue)->addArgument(arg);
     }
 
-    dynamic_cast<IRFunction*>(irValue)->setCount(IRArgs.size()+1);
+    dynamic_cast<IRFunction *>(irValue)->setCount(IRArgs.size() + 1);
 }
 
 
 /***********常量变量数组符号表(init函数)***********/
 ConstVarArraySymbolInfo::ConstVarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global)
-    : SymbolInfo(name, line), initValue(), dataType(dataType), global(global) {}
+        : SymbolInfo(name, line), initValue(), dataType(dataType), global(global) {}
 
 ConstSymbolInfo::ConstSymbolInfo(const std::string &name, int line, DataType dataType, int global)
-    : ConstVarArraySymbolInfo(name, line, dataType, global) {}
+        : ConstVarArraySymbolInfo(name, line, dataType, global) {}
 
 
 VarSymbolInfo::VarSymbolInfo(const std::string &name, int line, DataType dataType, int global)
-    : ConstVarArraySymbolInfo(name, line, dataType, global) {}
+        : ConstVarArraySymbolInfo(name, line, dataType, global) {}
 
 
 ConstArraySymbolInfo::ConstArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                                            const std::vector<int> arraySize, int dimension)
-    : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
+        : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
 
 
 VarArraySymbolInfo::VarArraySymbolInfo(const std::string &name, int line, DataType dataType, int global,
                                        const std::vector<int> arraySize, int dimension)
-    : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
+        : ConstVarArraySymbolInfo(name, line, dataType, global), arraySize(arraySize), dimension(dimension) {}
 
 
 /***********FuncSymbolInfo***********/
 FuncSymbolInfo::FuncSymbolInfo(const std::string &name, int line, DataType returnType)
-    : SymbolInfo(name, line), returnType(returnType), baseblock(nullptr) {}
+        : SymbolInfo(name, line), returnType(returnType), baseblock(nullptr) {}
 
 SymbolInfo *FuncSymbolInfo::addParamVar(const std::string &name, int line, DataType dataType) {
     VarSymbolInfo *newParam = new VarSymbolInfo(name, line, dataType, 0);//函数的形参必然不是全局变量
@@ -235,11 +241,11 @@ BlockInfo::BlockInfo(BlockInfo *parentBlock) : parentBlock(parentBlock) {
 }
 
 BlockInfo::BlockInfo(BlockInfo *parentBlock, FuncSymbolInfo *belongTo, const std::vector<SymbolInfo *> &paramList)
-    : parentBlock(parentBlock), belongTo(belongTo) {
+        : parentBlock(parentBlock), belongTo(belongTo) {
     for (SymbolInfo *one_param: paramList) {
         if (symbolTable.symbolList.count(one_param->getName()) > 0) {
             ErrorHandler::printErrorSymbol(one_param, "redefinition. Previous definition is on line " + std::to_string(
-                                                                                                                symbolTable.symbolList[one_param->getName()]->getline()));
+                    symbolTable.symbolList[one_param->getName()]->getline()));
             throw std::runtime_error(
                     "Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         }
@@ -271,7 +277,8 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
     //symbol符号表添加
     if (symbolTable.symbolList.count(name) > 0) {//这里注意，我还会去全局的函数表里面寻找函数名，任何块内定义的变量名都不能和全局的函数名相同//不用
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
@@ -287,7 +294,8 @@ ConstSymbolInfo *BlockInfo::addNewConst(const std::string &name, int line, DataT
 VarSymbolInfo *BlockInfo::addNewVar(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
@@ -305,7 +313,8 @@ BlockInfo::addNewConstArray(const std::string &name, int line, DataType dataType
                             int dimension) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -323,7 +332,8 @@ BlockInfo::addNewVarArray(const std::string &name, int line, DataType dataType, 
                           int dimension) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -363,14 +373,15 @@ BlockInfo *BlockInfo::addNewBlock() {
 /***********GlobalBlock***********/
 
 GlobalBlock::GlobalBlock()
-    : BlockInfo(nullptr){};
+        : BlockInfo(nullptr) {};
 
 /***********在GlobalBlock中添加各种符号***********/
 //注意这里的函数与blockInfo不是覆写的关系，因为添加常量或者变量总需要查找全局的函数表以防同名，这里直接查自己即可
 ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {//这里注意，我还会去全局的函数表里面寻找函数名，全局变量不能和全局的函数名相同
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstSymbolInfo *newSymbol = new ConstSymbolInfo(name, line, dataType, 0);
@@ -386,7 +397,8 @@ ConstSymbolInfo *GlobalBlock::addNewConst(const std::string &name, int line, Dat
 VarSymbolInfo *GlobalBlock::addNewVar(const std::string &name, int line, DataType dataType) {
     if (symbolTable.symbolList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarSymbolInfo *newSymbol = new VarSymbolInfo(name, line, dataType, 0);
@@ -404,7 +416,8 @@ GlobalBlock::addNewConstArray(const std::string &name, int line, DataType dataTy
                               int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     ConstArraySymbolInfo *newSymbol = new ConstArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -422,7 +435,8 @@ GlobalBlock::addNewVarArray(const std::string &name, int line, DataType dataType
                             int dimension) {
     if (symbolTable.symbolList.count(name) > 0 || lookUpFunc(name) != nullptr) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(symbolTable.symbolList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(symbolTable.symbolList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     VarArraySymbolInfo *newSymbol = new VarArraySymbolInfo(name, line, dataType, 0, arraySize, dimension);
@@ -455,7 +469,8 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
     //首先在global中加入函数
     if (funcTable.funcList.count(name) > 0) {
         ErrorHandler::printErrorMessage(
-                "'" + name + "' redefinition. Previous definition is on line " + std::to_string(funcTable.funcList[name]->getline()));
+                "'" + name + "' redefinition. Previous definition is on line " +
+                std::to_string(funcTable.funcList[name]->getline()));
         throw std::runtime_error("Syntax analysis failed at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
     }
     FuncSymbolInfo *newFunc = new FuncSymbolInfo(name, line, returnType);
@@ -470,11 +485,12 @@ FuncSymbolInfo *GlobalBlock::addNewFunc(const std::string &name, int line, DataT
 
     return newFunc;
 }
-void GlobalBlock::initIOFunction(IRModule* irmodule) {
+
+void GlobalBlock::initIOFunction(IRModule *irmodule) {
     // 建立I/O函数的符号表
     // TODO: build I/O函数的IRFunction
-    IRType* irType;
-    IRArgument* irarg;
+    IRType *irType;
+    IRArgument *irarg;
     this->addNewFunc("print_int", 0, DataType::VOID)
             ->addParamVar("x", 0, DataType::INT);
     irType = const_cast<IRType *>(IRType::getPrimitiveType(IRType::IntTyID));

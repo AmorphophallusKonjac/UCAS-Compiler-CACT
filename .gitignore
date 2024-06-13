@@ -31,4 +31,6 @@ test/*/ll
 test/*/s
 IRgen
 IRgenbench
+Codegen
+Codegenbench
 test/samples_codegen_llvmtest

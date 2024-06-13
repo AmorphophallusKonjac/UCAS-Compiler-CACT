@@ -1,7 +1,6 @@
 #ifndef COMPILER_IMEMORY_H
 #define COMPILER_IMEMORY_H
 
-
 #include "IRInstruction.h"
 class IRPointerType;
 

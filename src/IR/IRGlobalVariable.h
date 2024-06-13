@@ -14,10 +14,12 @@ class IRGlobalVariable : public IRGlobalValue {
 
     bool isConstantGlobal;
 
+    bool isinitial;
+
 public:
     IRGlobalVariable(IRType *Ty, bool isConstant, LinkageTypes Linkage,
                      IRConstant *Initializer = nullptr, const std::string &Name = "",
-                     IRModule *Parent = nullptr);
+                     IRModule *Parent = nullptr, bool isinitial = true);
 
     /******全局变量的初始化******/
     inline bool hasInitializer() const { return !Operands.empty(); }
@@ -36,6 +38,8 @@ public:
 
     /******判断是不是一个常量，但是我们都会把这个常量直接当作立即数使用，故无用******/
     bool isConstant() const { return isConstantGlobal; }
+
+    bool isIsinitial() const;
 
     /******全局变量的print******/
     void printPrefixName(std::ostream &OS) const;
