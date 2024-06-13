@@ -19,7 +19,7 @@ void RegisterPass::runOnFunction(IRFunction &F){
     /*每一个inst都根据它的outlive来给出哪些寄存器活跃*/
     for(auto BB: F.getBasicBlockList()){
         for(auto inst: BB->getInstList()){
-            for(auto irlive: *inst->getLive()->getOUTLive()){
+            for(auto irlive: *inst->getLive()->getINLive()){
                 if(irlive->getValueType() == IRValue::InstructionVal){
                     switch(dynamic_cast<IRInstruction*>(irlive)->getReg()->getRegty()){
                         case Register::CalleeSaved:
