@@ -438,7 +438,8 @@ namespace RISCV {
                 }
                 case IRInstruction::Call: {
                     auto callInst = dynamic_cast<IRCallInst *>(irInst);
-                    auto callerRegList = parent->getIrFunction()->getCallerSavedRegList();
+//                    auto callerRegList = parent->getIrFunction()->getCallerSavedRegList();
+                    auto callerRegList = irInst->getCallerSavedLiveRegList();
                     auto regSize = Function::alignSize(8 * callerRegList.size());
                     // 申请栈空间
                     if (regSize)

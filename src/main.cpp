@@ -39,12 +39,12 @@ int main(int argc, const char *argv[]) {
 
     Optimizer opt(&ir);
     opt.build();
-//    opt.setLevel(parser.getLevel());
-    opt.setLevel(2);
+    std::cout << parser.getLevel() << std::endl;
+    opt.setLevel(parser.getLevel());
     opt.run();
 
-//    if (parser.get("emit-IR"))
-    frontEnd.print();
+    if (parser.get("emit-IR"))
+        frontEnd.print();
 
     BackEnd backEnd(&ir);
     backEnd.print();

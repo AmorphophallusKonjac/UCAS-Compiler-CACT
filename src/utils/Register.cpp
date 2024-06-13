@@ -131,15 +131,15 @@ FloatParamRegister *FloatParamRegister::Num2Reg(unsigned int num) {
     }
 }
 
-void RegisterFactory::printInst(std::ostream& OS, IRInstruction& inst){
+void RegisterFactory::printInst(std::ostream &OS, IRInstruction &inst) {
     /*打印inst中需要保存的寄存器*/
     OS << "CalleeSaved: ";
-    for(auto reg: inst.getCalleeSavedLiveRegList())
-        OS << reg->getRegName() <<", ";
+    for (auto reg: inst.getCalleeSavedLiveRegList())
+        OS << reg->getRegName() << ", ";
 
     OS << "CallerSaved: ";
-    for(auto reg: inst.getCallerSavedLiveRegList())
-        OS << reg->getRegName() <<", ";
+    for (auto reg: inst.getCallerSavedLiveRegList())
+        OS << reg->getRegName() << ", ";
     OS << std::endl;
 }
 
@@ -213,17 +213,10 @@ void RegisterFactory::check(IRFunction &F) {
     for (auto BB: F.getBasicBlockList()) {
         for (auto inst: BB->getInstList()) {
             if ((inst->isBinaryOp() ||
-                 inst->getOpcode() == IRInstruction::Call ||
+                 (inst->getOpcode() == IRInstruction::Call && inst->getType()->getPrimitiveID() != IRType::VoidTyID) ||
                  inst->getOpcode() == IRInstruction::Load ||
                  inst->getOpcode() == IRInstruction::Shl ||
                  inst->getOpcode() == IRInstruction::Shr)) {
-    for(auto BB: F.getBasicBlockList()){
-        for(auto inst: BB->getInstList()){
-            if((inst->isBinaryOp() ||
-               (inst->getOpcode() == IRInstruction::Call && inst->getType()->getPrimitiveID() != IRType::VoidTyID) ||
-                inst->getOpcode() == IRInstruction::Load ||
-                inst->getOpcode() == IRInstruction::Shl ||
-                inst->getOpcode() == IRInstruction::Shr)){
                 instreg = inst->getReg();
 
                 /*针对每一条指令，比较其与OUTLive的冲突*/
