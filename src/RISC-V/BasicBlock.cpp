@@ -387,7 +387,7 @@ namespace RISCV {
                     Value *stVal = nullptr;
                     if (dynamic_cast<IRConstant *>(irStVal)) {
                         // 存储值是常数
-                        if (ty == IRType::IntTy) {
+                        if (ty == IRType::IntTy || ty == IRType::BoolTy) {
                             new LiInst(stVal = new Value(CallerSavedRegister::ra),
                                        dynamic_cast<IRConstantInt *>(irStVal)->getRawValue(), this);
                         } else
@@ -526,6 +526,8 @@ namespace RISCV {
                     }
                     break;
                 }
+                default:
+                    assert(0 && "unknown ir instruction");
             }
         }
     }

@@ -72,6 +72,8 @@ namespace RISCV {
                 auto arrayTy = dynamic_cast<const IRArrayType *>(ty);
                 sizeList.push_back(
                         alignSize(arrayTy->getNumElements() * arrayTy->getElementType()->getPrimitiveSize()));
+            } else if (ty->isPrimitiveType() && ty != IRType::VoidTy && ty != IRType::LabelTy && ty != IRType::TypeTy) {
+                sizeList.push_back(alignSize(ty->getPrimitiveSize()));
             } else
                 assert(0 && "Error type");
         }
