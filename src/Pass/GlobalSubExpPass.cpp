@@ -172,7 +172,6 @@ void childrenSubExp(IRBasicBlock &BB, ControlFlowGraph *cfg) {
                         for (unsigned k = 0; k < childinst->getNumOperands(); k++) {
                             if (childinst->getOperand(k) == parentinst->getOperand(k)) {
                                 flag = true;
-                                global_optflag = true;
                             } else {
                                 flag = false;
                                 break;
@@ -183,6 +182,7 @@ void childrenSubExp(IRBasicBlock &BB, ControlFlowGraph *cfg) {
             }
 
             if (flag) { // erase完毕后下一条指令自动上前
+                global_optflag = true;
                 auto ircancelinst = std::find(BB.getInstList().begin(),
                                               BB.getInstList().end(), childinst);
                 childinst->dropAllReferences();
@@ -223,10 +223,6 @@ void GlobalSubExpPass::runOnFunction(IRFunction &F) {
         childrenSubExp(*rootBB, &cfg);
         childrenldst(*rootBB, &cfg);
     }
-    // childrenSubExp(*rootBB, &cfg);
-    // childrenldst(*rootBB, &cfg);
-    // childrenSubExp(*rootBB, &cfg);
-    // childrenldst(*rootBB, &cfg);
 
     irdomiinstArray.clear();
     irloadstoreArray.clear();

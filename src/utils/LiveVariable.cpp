@@ -61,6 +61,7 @@ void LiveVariableBB::genLiveVariableBB(IRFunction *F) {
     }
 
     bool flag=true;
+    /*一直迭代到不动点*/
     while(flag){
         flag = false;
         for(auto BB:F->getBasicBlockList()){
@@ -71,11 +72,13 @@ void LiveVariableBB::genLiveVariableBB(IRFunction *F) {
                 }
             }
 
+            /*对OUT进行去重处理*/
             auto OUTLive = BB->getLive()->getOUTLive();
             /*去重处理*/
             std::sort(OUTLive->begin(), OUTLive->end());
             OUTLive->erase(std::unique(OUTLive->begin(), OUTLive->end()), OUTLive->end());
 
+            /*调用基本块内部的活跃变量分析得到基本块开头的Live变量*/
             LiveVariableInst::genLiveVariableInst(BB);
 
             /*IN[B] = OUT[inst]*/
