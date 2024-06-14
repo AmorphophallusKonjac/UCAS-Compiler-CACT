@@ -5,7 +5,7 @@ namespace RISCV {
     LoadInst::LoadInst(Value *rd, Pointer *ptr, BasicBlock *parent, IRType *ty, Value *rt)
             : Instruction(IRType::VoidTy, 0, parent), rt(rt) {
         assert(ty != IRType::VoidTy && ty != IRType::LabelTy && ty != IRType::TypeTy && "Error Type");
-        if (ty == nullptr)
+        if (ty == nullptr || ty->getPrimitiveID() == IRType::PointerTyID)
             iType = Ld;
         else if (ty == IRType::BoolTy)
             iType = Lb;

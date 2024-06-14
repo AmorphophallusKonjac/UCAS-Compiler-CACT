@@ -219,7 +219,7 @@ namespace RISCV {
                                                this);
                         }
                     } else {
-                        // 两给操作数都是reg
+                        // 两个操作数都是reg
                         new BinaryOperator(Instruction::Add, ty, new Value(irInst), new Value(op1), new Value(op2),
                                            this);
                     }
@@ -368,7 +368,7 @@ namespace RISCV {
                         new LoadInst(new Value(loadInst), new Pointer(gv), this, ty, rt);
                     } else if (alloc) {
                         auto ptr = parent->getPointer(alloc);
-                        if (ty->isPrimitiveType())
+                        if (ty->isPrimitiveType() || ty->getPrimitiveID() == IRType::PointerTyID)
                             new LoadInst(new Value(loadInst), ptr, this, ty);
                         else
                             new BinaryOperator(Instruction::Addi, IRType::IntTy, new Value(loadInst),
@@ -385,13 +385,26 @@ namespace RISCV {
                     auto ty = irStVal->getType();
                     auto alloc = dynamic_cast<IRAllocaInst *>(irPtr);
                     Value *stVal = nullptr;
+                    bool needRestore = false;
                     if (dynamic_cast<IRConstant *>(irStVal)) {
                         // 存储值是常数
                         if (ty == IRType::IntTy || ty == IRType::BoolTy) {
                             new LiInst(stVal = new Value(CallerSavedRegister::ra),
                                        dynamic_cast<IRConstantInt *>(irStVal)->getRawValue(), this);
-                        } else
-                            assert(0 && "whoops float constant");
+                        } else {
+                            // add GV
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(irStVal), parent->getParent());
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 所有的 caller 寄存器全满了，使用 fa0 替代
+                                needRestore = true;
+                                stVal = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(stVal, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                stVal = new Value(tempReg);
+                            }
+                            new LoadInst(stVal, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        }
                     } else
                         stVal = new Value(irStVal);
                     if (IRGlobalVariable::classof(irPtr)) {
@@ -413,6 +426,8 @@ namespace RISCV {
                     } else {
                         new StoreInst(stVal, new Pointer(0, irPtr->getReg()), this, ty);
                     }
+                    if (needRestore)
+                        new LoadInst(stVal, new Pointer(-8), this, IRType::DoubleTy);
                     break;
                 }
                 case IRInstruction::Memcpy: {
@@ -438,7 +453,6 @@ namespace RISCV {
                 }
                 case IRInstruction::Call: {
                     auto callInst = dynamic_cast<IRCallInst *>(irInst);
-//                    auto callerRegList = parent->getIrFunction()->getCallerSavedRegList();
                     auto callerRegList = irInst->getCallerSavedLiveRegList();
                     auto regSize = Function::alignSize(8 * callerRegList.size());
                     // 申请栈空间
@@ -455,7 +469,7 @@ namespace RISCV {
                             new StoreInst(new Value(reg), new Pointer(index), this);
                         index += 8;
                     }
-                    // 设置 a0..
+                    // 设置 a0..a7
                     for (unsigned i = 1, E = callInst->getNumOperands(), Idx = 0, fIdx = 0; i < E; ++i) {
                         auto param = callInst->getOperand(i);
                         Value *dest = nullptr;
@@ -526,7 +540,10 @@ namespace RISCV {
                     }
                     break;
                 }
+                case IRInstruction::Alloca:
+                    break;
                 default:
+                    irInst->print(std::cout);
                     assert(0 && "unknown ir instruction");
             }
         }

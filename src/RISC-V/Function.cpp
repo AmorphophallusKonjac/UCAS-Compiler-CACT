@@ -72,8 +72,12 @@ namespace RISCV {
                         alignSize(arrayTy->getNumElements() * arrayTy->getElementType()->getPrimitiveSize()));
             } else if (ty->isPrimitiveType() && ty != IRType::VoidTy && ty != IRType::LabelTy && ty != IRType::TypeTy) {
                 sizeList.push_back(alignSize(ty->getPrimitiveSize()));
-            } else
+            } else if (ty->getPrimitiveID() == IRType::PointerTyID) {
+                // 在栈上存指针
+                sizeList.push_back(alignSize(8));
+            } else {
                 assert(0 && "Error type");
+            }
         }
         allocSize = regSize;
         for (auto sz: sizeList)
