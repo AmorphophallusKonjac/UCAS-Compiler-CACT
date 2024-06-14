@@ -6,7 +6,8 @@
 
 namespace RISCV {
 
-    BinaryOperator::BinaryOperator(unsigned int iType, IRType *ty, Value *rd, Value *op1, Value *op2, BasicBlock *parent)
+    BinaryOperator::BinaryOperator(unsigned int iType, IRType *ty, Value *rd, Value *op1, Value *op2,
+                                   BasicBlock *parent)
             : Instruction(IRType::VoidTy, iType, parent), ty(ty) {
         Operands.push_back(rd);
         Operands.push_back(op1);
@@ -14,7 +15,8 @@ namespace RISCV {
     }
 
     void BinaryOperator::print(std::ostream &O) const {
-        assert(ty == IRType::IntTy || ty == IRType::FloatTy || ty == IRType::DoubleTy && "Error type");
+        assert(ty == IRType::BoolTy || ty == IRType::IntTy || ty == IRType::FloatTy ||
+               ty == IRType::DoubleTy && "Error type");
         if (ty != IRType::IntTy) {
             O << "f";
         }
@@ -37,7 +39,11 @@ namespace RISCV {
             case Rem:
                 O << "rem";
                 break;
-
+            case Xori:
+                O << "xori";
+                break;
+            default:
+                assert(0 && "Error iType");
         }
         if (ty == IRType::FloatTy) {
             O << ".s";

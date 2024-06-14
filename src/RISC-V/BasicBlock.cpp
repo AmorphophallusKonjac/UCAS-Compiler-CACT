@@ -54,14 +54,18 @@ namespace RISCV {
                     auto retVal = retInst->getReturnValue();
                     // 设置返回值
                     if (retVal) {
-                        if (IRConstant::classof(retVal)) {
+                        if (IRConstant::classof(retVal)) { // 返回值是常数
                             if (retVal->getType() == IRType::IntTy) {
                                 new LiInst(new Value(RegisterFactory::getReg("a0")),
                                            dynamic_cast<IRConstantInt *>(retVal)->getRawValue(), this);
-                            } else if (retVal->getType() == IRType::FloatTy) {
-                                assert(0 && "whoops, float constant");
-                            } else if (retVal->getType() == IRType::DoubleTy) {
-                                assert(0 && "whoops, float constant");
+                            } else if (retVal->getType() == IRType::FloatTy || retVal->getType() == IRType::DoubleTy) {
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(retVal),
+                                                                parent->getParent());
+                                new LoadInst(new Value(RegisterFactory::getReg("fa0")), new Pointer(immGV), this,
+                                             retVal->getType(), new Value(CallerSavedRegister::ra));
+                            } else if (retVal->getType() == IRType::BoolTy) {
+                                new LiInst(new Value(RegisterFactory::getReg("a0")),
+                                           dynamic_cast<IRConstantBool *>(retVal)->getRawValue(), this);
                             } else {
                                 assert(0 && "Error retVal Type");
                             }
@@ -74,12 +78,7 @@ namespace RISCV {
                             } else {
                                 assert(0 && "Error retVal Type");
                             }
-                            assert(dest && "Error register");
-                            if (IRConstant::classof(retVal)) {
-                                if (retVal->getType() == IRType::FloatTy || retVal->getType() == IRType::DoubleTy)
-                                    assert(0 && "whoops, float constant");
-                                new LiInst(new Value(dest), dynamic_cast<IRConstantInt *>(retVal)->getRawValue(), this);
-                            } else if (retVal->getReg() != dest) {
+                            if (retVal->getReg() != dest) {
                                 new MoveInst(retVal->getType(), new Value(dest), new Value(retVal), this);
                             }
                         }
@@ -110,74 +109,90 @@ namespace RISCV {
                     } else {
                         // 条件跳转
                         auto cond = dynamic_cast<IRSetCondInst *>(brInst->getCondition());
-                        if (cond->getOperand(0)->getType() == IRType::IntTy &&
-                            cond->getOperand(1)->getType() == IRType::IntTy) {
-                            // 整数跳转
-                            Value *value0 = nullptr;
-                            Value *value1 = nullptr;
-                            if (IRConstant::classof(cond->getOperand(0))) {
-                                if (dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue() == 0)
-                                    value0 = new Value(ZeroRegister::zero);
-                                else
-                                    new LiInst(value0 = new Value(CallerSavedRegister::ra),
-                                               dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue(), this);
+                        if (cond) {
+                            if (cond->getOperand(0)->getType() == IRType::IntTy &&
+                                cond->getOperand(1)->getType() == IRType::IntTy) {
+                                // 整数跳转
+                                Value *value0 = nullptr;
+                                Value *value1 = nullptr;
+                                if (IRConstant::classof(cond->getOperand(0))) {
+                                    if (dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue() == 0)
+                                        value0 = new Value(ZeroRegister::zero);
+                                    else
+                                        new LiInst(value0 = new Value(CallerSavedRegister::ra),
+                                                   dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue(),
+                                                   this);
+                                } else {
+                                    value0 = new Value(cond->getOperand(0)->getReg());
+                                }
+                                if (IRConstant::classof(cond->getOperand(1))) {
+                                    if (dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue() == 0)
+                                        value1 = new Value(ZeroRegister::zero);
+                                    else
+                                        new LiInst(value1 = new Value(CallerSavedRegister::ra),
+                                                   dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue(),
+                                                   this);
+                                } else {
+                                    value1 = new Value(cond->getOperand(1)->getReg());
+                                }
+                                Instruction::TermOps iType;
+                                auto irTrueBB = brInst->getSuccessor(0);
+                                auto irFalseBB = brInst->getSuccessor(1);
+                                if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
+                                    assert(0 && "need two jump");
+                                auto jumpBlock = parent->findBasicBlock(irTrueBB);
+                                unsigned irIType = cond->getOpcode();
+                                if (nextBlock->irBasicBlock == irTrueBB) {
+                                    jumpBlock = parent->findBasicBlock(irFalseBB);
+                                    irIType = cond->getInverseCondition();
+                                }
+                                switch (irIType) {
+                                    case IRInstruction::SetEQ:
+                                        iType = Instruction::Beq;
+                                        break;
+                                    case IRInstruction::SetNE:
+                                        iType = Instruction::Bne;
+                                        break;
+                                    case IRInstruction::SetLE:
+                                        iType = Instruction::Ble;
+                                        break;
+                                    case IRInstruction::SetGE:
+                                        iType = Instruction::Bge;
+                                        break;
+                                    case IRInstruction::SetLT:
+                                        iType = Instruction::Blt;
+                                        break;
+                                    case IRInstruction::SetGT:
+                                        iType = Instruction::Bgt;
+                                        break;
+                                    default:
+                                        assert(0 && "error irIType");
+                                }
+                                new BranchInst(iType, jumpBlock, value0, value1, this);
                             } else {
-                                value0 = new Value(cond->getOperand(0)->getReg());
+                                // 浮点跳转
+                                Instruction::TermOps iType = Instruction::Bnez;
+                                auto irTrueBB = brInst->getSuccessor(0);
+                                auto irFalseBB = brInst->getSuccessor(1);
+                                // 因为没有 fne，所以取反
+                                if (cond->getOpcode() == IRInstruction::SetNE) {
+                                    auto temp = irTrueBB;
+                                    irTrueBB = irFalseBB;
+                                    irFalseBB = temp;
+                                }
+                                if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
+                                    assert(0 && "need two jump");
+                                auto jumpBlock = parent->findBasicBlock(irTrueBB);
+                                if (nextBlock->irBasicBlock == irTrueBB) {
+                                    jumpBlock = parent->findBasicBlock(irFalseBB);
+                                    iType = Instruction::Beqz;
+                                }
+                                new BranchInst(iType, jumpBlock, new Value(brInst->getCondition()), nullptr, this);
                             }
-                            if (IRConstant::classof(cond->getOperand(1))) {
-                                if (dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue() == 0)
-                                    value1 = new Value(ZeroRegister::zero);
-                                else
-                                    new LiInst(value1 = new Value(CallerSavedRegister::ra),
-                                               dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue(), this);
-                            } else {
-                                value1 = new Value(cond->getOperand(1)->getReg());
-                            }
-                            Instruction::TermOps iType;
-                            auto irTrueBB = brInst->getSuccessor(0);
-                            auto irFalseBB = brInst->getSuccessor(1);
-                            if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
-                                assert(0 && "need two jump");
-                            auto jumpBlock = parent->findBasicBlock(irTrueBB);
-                            unsigned irIType = cond->getOpcode();
-                            if (nextBlock->irBasicBlock == irTrueBB) {
-                                jumpBlock = parent->findBasicBlock(irFalseBB);
-                                irIType = cond->getInverseCondition();
-                            }
-                            switch (irIType) {
-                                case IRInstruction::SetEQ:
-                                    iType = Instruction::Beq;
-                                    break;
-                                case IRInstruction::SetNE:
-                                    iType = Instruction::Bne;
-                                    break;
-                                case IRInstruction::SetLE:
-                                    iType = Instruction::Ble;
-                                    break;
-                                case IRInstruction::SetGE:
-                                    iType = Instruction::Bge;
-                                    break;
-                                case IRInstruction::SetLT:
-                                    iType = Instruction::Blt;
-                                    break;
-                                case IRInstruction::SetGT:
-                                    iType = Instruction::Bgt;
-                                    break;
-                                default:
-                                    assert(0 && "error irIType");
-                            }
-                            new BranchInst(iType, jumpBlock, value0, value1, this);
                         } else {
-                            // 浮点跳转
                             Instruction::TermOps iType = Instruction::Bnez;
                             auto irTrueBB = brInst->getSuccessor(0);
                             auto irFalseBB = brInst->getSuccessor(1);
-                            // 因为没有 fne，所以取反
-                            if (cond->getOpcode() == IRInstruction::SetNE) {
-                                auto temp = irTrueBB;
-                                irTrueBB = irFalseBB;
-                                irFalseBB = temp;
-                            }
                             if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
                                 assert(0 && "need two jump");
                             auto jumpBlock = parent->findBasicBlock(irTrueBB);
@@ -194,29 +209,53 @@ namespace RISCV {
                     auto addInst = dynamic_cast<IRBinaryOperator *>(irInst);
                     auto op1 = addInst->getOperand(0);
                     auto op2 = addInst->getOperand(1);
+                    auto ty = irInst->getType();
+                    bool needRestore = false;
                     if (IRConstant::classof(op1)) {
                         auto temp = op2;
                         op1 = op2;
                         op2 = temp;
                     }
                     auto imm = dynamic_cast<IRConstant *>(op2);
-                    auto ty = irInst->getType();
                     if (dynamic_cast<IRArrayType *>(ty) || dynamic_cast<IRPointerType *>(ty)) {
                         ty = IRType::IntTy;
                     }
                     if (imm) {
                         // 第二个操作数是立即数
-                        assert(ty == IRType::IntTy && "whoop float constant");
-                        int val = dynamic_cast<IRConstantInt *>(imm)->getRawValue();
-                        if (-2048 <= val && val < 2048) {
+                        auto immInt = dynamic_cast<IRConstantInt *>(imm);
+                        if (immInt && -2048 <= immInt->getRawValue() && immInt->getRawValue() < 2048) {
                             // 可以翻译为addi
+                            int val = immInt->getRawValue();
                             new BinaryOperator(Instruction::Addi, ty, new Value(irInst), new Value(op1), new Value(val),
                                                this);
-                        } else {
+                        } else if (ty == IRType::IntTy) {
+                            int val = immInt->getRawValue();
                             new LiInst(new Value(CallerSavedRegister::ra), val, this);
                             new BinaryOperator(Instruction::Addi, ty, new Value(irInst), new Value(op1),
                                                new Value(CallerSavedRegister::ra),
                                                this);
+                        } else if (ty == IRType::FloatTy || ty == IRType::DoubleTy) {
+                            // 浮点
+                            Value *val2 = nullptr;
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val2 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val2 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                            new BinaryOperator(Instruction::Add, ty, new Value(irInst), new Value(op1), val2,
+                                               this);
+                            if (needRestore)
+                                new LoadInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                        } else {
+                            assert(0 && "Error Type");
                         }
                     } else {
                         // 两个操作数都是reg
@@ -230,6 +269,7 @@ namespace RISCV {
                     auto op1 = addInst->getOperand(0);
                     auto op2 = addInst->getOperand(1);
                     auto ty = irInst->getType();
+                    bool needRestore = false;
                     if (dynamic_cast<IRArrayType *>(ty) || dynamic_cast<IRPointerType *>(ty)) {
                         ty = IRType::IntTy;
                     }
@@ -257,11 +297,55 @@ namespace RISCV {
                         }
                         new BinaryOperator(Instruction::Sub, ty, new Value(irInst), value1, value2,
                                            this);
-                    } else {
-                        if (dynamic_cast<IRConstant *>(op1) || dynamic_cast<IRConstant *>(op2))
-                            assert(0 && "whoop float const");
-                        new BinaryOperator(Instruction::Sub, ty, new Value(irInst), new Value(op1), new Value(op2),
+                    } else if (ty == IRType::FloatTy || ty == IRType::DoubleTy) {
+                        // 浮点
+                        Value *val1 = nullptr, *val2 = nullptr;
+                        // 如果op1是浮点常数
+                        if (dynamic_cast<IRConstant *>(op1)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val1 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val1 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val1 = new Value(op1);
+                        // 如果op2是浮点常数
+                        if (dynamic_cast<IRConstant *>(op2)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val2 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val2 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val2 = new Value(op2);
+                        new BinaryOperator(Instruction::Sub, ty, new Value(irInst), val1, val2,
                                            this);
+                        if (needRestore) {
+                            if (dynamic_cast<IRConstant *>(op1))
+                                new LoadInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (dynamic_cast<IRConstant *>(op2))
+                                new LoadInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                        }
+                    } else {
+                        assert(0 && "Error Type");
                     }
                     break;
                 }
@@ -306,11 +390,57 @@ namespace RISCV {
                         }
                         new BinaryOperator(iType, ty, new Value(irInst), value1, value2,
                                            this);
+                    } else if (ty == IRType::FloatTy || ty == IRType::DoubleTy) {
+                        bool needRestore = false;
+                        // 浮点
+                        Value *val1 = nullptr, *val2 = nullptr;
+                        // 如果op1是浮点常数
+                        if (dynamic_cast<IRConstant *>(op1)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val1 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val1 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val1 = new Value(op1);
+                        // 如果op2是浮点常数
+                        if (dynamic_cast<IRConstant *>(op2)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val2 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val2 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val2 = new Value(op2);
+
+                        new BinaryOperator(iType, ty, new Value(irInst), val1, val2, this);
+
+                        if (needRestore) {
+                            if (dynamic_cast<IRConstant *>(op1))
+                                new LoadInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (dynamic_cast<IRConstant *>(op2))
+                                new LoadInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                        }
                     } else {
-                        if (dynamic_cast<IRConstant *>(op1) || dynamic_cast<IRConstant *>(op2))
-                            assert(0 && "whoop float const");
-                        new BinaryOperator(iType, ty, new Value(irInst), new Value(op1), new Value(op2),
-                                           this);
+                        assert(0 && "Error type");
                     }
                     break;
                 }
@@ -326,30 +456,74 @@ namespace RISCV {
                     auto ty = op1->getType();
                     // 浮点比较才生成
                     if (ty == IRType::DoubleTy || ty == IRType::FloatTy) {
-                        if (dynamic_cast<IRConstant *>(op1) || dynamic_cast<IRConstant *>(op2))
-                            assert(0 && "whoop float constant");
+                        Value *val1 = nullptr, *val2 = nullptr;
+                        bool needRestore = false;
+                        // 如果op1是浮点常数
+                        if (dynamic_cast<IRConstant *>(op1)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val1 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val1 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val1 = new Value(op1);
+                        // 如果op2是浮点常数
+                        if (dynamic_cast<IRConstant *>(op2)) {
+                            // 将常数申明为全局变量
+                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                            // 寻找空闲寄存器
+                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                            if (tempReg == nullptr) {
+                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                needRestore = true;
+                                val2 = new Value(RegisterFactory::getReg("fa0"));
+                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            } else {
+                                val2 = new Value(tempReg);
+                            }
+                            // 将立即数的值load到寄存器中
+                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                        } else
+                            val2 = new Value(op2);
+
                         switch (setInst->getOpcode()) {
                             case IRInstruction::SetEQ:
                             case IRInstruction::SetNE:
-                                new SetCondInst(Instruction::Feq, new Value(setInst), new Value(op1), new Value(op2),
+                                new SetCondInst(Instruction::Feq, new Value(setInst), val1, val2,
                                                 this);
                                 break;
                             case IRInstruction::SetLE:
-                                new SetCondInst(Instruction::Fle, new Value(setInst), new Value(op1), new Value(op2),
+                                new SetCondInst(Instruction::Fle, new Value(setInst), val1, val2,
                                                 this);
                                 break;
                             case IRInstruction::SetGT:
-                                new SetCondInst(Instruction::Fle, new Value(setInst), new Value(op2), new Value(op1),
+                                new SetCondInst(Instruction::Fle, new Value(setInst), val2, val1,
                                                 this);
                                 break;
                             case IRInstruction::SetLT:
-                                new SetCondInst(Instruction::Flt, new Value(setInst), new Value(op1), new Value(op2),
+                                new SetCondInst(Instruction::Flt, new Value(setInst), val1, val2,
                                                 this);
                                 break;
                             case IRInstruction::SetGE:
-                                new SetCondInst(Instruction::Flt, new Value(setInst), new Value(op2), new Value(op1),
+                                new SetCondInst(Instruction::Flt, new Value(setInst), val2, val1,
                                                 this);
                                 break;
+                        }
+
+                        if (needRestore) {
+                            if (dynamic_cast<IRConstant *>(op1))
+                                new LoadInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (dynamic_cast<IRConstant *>(op2))
+                                new LoadInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                         }
                     }
                     break;
@@ -388,10 +562,13 @@ namespace RISCV {
                     bool needRestore = false;
                     if (dynamic_cast<IRConstant *>(irStVal)) {
                         // 存储值是常数
-                        if (ty == IRType::IntTy || ty == IRType::BoolTy) {
+                        if (ty == IRType::IntTy) {
                             new LiInst(stVal = new Value(CallerSavedRegister::ra),
                                        dynamic_cast<IRConstantInt *>(irStVal)->getRawValue(), this);
-                        } else {
+                        } else if (ty == IRType::BoolTy) {
+                            new LiInst(stVal = new Value(CallerSavedRegister::ra),
+                                       dynamic_cast<IRConstantBool *>(irStVal)->getRawValue(), this);
+                        } else if (ty == IRType::DoubleTy || ty == IRType::FloatTy) {
                             // add GV
                             auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(irStVal), parent->getParent());
                             auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
@@ -404,7 +581,8 @@ namespace RISCV {
                                 stVal = new Value(tempReg);
                             }
                             new LoadInst(stVal, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
-                        }
+                        } else
+                            assert(0 && "Error Type");
                     } else
                         stVal = new Value(irStVal);
                     if (IRGlobalVariable::classof(irPtr)) {
@@ -532,10 +710,17 @@ namespace RISCV {
                     auto irDest = mvInst->getDest();
                     auto imm = dynamic_cast<IRConstant *>(irSrc);
                     if (imm) {
-                        // 翻译为li
-                        if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy)
-                            assert(0 && "whoops float constant");
-                        new LiInst(new Value(irDest), dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                        if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy) {
+                            auto immGV = new GlobalVariable(imm, parent->getParent());
+                            new LoadInst(new Value(irDest), new Pointer(immGV), this, imm->getType(),
+                                         new Value(CallerSavedRegister::ra));
+                        } else if (imm->getType() == IRType::IntTy)
+                            // 翻译为li
+                            new LiInst(new Value(irDest), dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                        else if (imm->getType() == IRType::BoolTy)
+                            new LiInst(new Value(irDest), dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
+                        else
+                            assert(0 && "Error Type");
                     } else {
                         if (irSrc->getReg() != irDest->getReg())
                             new MoveInst(irSrc->getType(), new Value(irDest), new Value(irSrc), this);
@@ -544,8 +729,13 @@ namespace RISCV {
                 }
                 case IRInstruction::Alloca:
                     break;
+                case IRInstruction::Xor: {
+                    new BinaryOperator(Instruction::Xori, IRType::BoolTy, new Value(irInst),
+                                       new Value(irInst->getOperand(1)), new Value(1), this);
+                    break;
+                }
                 default:
-                    irInst->print(std::cout);
+                    irInst->print(std::cerr);
                     assert(0 && "unknown ir instruction");
             }
         }
