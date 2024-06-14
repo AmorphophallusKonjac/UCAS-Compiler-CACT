@@ -8,6 +8,7 @@
 #include "IR/IRType.h"
 #include "IRDerivedTypes.h"
 #include "IRUser.h"
+#include "utils/Register.h"
 
 /******这里是一系列IRConstant的子类，如果往里面传入一个val值，那么可以直接获得一个IRConstant子类的静态对象******/
 class IRConstant : public IRUser {
@@ -20,6 +21,7 @@ public:
 protected:
     inline explicit IRConstant(IRType *Ty) : IRUser(Ty, IRValue::ConstantVal) {}
     constType constTy = normal;
+    Register* reg = nullptr;
 
 public:
     static IRConstant *getNullValue(const IRType *Ty);
@@ -30,6 +32,10 @@ public:
     bool jugdeZero(IRConstant* irconst) const;
     void zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const;
     constType getConstTy() { return constTy; };
+
+    void setReg(Register* reg) { this->reg = reg; };
+
+    Register* getReg() { return reg; };
 
     static inline bool classof(IRConstant *) {return true;}
 

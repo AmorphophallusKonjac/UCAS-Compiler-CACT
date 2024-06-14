@@ -56,7 +56,7 @@ std::vector<RegisterNode*> RegisterNode::Adjcent(RegisterNode* node){
 std::vector<RegisterMove*> RegisterNode::NodeMoves(RegisterNode* node){
     std::vector<RegisterMove*> NodeMoves;
     /*adjList[n]\(selectStack U coalescedNodes)*/
-    for(auto irmove: node->moveList){
+    for(auto irmove: node->moveList){ 
         if(std::find(activeMoves.begin(), activeMoves.end(), irmove) != activeMoves.end() ||
            std::find(worklistMoves.begin(), worklistMoves.end(), irmove) != worklistMoves.end()){
                 NodeMoves.push_back(irmove);
