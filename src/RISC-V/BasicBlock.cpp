@@ -108,30 +108,50 @@ namespace RISCV {
                         }
                     } else {
                         // 条件跳转
+                        bool needTwoJump = false;
                         auto cond = dynamic_cast<IRSetCondInst *>(brInst->getCondition());
                         if (cond) {
-                            if (cond->getOperand(0)->getType() == IRType::IntTy &&
-                                cond->getOperand(1)->getType() == IRType::IntTy) {
+                            auto ty = cond->getOperand(0)->getType();
+                            if (ty == IRType::IntTy && ty == IRType::BoolTy) {
                                 // 整数跳转
                                 Value *value0 = nullptr;
                                 Value *value1 = nullptr;
                                 if (IRConstant::classof(cond->getOperand(0))) {
-                                    if (dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue() == 0)
-                                        value0 = new Value(ZeroRegister::zero);
-                                    else
-                                        new LiInst(value0 = new Value(CallerSavedRegister::ra),
-                                                   dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue(),
-                                                   this);
+                                    if (ty == IRType::IntTy) {
+                                        if (dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue() == 0)
+                                            value0 = new Value(ZeroRegister::zero);
+                                        else
+                                            new LiInst(value0 = new Value(CallerSavedRegister::ra),
+                                                       dynamic_cast<IRConstantInt *>(cond->getOperand(
+                                                               0))->getRawValue(),
+                                                       this);
+                                    } else if (ty == IRType::BoolTy) {
+                                        if (!dynamic_cast<IRConstantBool *>(cond->getOperand(0))->getRawValue())
+                                            value0 = new Value(ZeroRegister::zero);
+                                        else
+                                            new LiInst(value0 = new Value(CallerSavedRegister::ra), 1, this);
+                                    } else {
+                                        assert(0 && "Error Type");
+                                    }
                                 } else {
                                     value0 = new Value(cond->getOperand(0)->getReg());
                                 }
+
                                 if (IRConstant::classof(cond->getOperand(1))) {
-                                    if (dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue() == 0)
-                                        value1 = new Value(ZeroRegister::zero);
-                                    else
-                                        new LiInst(value1 = new Value(CallerSavedRegister::ra),
-                                                   dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue(),
-                                                   this);
+                                    if (ty == IRType::IntTy) {
+                                        if (dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue() == 0)
+                                            value1 = new Value(ZeroRegister::zero);
+                                        else
+                                            new LiInst(value1 = new Value(CallerSavedRegister::ra),
+                                                       dynamic_cast<IRConstantInt *>(cond->getOperand(
+                                                               1))->getRawValue(),
+                                                       this);
+                                    } else if (ty == IRType::BoolTy) {
+                                        if (!dynamic_cast<IRConstantBool *>(cond->getOperand(1))->getRawValue())
+                                            value1 = new Value(ZeroRegister::zero);
+                                        else
+                                            new LiInst(value1 = new Value(CallerSavedRegister::ra), 1, this);
+                                    }
                                 } else {
                                     value1 = new Value(cond->getOperand(1)->getReg());
                                 }
@@ -139,7 +159,7 @@ namespace RISCV {
                                 auto irTrueBB = brInst->getSuccessor(0);
                                 auto irFalseBB = brInst->getSuccessor(1);
                                 if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
-                                    assert(0 && "need two jump");
+                                    needTwoJump = true;
                                 auto jumpBlock = parent->findBasicBlock(irTrueBB);
                                 unsigned irIType = cond->getOpcode();
                                 if (nextBlock->irBasicBlock == irTrueBB) {
@@ -169,6 +189,12 @@ namespace RISCV {
                                         assert(0 && "error irIType");
                                 }
                                 new BranchInst(iType, jumpBlock, value0, value1, this);
+                                if (needTwoJump) {
+                                    if (jumpBlock->getIrBb() == irTrueBB)
+                                        new JInst(parent->findBasicBlock(irFalseBB), this);
+                                    else
+                                        new JInst(parent->findBasicBlock(irTrueBB), this);
+                                }
                             } else {
                                 // 浮点跳转
                                 Instruction::TermOps iType = Instruction::Bnez;
@@ -181,26 +207,38 @@ namespace RISCV {
                                     irFalseBB = temp;
                                 }
                                 if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
-                                    assert(0 && "need two jump");
+                                    needTwoJump = true;
                                 auto jumpBlock = parent->findBasicBlock(irTrueBB);
                                 if (nextBlock->irBasicBlock == irTrueBB) {
                                     jumpBlock = parent->findBasicBlock(irFalseBB);
                                     iType = Instruction::Beqz;
                                 }
                                 new BranchInst(iType, jumpBlock, new Value(brInst->getCondition()), nullptr, this);
+                                if (needTwoJump) {
+                                    if (jumpBlock->getIrBb() == irTrueBB)
+                                        new JInst(parent->findBasicBlock(irFalseBB), this);
+                                    else
+                                        new JInst(parent->findBasicBlock(irTrueBB), this);
+                                }
                             }
                         } else {
                             Instruction::TermOps iType = Instruction::Bnez;
                             auto irTrueBB = brInst->getSuccessor(0);
                             auto irFalseBB = brInst->getSuccessor(1);
                             if (nextBlock->irBasicBlock != irTrueBB && nextBlock->irBasicBlock != irFalseBB)
-                                assert(0 && "need two jump");
+                                needTwoJump = true;
                             auto jumpBlock = parent->findBasicBlock(irTrueBB);
                             if (nextBlock->irBasicBlock == irTrueBB) {
                                 jumpBlock = parent->findBasicBlock(irFalseBB);
                                 iType = Instruction::Beqz;
                             }
                             new BranchInst(iType, jumpBlock, new Value(brInst->getCondition()), nullptr, this);
+                            if (needTwoJump) {
+                                if (jumpBlock->getIrBb() == irTrueBB)
+                                    new JInst(parent->findBasicBlock(irFalseBB), this);
+                                else
+                                    new JInst(parent->findBasicBlock(irTrueBB), this);
+                            }
                         }
                     }
                     break;
