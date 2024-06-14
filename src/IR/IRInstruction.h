@@ -118,6 +118,10 @@ public:
 
     const std::set<Register*>& getCalleeSavedLiveRegList(){ return CalleeSavedLiveRegList; };
 
+    const Register* getFreeGenCallerSavedReg();
+
+    const Register* getFreeFloatCallerSavedReg();
+
     static inline bool classof(const IRInstruction *I) { return true; }
 
     static inline bool classof(const IRValue *V) {
