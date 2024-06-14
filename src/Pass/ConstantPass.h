@@ -5,7 +5,7 @@
 
 class ConstantPass : public BasicBlockPass {
 public:
-    explicit ConstantPass(std::string name = "", int level = 1);
+    explicit ConstantPass(std::string name = "", int level = 0);
 
     void runOnBasicBlock(IRBasicBlock &BB) override;
 };
