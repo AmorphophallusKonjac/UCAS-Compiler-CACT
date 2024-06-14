@@ -112,7 +112,7 @@ namespace RISCV {
                         auto cond = dynamic_cast<IRSetCondInst *>(brInst->getCondition());
                         if (cond) {
                             auto ty = cond->getOperand(0)->getType();
-                            if (ty == IRType::IntTy && ty == IRType::BoolTy) {
+                            if (ty == IRType::IntTy || ty == IRType::BoolTy) {
                                 // 整数跳转
                                 Value *value0 = nullptr;
                                 Value *value1 = nullptr;
