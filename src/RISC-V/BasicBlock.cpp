@@ -490,7 +490,8 @@ namespace RISCV {
                             } else
                                 new LiInst(dest, dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
                         } else {
-                            new MoveInst(param->getType(), dest, new Value(param), this);
+                            if (dest->getReg() != param->getReg())
+                                new MoveInst(param->getType(), dest, new Value(param), this);
                         }
                     }
                     // 生成call
