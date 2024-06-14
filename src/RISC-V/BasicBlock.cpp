@@ -536,7 +536,8 @@ namespace RISCV {
                             assert(0 && "whoops float constant");
                         new LiInst(new Value(irDest), dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
                     } else {
-                        new MoveInst(irSrc->getType(), new Value(irDest), new Value(irSrc), this);
+                        if (irSrc->getReg() != irDest->getReg())
+                            new MoveInst(irSrc->getType(), new Value(irDest), new Value(irSrc), this);
                     }
                     break;
                 }
