@@ -62,8 +62,6 @@ namespace RISCV {
             auto alloc = dynamic_cast<IRAllocaInst *>(inst);
             if (alloc) {
                 allocList.push_back(alloc);
-            } else {
-                break;
             }
         }
         for (auto alloc: allocList) {
