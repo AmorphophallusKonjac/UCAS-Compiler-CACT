@@ -5,6 +5,7 @@
 #include "IR/IRValue.h"
 #include "IR/iTerminators.h"
 #include "Pass/Pass.h"
+#include <algorithm>
 #include <typeinfo>
 
 #include <any>
@@ -89,9 +90,9 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
             inst->getOperand(0)->getValueType() == IRInstruction::ConstantVal   &&
             inst->getOperand(1)->getValueType() == IRInstruction::ConstantVal){
                 /*消除该条指令，并且用新得到的irnewconst代替所有的uses*/
-                if(inst->getOpcode() <= IRInstruction::BinaryOps::Xor){\
+                if(inst->getOpcode() <= IRInstruction::BinaryOps::Xor){
                     IRConstant* irnewconst;
-                    if(inst->getOperand(0)->getType()->getPrimitiveID() == IRType::BoolTyID) {\
+                    if(inst->getOperand(0)->getType()->getPrimitiveID() == IRType::BoolTyID) {
                         irnewconst = judge(inst->getOpcode(),
                                         dynamic_cast<IRConstantBool*>(inst->getOperand(0)), 
                                         dynamic_cast<IRConstantBool*>(inst->getOperand(1)));
@@ -143,6 +144,27 @@ void ConstantPass::runOnBasicBlock(IRBasicBlock &BB) {
                     instIterator = BB.getInstList().erase(instIterator);
                     flag = false;
                 }
+        }
+        else if(inst->getOpcode() == IRInstruction::Br  && 
+                dynamic_cast<IRBranchInst*>(inst)->isConditional() &&
+                dynamic_cast<IRBranchInst*>(inst)->getCondition()->getValueType() == IRInstruction::ConstantVal){
+                
+                auto oldBrInst = dynamic_cast<IRBranchInst*>(inst);
+                    
+                 /*删除掉原先的br指令并获取所有的信息*/
+                instIterator = std::find(BB.getInstList().begin(), BB.getInstList().end(), oldBrInst);
+                auto trueBB = oldBrInst->getSuccessor(0);
+                auto falseBB = oldBrInst->getSuccessor(1);
+                bool brcond = dynamic_cast<IRConstantBool*>(oldBrInst->getCondition())->getRawValue();
+                oldBrInst->dropAllReferences();
+                instIterator = BB.getInstList().erase(instIterator);
+
+                /*插入新的br指令*/
+                IRBranchInst* newBrInst;
+                if(brcond == true){ newBrInst = new IRBranchInst(trueBB, nullptr, nullptr, &BB); }
+                else{ newBrInst = new IRBranchInst(falseBB, nullptr, nullptr, &BB); }
+
+                flag = false;
         }
 
         if(flag){

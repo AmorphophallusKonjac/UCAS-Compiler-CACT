@@ -1,5 +1,6 @@
 #include "RegisterPass.h"
 #include "IR/IRArgument.h"
+#include "IR/IRConstant.h"
 #include "IR/IRValue.h"
 #include "utils/Register.h"
 #include "utils/LiveVariable.h"
@@ -15,6 +16,24 @@ void RegisterPass::runOnFunction(IRFunction &F){
     RegisterNode::End();
     RegisterNode::RegisterAlloc(F, RegisterNode::FLOAT);
     RegisterNode::End();
+
+    std::map<IRConstant*, unsigned>  ConstMap;
+    /*遍历每一条指令，得到所有在指令中被使用过的const*/
+    for(auto BB: F.getBasicBlockList()){
+        for(auto inst: BB->getInstList()){
+            for(unsigned i=0; i < inst->getNumOperands();i++){
+                /*如果发现常数，加入map中*/
+                if(inst->getOperand(i)->getValueType() == IRValue::ConstantVal){
+                    auto constval = dynamic_cast<IRConstant*>(inst->getOperand(i));
+                    if(ConstMap.find(constval) != ConstMap.end()){
+                        ConstMap[constval]++;
+                    }else{
+                        ConstMap.insert(std::make_pair(constval, 1));
+                    }
+                }
+            }
+        }
+    }
 
     /*每一个inst都根据它的outlive来给出哪些寄存器活跃*/
     for(auto BB: F.getBasicBlockList()){
