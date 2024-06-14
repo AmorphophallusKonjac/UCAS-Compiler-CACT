@@ -463,3 +463,25 @@ void IRInstruction::print(std::ostream &OS) const {
     //RegisterFactory::printInst(OS, *const_cast<IRInstruction*>(this));
     // TODO
 }
+
+const Register* IRInstruction::getFreeFloatCallerSavedReg(){
+    auto FregList = RegisterFactory::getFRegList();
+    for(auto reg: FregList){
+        /*在浮点caller保存寄存器中 && 同时当前不活跃*/
+        if( reg->getRegty() != Register::FloatCalleeSaved && 
+            std::find(CallerSavedLiveRegList.begin(), CallerSavedLiveRegList.end(), reg) == CallerSavedLiveRegList.end()){
+                return reg;
+            }
+    }
+};
+
+const Register* IRInstruction::getFreeGenCallerSavedReg(){
+    auto GregList = RegisterFactory::getGRegList();
+    for(auto reg: GregList){
+        /*在整型caller保存寄存器中 && 同时当前不活跃*/
+        if( reg->getRegty() != Register::CalleeSaved && 
+            std::find(CallerSavedLiveRegList.begin(), CallerSavedLiveRegList.end(), reg) == CallerSavedLiveRegList.end()){
+                return reg;
+            }
+    }
+};
