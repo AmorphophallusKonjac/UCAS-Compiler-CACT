@@ -114,11 +114,11 @@ public:
 
     void setCallerSavedLiveReg(Register* reg){ CallerSavedLiveRegList.insert(reg); };
 
-    const std::set<Register*>& getCallerSavedLiveRegList(){ return CallerSavedLiveRegList; };
+    const std::set<Register*>& getCallerSavedLiveRegList(){ return CallerSavedLiveRegList; }; //给出OUTLIVE的活跃寄存器
 
-    const std::set<Register*>& getCalleeSavedLiveRegList(){ return CalleeSavedLiveRegList; };
+    const std::set<Register*>& getCalleeSavedLiveRegList(){ return CalleeSavedLiveRegList; };   
 
-    const Register* getFreeGenCallerSavedReg();
+    const Register* getFreeGenCallerSavedReg(); //给出INLIVE的FreeReg
 
     const Register* getFreeFloatCallerSavedReg();
 
