@@ -137,6 +137,7 @@ void RegisterPass::runOnFunction(IRFunction &F) {
     for (int i = 0; i < allocGenSize; i++) {
         int index;
         if (i < GPRCalleeRegvec.size()) {
+            index = i;
             if(dynamic_cast<IRConstantInt*>(GenConstvec[i])->getRawValue() == 0){
                 F.setConstRegMap(std::make_pair(GenConstvec[i], ZeroRegister::zero));
             }else{
