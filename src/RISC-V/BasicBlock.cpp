@@ -166,7 +166,7 @@ namespace RISCV {
                                     }
                                 } else {
                                     if (IRConstant::classof(cond->getOperand(1))) {
-                                        value1 = new Value(dynamic_cast<IRConstant *>(cond->getOperand(1)));
+                                        value1 = new Value(constMap[dynamic_cast<IRConstant *>(cond->getOperand(1))]);
                                     } else {
                                         value1 = new Value(cond->getOperand(1)->getReg());
                                     }
