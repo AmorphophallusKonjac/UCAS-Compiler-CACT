@@ -47,6 +47,7 @@ namespace RISCV {
     }
 
     void BasicBlock::generate() {
+        auto constMap = parent->getIrFunction()->getConstRegMap();
         for (auto irInst: irBasicBlock->getInstList()) {
             switch (irInst->getOpcode()) {
                 case IRInstruction::Ret: {

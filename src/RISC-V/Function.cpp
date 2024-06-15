@@ -7,6 +7,8 @@
 #include "utils/Register.h"
 #include "StoreInst.h"
 #include "IR/iMemory.h"
+#include "LiInst.h"
+#include "LoadInst.h"
 
 namespace RISCV {
     Function::Function(IRFunction *irFunc, Module *parent) : section(TEXT), align(1), parent(parent),
@@ -105,6 +107,21 @@ namespace RISCV {
             else
                 new StoreInst(new Value(reg), new Pointer(index), entryBlock);
             index += 8;
+        }
+
+        // 将放入常数寄存器中
+        for (auto [constant, reg] : irFunction->getConstRegMap()) {
+            auto ty = constant->getType();
+            if (ty == IRType::IntTy) {
+                new LiInst(new Value(reg), dynamic_cast<IRConstantInt *>(constant)->getRawValue(), entryBlock);
+            } else if (ty == IRType::BoolTy) {
+                new LiInst(new Value(reg), dynamic_cast<IRConstantBool *>(constant)->getRawValue(), entryBlock);
+            } else if (ty == IRType::FloatTy || ty == IRType::DoubleTy) {
+                auto immGV = new GlobalVariable(constant, parent);
+                new LoadInst(new Value(reg), new Pointer(immGV), entryBlock, ty, new Value(CallerSavedRegister::ra));
+            } else {
+                assert(0 && "Error Type");
+            }
         }
     }
 
