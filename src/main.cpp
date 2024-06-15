@@ -58,9 +58,9 @@ int main(int argc, const char *argv[]) {
         if (parser.get("c"))
             printf("inst_cnt = %d\n", Interpreter::getInstCnt());
         return ret;
-    }else{
-        //BackEnd backEnd(&ir);
-        //backEnd.print();
+    } else {
+        BackEnd backEnd(&ir);
+        backEnd.print();
     }
 
     return 0;
