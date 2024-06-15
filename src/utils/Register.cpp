@@ -143,6 +143,16 @@ void RegisterFactory::printInst(std::ostream &OS, IRInstruction &inst) {
     for (auto reg: inst.getCallerSavedLiveRegList())
         OS << reg->getRegName() << ", ";
     OS << std::endl;
+
+    OS << "FreeFloatCaller: ";
+    auto Freg = inst.getFreeFloatCallerSavedReg();
+    OS << const_cast<Register*>(Freg)->getRegName() << ", ";
+    OS << std::endl;
+
+    OS << "FreeGenCaller: ";
+    auto Greg = inst.getFreeGenCallerSavedReg();
+    OS << const_cast<Register*>(Greg)->getRegName() << ", ";
+    OS << std::endl;
 }
 
 void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
@@ -158,6 +168,13 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
     for (auto reg: F.getCallerSavedRegList())
         OS << reg->getRegName() << ", ";
     OS << std::endl << std::endl;
+
+    /*打印ConstRegMap*/
+    for (auto ConstReg: F.getConstRegMap()) {
+        ConstReg.first->print(OS);
+        OS << ": " << ConstReg.second->getRegName() << ", ";
+    }
+    OS << std::endl;
 
     /*打印整型寄存器*/
     for (auto reg: getGRegList()) {
@@ -176,11 +193,6 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
                 } else {
                     if (inst->getReg() == reg) {
                         OS << inst->getName() << ", ";
-                    }
-                    for(unsigned i=0; i<inst->getNumOperands(); i++){
-                        if( inst->getOperand(i)->getType()->getPrimitiveID() == IRType::ConstantVal && 
-                            dynamic_cast<IRConstant*>(inst->getOperand(i))->getReg() == reg)
-                            dynamic_cast<IRConstant*>(inst->getOperand(i))->print(OS);
                     }
                 }
             }
@@ -205,11 +217,6 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
                 } else {
                     if (inst->getReg() == reg) {
                         OS << inst->getName() << ", ";
-                    }
-                    for(unsigned i=0; i<inst->getNumOperands(); i++){
-                        if( inst->getOperand(i)->getType()->getPrimitiveID() == IRType::ConstantVal && 
-                            dynamic_cast<IRConstant*>(inst->getOperand(i))->getReg() == reg)
-                            dynamic_cast<IRConstant*>(inst->getOperand(i))->print(OS);
                     }
                 }
             }

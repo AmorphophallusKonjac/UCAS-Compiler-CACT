@@ -21,7 +21,7 @@ public:
 protected:
     inline explicit IRConstant(IRType *Ty) : IRUser(Ty, IRValue::ConstantVal) {}
     constType constTy = normal;
-    Register* reg = nullptr;
+    // Register* reg = nullptr;
 
 public:
     static IRConstant *getNullValue(const IRType *Ty);
@@ -33,9 +33,9 @@ public:
     void zeroProcess(std::vector<IRConstant*>& zeroArray, std::ostream &OS) const;
     constType getConstTy() { return constTy; };
 
-    void setReg(Register* reg) { this->reg = reg; };
+    // void setReg(Register* reg) { this->reg = reg; };
 
-    Register* getReg() { return reg; };
+    // Register* getReg() { return reg; };
 
     static inline bool classof(IRConstant *) {return true;}
 

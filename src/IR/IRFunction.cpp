@@ -52,7 +52,7 @@ void IRFunction::print(std::ostream &OS) const {
     OS << "}" << std::endl;
 
     /*先打印再检查*/
-//    RegisterFactory::print(OS, *const_cast<IRFunction*>(this));
+    // RegisterFactory::print(OS, *const_cast<IRFunction*>(this));
     RegisterFactory::check(*const_cast<IRFunction *>(this));
 }
 

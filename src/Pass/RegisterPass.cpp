@@ -6,7 +6,9 @@
 #include "utils/Register.h"
 #include "utils/LiveVariable.h"
 #include "utils/RegisterNode.h"
+#include <algorithm>
 #include <utility>
+#define USENUM 1
 
 RegisterPass::RegisterPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
@@ -67,6 +69,9 @@ void RegisterPass::runOnFunction(IRFunction &F){
                 Const = constreg1.first;
             }
         }
+        /*考虑分配寄存器的代价*/
+        if(max <= USENUM)
+            break;
         /*将当前最大的元素放入vec中，同时从map中erase掉*/
         if( Const->getType()->getPrimitiveID() == IRType::IntTyID ||
             Const->getType()->getPrimitiveID() == IRType::BoolTyID)
@@ -94,8 +99,10 @@ void RegisterPass::runOnFunction(IRFunction &F){
                     case Register::CallerSaved:
                     case Register::Param:
                         GPRCallerRegvec.push_back(Reg);
+                        break;
                     case Register::CalleeSaved:
                         GPRCalleeRegvec.push_back(Reg);
+                        break;
                 }
             }
     }
@@ -106,11 +113,13 @@ void RegisterPass::runOnFunction(IRFunction &F){
         if( std::find(CalleeList.begin(), CalleeList.end(), Reg) == CalleeList.end() &&
             std::find(CallerList.begin(), CallerList.end(), Reg) == CallerList.end()){
                 switch (Reg->getRegty()) {
-                    case Register::CallerSaved:
-                    case Register::Param:
+                    case Register::FloatCallerSaved:
+                    case Register::FloatParam:
                         FPRCallerRegvec.push_back(Reg);
-                    case Register::CalleeSaved:
+                        break;
+                    case Register::FloatCalleeSaved:
                         FPRCalleeRegvec.push_back(Reg);
+                        break;
                 }
             }
     }
@@ -119,37 +128,37 @@ void RegisterPass::runOnFunction(IRFunction &F){
     unsigned GenRegSize = GPRCallerRegvec.size() + GPRCalleeRegvec.size();
     unsigned FloatRegSize = FPRCallerRegvec.size() + FPRCalleeRegvec.size();
 
+    /*可分配的寄存器和可分配的常量取小*/
+    unsigned allocGenSize = std::min((int)GenRegSize-1, (int)GenConstvec.size());
+    unsigned allocFloatSize = std::min((int)FloatRegSize-1, (int)FloatConstvec.size());
+
     /*一定要留出一个空闲寄存器(为整型分配)*/
-    for(unsigned i=0; i<GenRegSize-1; i++){
+    for(unsigned i=0; i<allocGenSize; i++){
         unsigned index;
         if(i<GPRCalleeRegvec.size()){
             index = i;
-            GenConstvec[index]->setReg(GPRCalleeRegvec[index]);
             F.setCalleeSavedReg(GPRCalleeRegvec[index]);
-            F.setConstRegMap(std::make_pair(GenConstvec[index], GPRCalleeRegvec[index]));
+            F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCalleeRegvec[index]));
             setAllInstCalleeConstReg(GPRCalleeRegvec[index], F);
         }else{
             index = i-GPRCalleeRegvec.size();
-            GenConstvec[index]->setReg(GPRCallerRegvec[index]);
             F.setCallerSavedReg(GPRCallerRegvec[index]);
-            F.setConstRegMap(std::make_pair(GenConstvec[index], GPRCallerRegvec[index]));
+            F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCallerRegvec[index]));
             setAllInstCallerConstReg(GPRCallerRegvec[index], F);
         }
     }
     /*一定要留出一个空闲寄存器(为浮点型分配)*/
-    for(unsigned i=0; i<FloatRegSize-1; i++){
+    for(unsigned i=0; i<allocFloatSize; i++){
         unsigned index;
         if(i<FPRCalleeRegvec.size()){
             index = i;
-            FloatConstvec[index]->setReg(FPRCalleeRegvec[index]);
             F.setCalleeSavedReg(FPRCalleeRegvec[index]);
-            F.setConstRegMap(std::make_pair(FloatConstvec[index], FPRCalleeRegvec[index]));
+            F.setConstRegMap(std::make_pair(FloatConstvec[i], FPRCalleeRegvec[index]));
             setAllInstCalleeConstReg(FPRCalleeRegvec[index], F);
         }else{
             index = i-FPRCalleeRegvec.size();
-            FloatConstvec[index]->setReg(FPRCallerRegvec[index]);
             F.setCallerSavedReg(FPRCallerRegvec[index]);
-            F.setConstRegMap(std::make_pair(FloatConstvec[index], FPRCallerRegvec[index]));
+            F.setConstRegMap(std::make_pair(FloatConstvec[i], FPRCallerRegvec[index]));
             setAllInstCallerConstReg(FPRCallerRegvec[index], F);
         }
     }
