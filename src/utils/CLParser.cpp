@@ -38,9 +38,11 @@ void CLParser::parse(int argc, const char **argv) {
             } else
                 argTable[st] = true;
         } else {
-            if (filePath.empty())
+            if (filePath.empty()) {
+                if (st[0] != '/' && st[0] != '.')
+                    st = "./" + st;
                 filePath = st;
-            else
+            } else
                 assert(0 && "too many files");
         }
     }
