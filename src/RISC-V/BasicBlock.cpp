@@ -703,8 +703,13 @@ namespace RISCV {
                                 auto immGV = new GlobalVariable(imm, parent->getParent());
                                 new LoadInst(dest, new Pointer(immGV), this, imm->getType(),
                                              new Value(CallerSavedRegister::ra));
-                            } else
+                            } else if (imm->getType() == IRType::BoolTy) {
+                                new LiInst(dest, dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
+                            } else if (imm->getType() == IRType::IntTy) {
                                 new LiInst(dest, dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                            } else {
+                                assert(0 && "Error Type");
+                            }
                         } else {
                             if (dest->getReg() != param->getReg())
                                 new MoveInst(param->getType(), dest, new Value(param), this);
