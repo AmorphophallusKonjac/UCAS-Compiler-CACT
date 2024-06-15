@@ -8,13 +8,11 @@
 #include "Pass/HoistingLoopInvariantValuePass.h"
 #include "Pass/StrengthReductionPass.h"
 #include "Pass/GlobalSubExpPass.h"
-#include "Pass/LoopArrayScalarizePass.h"
 #include "Pass/CutDeadCodePass.h"
 #include "Pass/EliminateBasicInductionVarPass.h"
 #include "Pass/RegisterPass.h"
 #include "Pass/AggressiveDeadCodeEliminatePass.h"
 #include "Pass/PHIdeletePass.h"
-#include "Pass/A0MovePass.h"
 #include "Pass/DeleteNonepredsPass.h"
 
 void Optimizer::run() {
@@ -44,6 +42,11 @@ void Optimizer::build() {
     addPass(new DeleteNonePredsPass("DeleteNonepredsPass"));
 
     addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
+
+//    new StrengthReductionPass("");
+//    new CutDeadCodePass("");
+//    new AlgebraicPass("");
+//    new EliminateBasicInductionVarPass("");
 
     addPass(new PHIdeletePass("PHIdeletePass"));
 
