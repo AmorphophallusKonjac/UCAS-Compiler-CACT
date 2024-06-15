@@ -136,11 +136,11 @@ FloatParamRegister *FloatParamRegister::Num2Reg(unsigned int num) {
 void RegisterFactory::printInst(std::ostream &OS, IRInstruction &inst) {
     /*打印inst中需要保存的寄存器*/
     OS << "CalleeSaved: ";
-    for (auto reg: inst.getCalleeSavedLiveRegList())
+    for (auto reg: inst.getCalleeSavedINLiveRegList())
         OS << reg->getRegName() << ", ";
 
     OS << "CallerSaved: ";
-    for (auto reg: inst.getCallerSavedLiveRegList())
+    for (auto reg: inst.getCallerSavedINLiveRegList())
         OS << reg->getRegName() << ", ";
     OS << std::endl;
 
