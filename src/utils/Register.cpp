@@ -1,4 +1,6 @@
 #include "Register.h"
+#include "IR/IRConstant.h"
+#include "IR/IRType.h"
 #include "IR/IRValue.h"
 #include "RegisterNode.h"
 #include "IR/IRFunction.h"
@@ -141,6 +143,16 @@ void RegisterFactory::printInst(std::ostream &OS, IRInstruction &inst) {
     for (auto reg: inst.getCallerSavedLiveRegList())
         OS << reg->getRegName() << ", ";
     OS << std::endl;
+
+    OS << "FreeFloatCaller: ";
+    auto Freg = inst.getFreeFloatCallerSavedReg();
+    OS << const_cast<Register*>(Freg)->getRegName() << ", ";
+    OS << std::endl;
+
+    OS << "FreeGenCaller: ";
+    auto Greg = inst.getFreeGenCallerSavedReg();
+    OS << const_cast<Register*>(Greg)->getRegName() << ", ";
+    OS << std::endl;
 }
 
 void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
@@ -156,6 +168,13 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
     for (auto reg: F.getCallerSavedRegList())
         OS << reg->getRegName() << ", ";
     OS << std::endl << std::endl;
+
+    /*打印ConstRegMap*/
+    for (auto ConstReg: F.getConstRegMap()) {
+        ConstReg.first->print(OS);
+        OS << ": " << ConstReg.second->getRegName() << ", ";
+    }
+    OS << std::endl;
 
     /*打印整型寄存器*/
     for (auto reg: getGRegList()) {

@@ -1,6 +1,8 @@
 #ifndef COMPILER_IRFUNCTION_H
 #define COMPILER_IRFUNCTION_H
+#include "IR/IRConstant.h"
 #include "utils/Register.h"
+#include <utility>
 #pragma once
 
 #include "IRArgument.h"
@@ -24,6 +26,7 @@ private:
     std::vector<IRBasicBlock *> BasicBlocks;
     std::set<Register *> CalleeSavedRegisters;   //s,fs系列寄存器
     std::set<Register *> CallerSavedRegisters;   //t,ft,a,fa系列寄存器
+    std::map<IRConstant*, Register*> ConstRegMap;
     IRModule *Parent;
     unsigned IRSymbolCount = 0;
     FuncTy fTy;
@@ -49,10 +52,12 @@ public:
     void addBasicBlock(IRBasicBlock * block);
 
     IRBasicBlock *getEntryBlock() { return BasicBlocks.front(); }
-    std::set<Register*>& getCalleeSavedRegList() { return CalleeSavedRegisters; };
-    std::set<Register*>& getCallerSavedRegList() { return CallerSavedRegisters; };
+    const std::set<Register*>& getCalleeSavedRegList() { return CalleeSavedRegisters; };
+    const std::set<Register*>& getCallerSavedRegList() { return CallerSavedRegisters; };
+    const std::map<IRConstant*, Register*>& getConstRegMap() { return ConstRegMap; };
     void setCalleeSavedReg(Register* reg) { CalleeSavedRegisters.insert(reg); };
     void setCallerSavedReg(Register* reg) { CallerSavedRegisters.insert(reg); };
+    void setConstRegMap(std::pair<IRConstant*, Register*> ConstReg) { ConstRegMap.insert(ConstReg); };
 
     /******IRFunction的print方法******/
     void printPrefixName(std::ostream &OS) const override;
