@@ -2,6 +2,7 @@
 #define COMPILER_IRINSTRUCTION_H
 
 #include <vector>
+
 #pragma once
 
 #include "IRUser.h"
@@ -25,11 +26,11 @@ private:
     LiveVariableInst *Live;
     RegisterNode *regNode = nullptr;
     Register *reg;
-    std::set<Register*> CallerSavedLiveRegList;
-    std::set<Register*> CalleeSavedLiveRegList;
+    std::set<Register *> CallerSavedLiveRegList;
+    std::set<Register *> CalleeSavedLiveRegList;
 
-    std::set<Register*> CallerSavedINLiveRegList;
-    std::set<Register*> CalleeSavedINLiveRegList;   //这两个都是INLive!!目的只是给出当前的FreeReg
+    std::set<Register *> CallerSavedINLiveRegList;
+    std::set<Register *> CalleeSavedINLiveRegList;   //这两个都是INLive!!目的只是给出当前的FreeReg
 
 protected:
 
@@ -113,22 +114,24 @@ public:
 
     Register *getReg() override { return reg; };
 
-    void setCalleeSavedLiveReg(Register* reg){ CalleeSavedLiveRegList.insert(reg); };
-    void setCallerSavedLiveReg(Register* reg){ CallerSavedLiveRegList.insert(reg); };       //对OUTLive的进行操作
-    void setCalleeSavedINLiveReg(Register* reg){ CalleeSavedINLiveRegList.insert(reg); };
-    void setCallerSavedINLiveReg(Register* reg){ CallerSavedINLiveRegList.insert(reg); };   //对INLive的进行操作
+    void setCalleeSavedLiveReg(Register *reg) { CalleeSavedLiveRegList.insert(reg); };
 
-    const std::set<Register*>& getCallerSavedLiveRegList(){ return CallerSavedLiveRegList; }; //给出OUTLIVE的活跃寄存器
+    void setCallerSavedLiveReg(Register *reg) { CallerSavedLiveRegList.insert(reg); };       //对OUTLive的进行操作
+    void setCalleeSavedINLiveReg(Register *reg) { CalleeSavedINLiveRegList.insert(reg); };
 
-    const std::set<Register*>& getCalleeSavedLiveRegList(){ return CalleeSavedLiveRegList; };   
+    void setCallerSavedINLiveReg(Register *reg) { CallerSavedINLiveRegList.insert(reg); };   //对INLive的进行操作
 
-    const std::set<Register*>& getCallerSavedINLiveRegList(){ return CallerSavedLiveRegList; }; //给出INLIVE的活跃寄存器
+    const std::set<Register *> &getCallerSavedLiveRegList() { return CallerSavedLiveRegList; }; //给出OUTLIVE的活跃寄存器
 
-    const std::set<Register*>& getCalleeSavedINLiveRegList(){ return CalleeSavedLiveRegList; };  
+    const std::set<Register *> &getCalleeSavedLiveRegList() { return CalleeSavedLiveRegList; };
 
-    const Register* getFreeGenCallerSavedReg(); //给出INLIVE的FreeReg
+    const std::set<Register *> &getCallerSavedINLiveRegList() { return CallerSavedINLiveRegList; }; //给出INLIVE的活跃寄存器
 
-    const Register* getFreeFloatCallerSavedReg();
+    const std::set<Register *> &getCalleeSavedINLiveRegList() { return CalleeSavedINLiveRegList; };
+
+    const Register *getFreeGenCallerSavedReg(); //给出INLIVE的FreeReg
+
+    const Register *getFreeFloatCallerSavedReg();
 
     static inline bool classof(const IRInstruction *I) { return true; }
 
