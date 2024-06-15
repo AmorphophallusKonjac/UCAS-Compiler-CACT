@@ -28,6 +28,9 @@ private:
     std::set<Register*> CallerSavedLiveRegList;
     std::set<Register*> CalleeSavedLiveRegList;
 
+    std::set<Register*> CallerSavedINLiveRegList;
+    std::set<Register*> CalleeSavedINLiveRegList;   //这两个都是INLive!!目的只是给出当前的FreeReg
+
 protected:
 
     unsigned iType;// InstructionType: The opcode of the instruction
@@ -111,8 +114,9 @@ public:
     Register *getReg() override { return reg; };
 
     void setCalleeSavedLiveReg(Register* reg){ CalleeSavedLiveRegList.insert(reg); };
-
-    void setCallerSavedLiveReg(Register* reg){ CallerSavedLiveRegList.insert(reg); };
+    void setCallerSavedLiveReg(Register* reg){ CallerSavedLiveRegList.insert(reg); };       //对OUTLive的进行操作
+    void setCalleeSavedINLiveReg(Register* reg){ CalleeSavedINLiveRegList.insert(reg); };
+    void setCallerSavedINLiveReg(Register* reg){ CallerSavedINLiveRegList.insert(reg); };   //对INLive的进行操作
 
     const std::set<Register*>& getCallerSavedLiveRegList(){ return CallerSavedLiveRegList; }; //给出OUTLIVE的活跃寄存器
 

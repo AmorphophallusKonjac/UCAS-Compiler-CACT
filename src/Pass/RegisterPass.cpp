@@ -19,6 +19,7 @@ void setAllInstCalleeConstReg(Register *reg, IRFunction &F) {
     for (auto BB: F.getBasicBlockList()) {
         for (auto inst: BB->getInstList()) {
             inst->setCalleeSavedLiveReg(reg);
+            inst->setCalleeSavedINLiveReg(reg);
         }
     }
 }
@@ -27,6 +28,7 @@ void setAllInstCallerConstReg(Register *reg, IRFunction &F) {
     for (auto BB: F.getBasicBlockList()) {
         for (auto inst: BB->getInstList()) {
             inst->setCallerSavedLiveReg(reg);
+            inst->setCallerSavedINLiveReg(reg);
         }
     }
 }
@@ -175,7 +177,7 @@ void RegisterPass::runOnFunction(IRFunction &F) {
     /*每一个inst都根据它的outlive来给出哪些寄存器活跃*/
     for (auto BB: F.getBasicBlockList()) {
         for (auto inst: BB->getInstList()) {
-            for (auto irlive: *inst->getLive()->getINLive()) {
+            for (auto irlive: *inst->getLive()->getOUTLive()) {
                 if (irlive->getValueType() == IRValue::InstructionVal) {
                     switch (dynamic_cast<IRInstruction *>(irlive)->getReg()->getRegty()) {
                         case Register::CalleeSaved:
@@ -200,6 +202,41 @@ void RegisterPass::runOnFunction(IRFunction &F) {
                         case Register::Param:
                         case Register::FloatParam:
                             inst->setCallerSavedLiveReg(dynamic_cast<IRArgument *>(irlive)->getReg());
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    /*每一个inst都根据它的inlive来给出哪些寄存器活跃，方便后续给出FreeReg*/
+    for (auto BB: F.getBasicBlockList()) {
+        for (auto inst: BB->getInstList()) {
+            for (auto irlive: *inst->getLive()->getINLive()) {
+                if (irlive->getValueType() == IRValue::InstructionVal) {
+                    switch (dynamic_cast<IRInstruction *>(irlive)->getReg()->getRegty()) {
+                        case Register::CalleeSaved:
+                        case Register::FloatCalleeSaved:
+                            inst->setCalleeSavedINLiveReg(dynamic_cast<IRInstruction *>(irlive)->getReg());
+                            break;
+                        case Register::CallerSaved:
+                        case Register::FloatCallerSaved:
+                        case Register::Param:
+                        case Register::FloatParam:
+                            inst->setCallerSavedINLiveReg(dynamic_cast<IRInstruction *>(irlive)->getReg());
+                            break;
+                    }
+                } else if (irlive->getValueType() == IRValue::ArgumentVal) {
+                    switch (dynamic_cast<IRArgument *>(irlive)->getReg()->getRegty()) {
+                        case Register::CalleeSaved:
+                        case Register::FloatCalleeSaved:
+                            inst->setCalleeSavedINLiveReg(dynamic_cast<IRArgument *>(irlive)->getReg());
+                            break;
+                        case Register::CallerSaved:
+                        case Register::FloatCallerSaved:
+                        case Register::Param:
+                        case Register::FloatParam:
+                            inst->setCallerSavedINLiveReg(dynamic_cast<IRArgument *>(irlive)->getReg());
                             break;
                     }
                 }
