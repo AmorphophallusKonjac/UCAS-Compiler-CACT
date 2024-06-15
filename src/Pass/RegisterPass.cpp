@@ -134,23 +134,30 @@ void RegisterPass::runOnFunction(IRFunction &F) {
     unsigned allocFloatSize = std::min((int) FloatRegSize - 1, (int) FloatConstvec.size());
 
     /*一定要留出一个空闲寄存器(为整型分配)*/
-    for (unsigned i = 0; i < allocGenSize; i++) {
-        unsigned index;
+    for (int i = 0; i < allocGenSize; i++) {
+        int index;
         if (i < GPRCalleeRegvec.size()) {
-            index = i;
-            F.setCalleeSavedReg(GPRCalleeRegvec[index]);
-            F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCalleeRegvec[index]));
-            setAllInstCalleeConstReg(GPRCalleeRegvec[index], F);
+            if(dynamic_cast<IRConstantInt*>(GenConstvec[i])->getRawValue() == 0){
+                F.setConstRegMap(std::make_pair(GenConstvec[i], ZeroRegister::zero));
+            }else{
+                F.setCalleeSavedReg(GPRCalleeRegvec[index]);
+                F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCalleeRegvec[index]));
+                setAllInstCalleeConstReg(GPRCalleeRegvec[index], F);
+            }
         } else {
             index = i - GPRCalleeRegvec.size();
-            F.setCallerSavedReg(GPRCallerRegvec[index]);
-            F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCallerRegvec[index]));
-            setAllInstCallerConstReg(GPRCallerRegvec[index], F);
+            if(dynamic_cast<IRConstantInt*>(GenConstvec[i])->getRawValue() == 0){
+                F.setConstRegMap(std::make_pair(GenConstvec[i], ZeroRegister::zero));
+            }else{
+                F.setCallerSavedReg(GPRCallerRegvec[index]);
+                F.setConstRegMap(std::make_pair(GenConstvec[i], GPRCallerRegvec[index]));
+                setAllInstCallerConstReg(GPRCallerRegvec[index], F);
+            }
         }
     }
     /*一定要留出一个空闲寄存器(为浮点型分配)*/
-    for (unsigned i = 0; i < allocFloatSize; i++) {
-        unsigned index;
+    for (int i = 0; i < allocFloatSize; i++) {
+        int index;
         if (i < FPRCalleeRegvec.size()) {
             index = i;
             F.setCalleeSavedReg(FPRCalleeRegvec[index]);
