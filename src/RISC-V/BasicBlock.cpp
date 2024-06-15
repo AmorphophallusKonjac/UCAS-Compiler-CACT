@@ -55,7 +55,8 @@ namespace RISCV {
                     auto retVal = retInst->getReturnValue();
                     // 设置返回值
                     if (retVal) {
-                        if (IRConstant::classof(retVal)) { // 返回值是常数
+                        if (IRConstant::classof(retVal) &&
+                            !constMap[dynamic_cast<IRConstant *>(retVal)]) { // 返回值是常数并且没有被分配寄存器
                             if (retVal->getType() == IRType::IntTy) {
                                 new LiInst(new Value(RegisterFactory::getReg("a0")),
                                            dynamic_cast<IRConstantInt *>(retVal)->getRawValue(), this);
@@ -71,16 +72,20 @@ namespace RISCV {
                                 assert(0 && "Error retVal Type");
                             }
                         } else {
-                            Register *dest = nullptr;
+                            Register *destReg = nullptr, *srcReg = nullptr;
                             if (retVal->getType() == IRType::IntTy || retVal->getType() == IRType::BoolTy) {
-                                dest = RegisterFactory::getReg("a0");
+                                destReg = RegisterFactory::getReg("a0");
                             } else if (retVal->getType() == IRType::FloatTy || retVal->getType() == IRType::DoubleTy) {
-                                dest = RegisterFactory::getReg("fa0");
+                                destReg = RegisterFactory::getReg("fa0");
                             } else {
                                 assert(0 && "Error retVal Type");
                             }
-                            if (retVal->getReg() != dest) {
-                                new MoveInst(retVal->getType(), new Value(dest), new Value(retVal), this);
+                            srcReg = retVal->getReg();
+                            if (IRConstant::classof(retVal)) { // 返回值是常数并且被分配了寄存器
+                                srcReg = constMap[dynamic_cast<IRConstant *>(retVal)];
+                            }
+                            if (srcReg != destReg) {
+                                new MoveInst(retVal->getType(), new Value(destReg), new Value(srcReg), this);
                             }
                         }
                     }
@@ -117,7 +122,8 @@ namespace RISCV {
                                 // 整数跳转
                                 Value *value0 = nullptr;
                                 Value *value1 = nullptr;
-                                if (IRConstant::classof(cond->getOperand(0))) {
+                                if (IRConstant::classof(cond->getOperand(0)) &&
+                                    !constMap[dynamic_cast<IRConstant *>(cond->getOperand(0))]) {
                                     if (ty == IRType::IntTy) {
                                         if (dynamic_cast<IRConstantInt *>(cond->getOperand(0))->getRawValue() == 0)
                                             value0 = new Value(ZeroRegister::zero);
@@ -135,10 +141,15 @@ namespace RISCV {
                                         assert(0 && "Error Type");
                                     }
                                 } else {
-                                    value0 = new Value(cond->getOperand(0)->getReg());
+                                    if (IRConstant::classof(cond->getOperand(0))) {
+                                        value0 = new Value(constMap[dynamic_cast<IRConstant *>(cond->getOperand(0))]);
+                                    } else {
+                                        value0 = new Value(cond->getOperand(0)->getReg());
+                                    }
                                 }
 
-                                if (IRConstant::classof(cond->getOperand(1))) {
+                                if (IRConstant::classof(cond->getOperand(1)) &&
+                                    !constMap[dynamic_cast<IRConstant *>(cond->getOperand(1))]) {
                                     if (ty == IRType::IntTy) {
                                         if (dynamic_cast<IRConstantInt *>(cond->getOperand(1))->getRawValue() == 0)
                                             value1 = new Value(ZeroRegister::zero);
@@ -154,7 +165,11 @@ namespace RISCV {
                                             new LiInst(value1 = new Value(CallerSavedRegister::ra), 1, this);
                                     }
                                 } else {
-                                    value1 = new Value(cond->getOperand(1)->getReg());
+                                    if (IRConstant::classof(cond->getOperand(1))) {
+                                        value1 = new Value(dynamic_cast<IRConstant *>(cond->getOperand(1)));
+                                    } else {
+                                        value1 = new Value(cond->getOperand(1)->getReg());
+                                    }
                                 }
                                 Instruction::TermOps iType;
                                 auto irTrueBB = brInst->getSuccessor(0);
@@ -268,29 +283,38 @@ namespace RISCV {
                             new BinaryOperator(Instruction::Addi, ty, new Value(irInst), new Value(op1), new Value(val),
                                                this);
                         } else if (ty == IRType::IntTy) {
-                            int val = immInt->getRawValue();
-                            new LiInst(new Value(CallerSavedRegister::ra), val, this);
-                            new BinaryOperator(Instruction::Addi, ty, new Value(irInst), new Value(op1),
-                                               new Value(CallerSavedRegister::ra),
-                                               this);
+                            Value *val2 = nullptr;
+                            if (constMap[imm]) {
+                                val2 = new Value(constMap[imm]);
+                            } else {
+                                int val = immInt->getRawValue();
+                                new LiInst(val2 = new Value(CallerSavedRegister::ra), val, this);
+                            }
+                            new BinaryOperator(Instruction::Addi, ty, new Value(irInst), new Value(op1), val2, this);
                         } else if (ty == IRType::FloatTy || ty == IRType::DoubleTy) {
                             // 浮点
                             Value *val2 = nullptr;
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val2 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[imm]) {
+                                val2 = new Value(constMap[imm]);
                             } else {
-                                val2 = new Value(tempReg);
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val2 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+
                             new BinaryOperator(Instruction::Add, ty, new Value(irInst), new Value(op1), val2,
                                                this);
+
                             if (needRestore)
                                 new LoadInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                         } else {
@@ -325,12 +349,20 @@ namespace RISCV {
                         Value *value1 = nullptr;
                         Value *value2 = nullptr;
                         if (imm1) {
-                            new LiInst(value1 = new Value(CallerSavedRegister::ra), imm1->getRawValue(), this);
+                            if (constMap[imm1]) {
+                                value1 = new Value(constMap[imm1]);
+                            } else {
+                                new LiInst(value1 = new Value(CallerSavedRegister::ra), imm1->getRawValue(), this);
+                            }
                         } else {
                             value1 = new Value(op1);
                         }
                         if (imm2) {
-                            new LiInst(value2 = new Value(CallerSavedRegister::ra), imm2->getRawValue(), this);
+                            if (constMap[imm2]) {
+                                value2 = new Value(constMap[imm2]);
+                            } else {
+                                new LiInst(value2 = new Value(CallerSavedRegister::ra), imm2->getRawValue(), this);
+                            }
                         } else {
                             value2 = new Value(op2);
                         }
@@ -341,38 +373,46 @@ namespace RISCV {
                         Value *val1 = nullptr, *val2 = nullptr;
                         // 如果op1是浮点常数
                         if (dynamic_cast<IRConstant *>(op1)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val1 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op1)]) {
+                                val1 = new Value(constMap[dynamic_cast<IRConstant *>(op1)]);
                             } else {
-                                val1 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val1 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val1 = new Value(op1);
                         // 如果op2是浮点常数
                         if (dynamic_cast<IRConstant *>(op2)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val2 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op2)]) {
+                                val2 = new Value(dynamic_cast<IRConstant *>(op2));
                             } else {
-                                val2 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val2 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val2 = new Value(op2);
                         new BinaryOperator(Instruction::Sub, ty, new Value(irInst), val1, val2,
@@ -418,12 +458,20 @@ namespace RISCV {
                         Value *value1 = nullptr;
                         Value *value2 = nullptr;
                         if (imm1) {
-                            new LiInst(value1 = new Value(CallerSavedRegister::ra), imm1->getRawValue(), this);
+                            if (constMap[imm1]) {
+                                value1 = new Value(constMap[imm1]);
+                            } else {
+                                new LiInst(value1 = new Value(CallerSavedRegister::ra), imm1->getRawValue(), this);
+                            }
                         } else {
                             value1 = new Value(op1);
                         }
                         if (imm2) {
-                            new LiInst(value2 = new Value(CallerSavedRegister::ra), imm2->getRawValue(), this);
+                            if (constMap[imm2]) {
+                                value2 = new Value(constMap[imm2]);
+                            } else {
+                                new LiInst(value2 = new Value(CallerSavedRegister::ra), imm2->getRawValue(), this);
+                            }
                         } else {
                             value2 = new Value(op2);
                         }
@@ -435,38 +483,46 @@ namespace RISCV {
                         Value *val1 = nullptr, *val2 = nullptr;
                         // 如果op1是浮点常数
                         if (dynamic_cast<IRConstant *>(op1)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val1 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op1)]) {
+                                val1 = new Value(constMap[dynamic_cast<IRConstant *>(op1)]);
                             } else {
-                                val1 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val1 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val1 = new Value(op1);
                         // 如果op2是浮点常数
                         if (dynamic_cast<IRConstant *>(op2)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val2 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op2)]) {
+                                val2 = new Value(constMap[dynamic_cast<IRConstant *>(op2)]);
                             } else {
-                                val2 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val2 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val2 = new Value(op2);
 
@@ -499,38 +555,46 @@ namespace RISCV {
                         bool needRestore = false;
                         // 如果op1是浮点常数
                         if (dynamic_cast<IRConstant *>(op1)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val1 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op1)]) {
+                                val1 = new Value(constMap[dynamic_cast<IRConstant *>(op1)]);
                             } else {
-                                val1 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op1), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val1 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val1, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val1 = new Value(op1);
                         // 如果op2是浮点常数
                         if (dynamic_cast<IRConstant *>(op2)) {
-                            // 将常数申明为全局变量
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
-                            // 寻找空闲寄存器
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
-                                needRestore = true;
-                                val2 = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                            if (constMap[dynamic_cast<IRConstant *>(op2)]) {
+                                val2 = new Value(constMap[dynamic_cast<IRConstant *>(op2)]);
                             } else {
-                                val2 = new Value(tempReg);
+                                // 将常数申明为全局变量
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(op2), parent->getParent());
+                                // 寻找空闲寄存器
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    needRestore = true;
+                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    val2 = new Value(tempReg);
+                                }
+                                // 将立即数的值load到寄存器中
+                                new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                             }
-                            // 将立即数的值load到寄存器中
-                            new LoadInst(val2, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
                         } else
                             val2 = new Value(op2);
 
@@ -601,27 +665,32 @@ namespace RISCV {
                     bool needRestore = false;
                     if (dynamic_cast<IRConstant *>(irStVal)) {
                         // 存储值是常数
-                        if (ty == IRType::IntTy) {
-                            new LiInst(stVal = new Value(CallerSavedRegister::ra),
-                                       dynamic_cast<IRConstantInt *>(irStVal)->getRawValue(), this);
-                        } else if (ty == IRType::BoolTy) {
-                            new LiInst(stVal = new Value(CallerSavedRegister::ra),
-                                       dynamic_cast<IRConstantBool *>(irStVal)->getRawValue(), this);
-                        } else if (ty == IRType::DoubleTy || ty == IRType::FloatTy) {
-                            // add GV
-                            auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(irStVal), parent->getParent());
-                            auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
-                            if (tempReg == nullptr) {
-                                // 所有的 caller 寄存器全满了，使用 fa0 替代
-                                needRestore = true;
-                                stVal = new Value(RegisterFactory::getReg("fa0"));
-                                new StoreInst(stVal, new Pointer(-8), this, IRType::DoubleTy);
-                            } else {
-                                stVal = new Value(tempReg);
-                            }
-                            new LoadInst(stVal, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
-                        } else
-                            assert(0 && "Error Type");
+                        if (constMap[dynamic_cast<IRConstant *>(irStVal)]) {
+                            stVal = new Value(constMap[dynamic_cast<IRConstant *>(irStVal)]);
+                        } else {
+                            if (ty == IRType::IntTy) {
+                                new LiInst(stVal = new Value(CallerSavedRegister::ra),
+                                           dynamic_cast<IRConstantInt *>(irStVal)->getRawValue(), this);
+                            } else if (ty == IRType::BoolTy) {
+                                new LiInst(stVal = new Value(CallerSavedRegister::ra),
+                                           dynamic_cast<IRConstantBool *>(irStVal)->getRawValue(), this);
+                            } else if (ty == IRType::DoubleTy || ty == IRType::FloatTy) {
+                                // add GV
+                                auto immGV = new GlobalVariable(dynamic_cast<IRConstant *>(irStVal),
+                                                                parent->getParent());
+                                auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
+                                if (tempReg == nullptr) {
+                                    // 所有的 caller 寄存器全满了，使用 fa0 替代
+                                    needRestore = true;
+                                    stVal = new Value(RegisterFactory::getReg("fa0"));
+                                    new StoreInst(stVal, new Pointer(-8), this, IRType::DoubleTy);
+                                } else {
+                                    stVal = new Value(tempReg);
+                                }
+                                new LoadInst(stVal, new Pointer(immGV), this, ty, new Value(CallerSavedRegister::ra));
+                            } else
+                                assert(0 && "Error Type");
+                        }
                     } else
                         stVal = new Value(irStVal);
                     if (IRGlobalVariable::classof(irPtr)) {
@@ -699,17 +768,25 @@ namespace RISCV {
                         }
                         auto imm = dynamic_cast<IRConstant *>(param);
                         if (imm) {
-                            // 翻译为li
-                            if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy) {
-                                auto immGV = new GlobalVariable(imm, parent->getParent());
-                                new LoadInst(dest, new Pointer(immGV), this, imm->getType(),
-                                             new Value(CallerSavedRegister::ra));
-                            } else if (imm->getType() == IRType::BoolTy) {
-                                new LiInst(dest, dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
-                            } else if (imm->getType() == IRType::IntTy) {
-                                new LiInst(dest, dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                            if (constMap[imm]) {
+                                // 翻译为mv
+                                if (dest->getReg() != constMap[imm])
+                                    new MoveInst(imm->getType(), dest, new Value(constMap[imm]), this);
                             } else {
-                                assert(0 && "Error Type");
+                                if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy) {
+                                    // 翻译为load
+                                    auto immGV = new GlobalVariable(imm, parent->getParent());
+                                    new LoadInst(dest, new Pointer(immGV), this, imm->getType(),
+                                                 new Value(CallerSavedRegister::ra));
+                                } else if (imm->getType() == IRType::BoolTy) {
+                                    // 翻译为li
+                                    new LiInst(dest, dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
+                                } else if (imm->getType() == IRType::IntTy) {
+                                    // 翻译为li
+                                    new LiInst(dest, dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                                } else {
+                                    assert(0 && "Error Type");
+                                }
                             }
                         } else {
                             if (dest->getReg() != param->getReg())
@@ -754,17 +831,25 @@ namespace RISCV {
                     auto irDest = mvInst->getDest();
                     auto imm = dynamic_cast<IRConstant *>(irSrc);
                     if (imm) {
-                        if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy) {
-                            auto immGV = new GlobalVariable(imm, parent->getParent());
-                            new LoadInst(new Value(irDest), new Pointer(immGV), this, imm->getType(),
-                                         new Value(CallerSavedRegister::ra));
-                        } else if (imm->getType() == IRType::IntTy)
-                            // 翻译为li
-                            new LiInst(new Value(irDest), dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
-                        else if (imm->getType() == IRType::BoolTy)
-                            new LiInst(new Value(irDest), dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
-                        else
-                            assert(0 && "Error Type");
+                        if (constMap[imm]) {
+                            // 翻译为mv
+                            if (constMap[imm] != irDest->getReg())
+                                new MoveInst(irSrc->getType(), new Value(irDest), new Value(constMap[imm]), this);
+                        } else {
+                            if (imm->getType() == IRType::FloatTy || imm->getType() == IRType::DoubleTy) {
+                                // 翻译为load
+                                auto immGV = new GlobalVariable(imm, parent->getParent());
+                                new LoadInst(new Value(irDest), new Pointer(immGV), this, imm->getType(),
+                                             new Value(CallerSavedRegister::ra));
+                            } else if (imm->getType() == IRType::IntTy)
+                                // 翻译为li
+                                new LiInst(new Value(irDest), dynamic_cast<IRConstantInt *>(imm)->getRawValue(), this);
+                            else if (imm->getType() == IRType::BoolTy)
+                                // 翻译为li
+                                new LiInst(new Value(irDest), dynamic_cast<IRConstantBool *>(imm)->getRawValue(), this);
+                            else
+                                assert(0 && "Error Type");
+                        }
                     } else {
                         if (irSrc->getReg() != irDest->getReg())
                             new MoveInst(irSrc->getType(), new Value(irDest), new Value(irSrc), this);
