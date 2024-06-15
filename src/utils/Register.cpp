@@ -1,4 +1,6 @@
 #include "Register.h"
+#include "IR/IRConstant.h"
+#include "IR/IRType.h"
 #include "IR/IRValue.h"
 #include "RegisterNode.h"
 #include "IR/IRFunction.h"
@@ -175,6 +177,11 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
                     if (inst->getReg() == reg) {
                         OS << inst->getName() << ", ";
                     }
+                    for(unsigned i=0; i<inst->getNumOperands(); i++){
+                        if( inst->getOperand(i)->getType()->getPrimitiveID() == IRType::ConstantVal && 
+                            dynamic_cast<IRConstant*>(inst->getOperand(i))->getReg() == reg)
+                            dynamic_cast<IRConstant*>(inst->getOperand(i))->print(OS);
+                    }
                 }
             }
         }
@@ -198,6 +205,11 @@ void RegisterFactory::print(std::ostream &OS, IRFunction &F) {
                 } else {
                     if (inst->getReg() == reg) {
                         OS << inst->getName() << ", ";
+                    }
+                    for(unsigned i=0; i<inst->getNumOperands(); i++){
+                        if( inst->getOperand(i)->getType()->getPrimitiveID() == IRType::ConstantVal && 
+                            dynamic_cast<IRConstant*>(inst->getOperand(i))->getReg() == reg)
+                            dynamic_cast<IRConstant*>(inst->getOperand(i))->print(OS);
                     }
                 }
             }
