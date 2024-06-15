@@ -111,6 +111,8 @@ namespace RISCV {
 
         // 将放入常数寄存器中
         for (auto [constant, reg] : irFunction->getConstRegMap()) {
+            if (constant == IRConstant::getNullValue(IRType::IntTy))
+                continue;
             auto ty = constant->getType();
             if (ty == IRType::IntTy) {
                 new LiInst(new Value(reg), dynamic_cast<IRConstantInt *>(constant)->getRawValue(), entryBlock);
