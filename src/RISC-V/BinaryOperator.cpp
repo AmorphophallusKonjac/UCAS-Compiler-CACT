@@ -17,7 +17,7 @@ namespace RISCV {
     void BinaryOperator::print(std::ostream &O) const {
         assert(ty == IRType::BoolTy || ty == IRType::IntTy || ty == IRType::FloatTy ||
                ty == IRType::DoubleTy && "Error type");
-        if (ty != IRType::IntTy) {
+        if (ty == IRType::DoubleTy || ty == IRType::FloatTy) {
             O << "f";
         }
         switch (iType) {

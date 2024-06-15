@@ -1,0 +1,35 @@
+bool get() {
+    return true;
+}
+
+
+int main() {
+    int x, y, z, zz;
+    bool a, b, c;
+    if (a == b || c == get() && zz > z) {
+        x = x + 1;
+    }
+    else {
+        y = y + 1;
+    }
+    zz = 3;
+    if (!a && (z + 1) == (zz + 2)) {
+        x = 2;
+    }
+    y = 2;
+
+    int i = 0;
+    i = i + 10;
+    while (i > 1) {
+        if (!a && b || c) {
+            x = 10;
+        }
+        else {
+            y = 11;
+            return 100;
+        }
+        z = 12;
+        return 1000;
+    }
+    return 0;
+}

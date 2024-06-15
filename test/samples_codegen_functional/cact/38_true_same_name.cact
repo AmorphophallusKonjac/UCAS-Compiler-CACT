@@ -1,0 +1,13 @@
+int foo = 0;
+
+int foo(int a)
+{
+	return a + a;
+}
+
+int main()
+{
+	foo = 3;
+	print_int(foo(foo));
+	return 0;
+}
