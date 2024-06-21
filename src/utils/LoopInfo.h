@@ -44,6 +44,8 @@ public:
     const std::vector<IRBasicBlock *> &getBasicBlockList() const;
 
     static bool isLoopInvariant(IRValue *value, LoopInfo *loop);
+
+    static unsigned belongedToLoopNums(IRBasicBlock *BB);
 };
 
 

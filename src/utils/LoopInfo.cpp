@@ -5,6 +5,7 @@
 #include "IR/IRConstant.h"
 #include "IR/IRArgument.h"
 #include "utils/ControlFlowGraph.h"
+#include "ControlFlowGraph.h"
 
 std::vector<LoopInfo *> LoopInfo::findLoop(IRFunction *F, ControlFlowGraph *cfg) {
     std::vector<LoopInfo *> loopList;
@@ -100,6 +101,21 @@ auto loopBBList = loop->getBasicBlockList();
         return true;
     }
     return false;
+}
+
+unsigned LoopInfo::belongedToLoopNums(IRBasicBlock *BB) {
+    unsigned count = 0;
+    auto F = BB->getParent();
+    ControlFlowGraph cfg(F);
+    DominatorTree::getDominatorTree(&cfg);
+    auto loopList = findLoop(F, &cfg);
+    for (auto loop : loopList) {
+        auto BBList = loop->getBasicBlockList();
+        if (std::find(BBList.begin(), BBList.end(), BB) != BBList.end()) {
+            count++;
+        }
+    }
+    return count;
 }
 
 LoopInfo::LoopInfo() = default;
