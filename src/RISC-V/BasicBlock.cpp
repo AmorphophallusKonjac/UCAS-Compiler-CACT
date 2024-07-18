@@ -301,9 +301,12 @@ namespace RISCV {
                                 // 寻找空闲寄存器
                                 auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
                                 if (tempReg == nullptr) {
-                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    // 找不到使用fa0/fa1，将fa0/fa1存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op1->getReg() == RegisterFactory::getReg("fa0"))
+                                        val2 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val2 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val2 = new Value(tempReg);
@@ -381,9 +384,12 @@ namespace RISCV {
                                 // 寻找空闲寄存器
                                 auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
                                 if (tempReg == nullptr) {
-                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    // 找不到使用fa0/fa1，将fa0/fa1存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op2->getReg() == RegisterFactory::getReg("fa0"))
+                                        val1 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val1 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val1 = new Value(tempReg);
@@ -405,7 +411,10 @@ namespace RISCV {
                                 if (tempReg == nullptr) {
                                     // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op1->getReg() == RegisterFactory::getReg("fa0"))
+                                        val2 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val2 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val2 = new Value(tempReg);
@@ -491,9 +500,12 @@ namespace RISCV {
                                 // 寻找空闲寄存器
                                 auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
                                 if (tempReg == nullptr) {
-                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    // 找不到使用fa0/fa1，将fa0/fa1存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op2->getReg() == RegisterFactory::getReg("fa0"))
+                                        val1 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val1 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val1 = new Value(tempReg);
@@ -513,9 +525,12 @@ namespace RISCV {
                                 // 寻找空闲寄存器
                                 auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
                                 if (tempReg == nullptr) {
-                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    // 找不到使用fa0/fa1，将fa0/fa1存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op1->getReg() == RegisterFactory::getReg("fa0"))
+                                        val2 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val2 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val2 = new Value(tempReg);
@@ -563,9 +578,12 @@ namespace RISCV {
                                 // 寻找空闲寄存器
                                 auto tempReg = const_cast<Register *>(irInst->getFreeFloatCallerSavedReg());
                                 if (tempReg == nullptr) {
-                                    // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
+                                    // 找不到使用fa0/fa1，将fa0/fa1存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val1 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op2->getReg() == RegisterFactory::getReg("fa0"))
+                                        val1 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val1 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val1, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val1 = new Value(tempReg);
@@ -587,7 +605,10 @@ namespace RISCV {
                                 if (tempReg == nullptr) {
                                     // 找不到使用fa0，将fa0存储在栈上，运算完之后restore
                                     needRestore = true;
-                                    val2 = new Value(RegisterFactory::getReg("fa0"));
+                                    if (op1->getReg() == RegisterFactory::getReg("fa0"))
+                                        val2 = new Value(RegisterFactory::getReg("fa1"));
+                                    else
+                                        val2 = new Value(RegisterFactory::getReg("fa0"));
                                     new StoreInst(val2, new Pointer(-8), this, IRType::DoubleTy);
                                 } else {
                                     val2 = new Value(tempReg);
