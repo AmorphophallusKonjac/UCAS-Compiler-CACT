@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <ostream>
+#include <iomanip>
 
 #include "IR/IRBasicBlock.h"
 #include "IR/IRDerivedTypes.h"
@@ -13,9 +14,11 @@
 #include "iOther.h"
 #include "iPHINdoe.h"
 #include "iTerminators.h"
+#include "utils/Register.h"
 
 IRInstruction::IRInstruction(IRType *Ty, unsigned int iType, const std::string &Name, IRBasicBlock *parent)
         : IRUser(Ty, InstructionVal, Name) {
+    Live = new LiveVariableInst(this);
     Parent = parent;
     this->iType = iType;
 
@@ -89,6 +92,8 @@ const char *IRInstruction::getOpcodeName(unsigned int OpCode) {
             return "shl";
         case Shr:
             return "shr";
+        case Move:
+            return "mv";
 
         default:
             return "<Invalid operator> ";
@@ -162,6 +167,9 @@ void IRInstruction::print(std::ostream &OS) const {
     IRValue *operand1;
     IRValue *operand2;
 
+    //LiveVariableInst::print(OS, const_cast<IRInstruction*>(this));
+
+    OS << "    ";
     switch (getOpcode()) {
         // Terminators
         case Ret:
@@ -310,18 +318,18 @@ void IRInstruction::print(std::ostream &OS) const {
             //instruction begin
             OS << this->getOpcodeName() << " ";//打印memcpy
 
+            // /******这里必然是IRPointerType******/
+            operand2 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getDestPointerOperand();
+            operand2->getType()->print(OS);
+            operand2->printPrefixName(OS);
+
+            OS << " ";
+
             operand1 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getSrcPointerOperand();
             operand1->getType()->print(OS);
             operand1->printPrefixName(OS);
 
-            // /******这里必然是IRPointerType******/
-            OS << " ";
-            operand2 = dynamic_cast<IRMemcpyInst *>(const_cast<IRInstruction *>(this))->getDestPointerOperand();
-            operand2->getType()->print(OS);
-            operand2->printPrefixName(OS);
             break;
-
-
             // Other instructions...
         case PHI:
             //instruction begin
@@ -348,8 +356,8 @@ void IRInstruction::print(std::ostream &OS) const {
             }
             OS << this->getOpcodeName() << " ";//打印call
 
-            IRCallInst* ircall;
-            IRFunction* irfunc;
+            IRCallInst *ircall;
+            IRFunction *irfunc;
             ircall = dynamic_cast<IRCallInst *>(const_cast<IRInstruction *>(this));
             irfunc = ircall->getCalledFunction();
             irfunc->getFunctionType()->print(OS);
@@ -415,10 +423,67 @@ void IRInstruction::print(std::ostream &OS) const {
             }
             OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 2));
             break;
+        case Move:
+            OS << this->getOpcodeName() << " ";//打印move
+
+            //打印两个操作数，这两个操作数都是以primitiveType的形式出现，不会是derivedType
+            operand1 = dynamic_cast<IRMoveInst *>(const_cast<IRInstruction *>(this))->getDest();
+            switch (operand1->getValueType()) {
+                case IRValue::ConstantVal:
+                    operand1->print(OS);
+                    break;
+                case IRValue::ArgumentVal:
+                    operand1->printPrefixName(OS);//打印本名
+                    break;
+                case IRValue::InstructionVal:
+                    operand1->printPrefixName(OS);
+                    break;
+            }
+            OS << ", ";
+            operand2 = dynamic_cast<IRMoveInst *>(const_cast<IRInstruction *>(this))->getSrc();
+            switch (operand2->getValueType()) {
+                case IRValue::ConstantVal:
+                    operand2->print(OS);
+                    break;
+                case IRValue::ArgumentVal:
+                    operand2->printPrefixName(OS);//打印本名
+                    break;
+                case IRValue::InstructionVal:
+                    operand2->printPrefixName(OS);
+                    break;
+            }
+            break;
 
         default:
             throw std::runtime_error("<Invalid operator> ");
     }
+
+    OS.seekp(0, std::ios::end);
     OS << std::endl;
+    // RegisterFactory::printInst(OS, *const_cast<IRInstruction*>(this));
     // TODO
 }
+
+const Register *IRInstruction::getFreeFloatCallerSavedReg() {
+    auto FregList = RegisterFactory::getFRegList();
+    for (auto reg: FregList) {
+        /*在浮点caller保存寄存器中 && 同时当前不活跃*/
+        if (reg->getRegty() != Register::FloatCalleeSaved &&
+            std::find(CallerSavedINLiveRegList.begin(), CallerSavedINLiveRegList.end(), reg) ==
+            CallerSavedINLiveRegList.end()) {
+            return reg;
+        }
+    }
+};
+
+const Register *IRInstruction::getFreeGenCallerSavedReg() {
+    auto GregList = RegisterFactory::getGRegList();
+    for (auto reg: GregList) {
+        /*在整型caller保存寄存器中 && 同时当前不活跃*/
+        if (reg->getRegty() != Register::CalleeSaved &&
+            std::find(CallerSavedINLiveRegList.begin(), CallerSavedINLiveRegList.end(), reg) ==
+            CallerSavedINLiveRegList.end()) {
+            return reg;
+        }
+    }
+};

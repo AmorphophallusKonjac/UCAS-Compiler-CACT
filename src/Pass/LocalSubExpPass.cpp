@@ -1,6 +1,7 @@
 #include "LocalSubExpPass.h"
 #include "IR/IRInstruction.h"
 #include "IR/IRValue.h"
+#include "IR/iMemory.h"
 
 #include <algorithm>
 #include <bitset>
@@ -8,7 +9,50 @@
 #include <string>
 #include <utility>
 
-void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
+void Localldst(IRBasicBlock &BB) {
+    std::vector<IRInstruction*>::iterator ite;
+    auto& InstList = BB.getInstList();
+    for(ite=InstList.begin(); ite<InstList.end(); ite++){
+        if((*ite)->getOpcode() == IRInstruction::Store){
+            /*消除前驱所有没有被ld打断的st*/
+            for(auto it=ite-1; it>=InstList.begin(); it--){
+                auto itinst = *it;
+                auto iteinst = *ite;
+                /*如果遇到st则消除*/
+                if( itinst->getOpcode() == IRInstruction::Store &&
+                    dynamic_cast<IRStoreInst*>(itinst)->getOperand(1) == dynamic_cast<IRStoreInst*>(iteinst)->getOperand(1)){
+                    itinst->dropAllReferences();
+                    InstList.erase(it);
+                    itinst->replaceAllUsesWith(iteinst);
+                    ite--;
+                }else if(itinst->getOpcode() == IRInstruction::Load &&
+                        dynamic_cast<IRLoadInst*>(itinst)->getOperand(0) == dynamic_cast<IRStoreInst*>(iteinst)->getOperand(1)){
+                    break;
+                }
+            }
+        }else if((*ite)->getOpcode() == IRInstruction::Load){
+            /*消除前驱所有没有被st打断的ld*/
+            for(auto it=ite+1; it<InstList.end();){
+                auto itinst = *it;
+                auto iteinst = *ite;
+                /*如果遇到load则消除*/
+                if( itinst->getOpcode() == IRInstruction::Load && 
+                    dynamic_cast<IRLoadInst*>(itinst)->getOperand(0) == dynamic_cast<IRLoadInst*>(iteinst)->getOperand(0)){
+                    itinst->dropAllReferences();
+                    InstList.erase(it);
+                    itinst->replaceAllUsesWith(iteinst);
+                }else if(itinst->getOpcode() == IRInstruction::Store &&
+                        dynamic_cast<IRStoreInst*>(itinst)->getOperand(1) == dynamic_cast<IRLoadInst*>(iteinst)->getOperand(0)){
+                    break;
+                }else{
+                    it++;
+                }
+            }
+        }   
+    }
+}
+
+void Localchildren(IRBasicBlock &BB) {
     bool flagEnd = true;//如果这一轮有子表达式消除，那么就需要再走一轮
 
     while(flagEnd){
@@ -23,7 +67,12 @@ void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
                 if( (irinst1->getOpcode() == irinst2->getOpcode()) &&
                     (irinst1->getOpcode() != IRInstruction::Br)    &&
                     (irinst1->getOpcode() != IRInstruction::PHI)   &&
-                    (irinst1->getOpcode() != IRInstruction::Call)){
+                    (irinst1->getOpcode() != IRInstruction::Load) &&
+                    (irinst1->getOpcode() != IRInstruction::Store) &&
+                    (irinst1->getOpcode() != IRInstruction::Memcpy) &&
+                    (irinst1->getOpcode() != IRInstruction::Call) &&
+                    (irinst1->getOpcode() != IRInstruction::Alloca) &&
+                    (irinst1->getOpcode() != IRInstruction::Ret)){
                     /*如果是可交换的，则两方都需要进行考虑*/
                     if(irinst1->isCommutative()){
                         if( (irinst1->getOperand(0) == irinst2->getOperand(0) && irinst1->getOperand(1) == irinst2->getOperand(1)) ||
@@ -53,6 +102,11 @@ void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
     }
 }
 
-LocalSubExpPass::LocalSubExpPass(std::string name) : BasicBlockPass(name) {
+void LocalSubExpPass::runOnBasicBlock(IRBasicBlock &BB) {
+    Localchildren(BB);
+    Localldst(BB);
+}
+
+LocalSubExpPass::LocalSubExpPass(std::string name, int level) : BasicBlockPass(name, level) {
 
 }

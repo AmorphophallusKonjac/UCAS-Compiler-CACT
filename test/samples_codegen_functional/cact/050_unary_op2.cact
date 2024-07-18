@@ -1,0 +1,9 @@
+int main() {
+    int a, b;
+    a = 070;
+    b = 0x4;
+    a = a - - 4 + + b;
+    a = 0 + + b;
+    print_int(a);
+    return 0;
+}

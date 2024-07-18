@@ -5,7 +5,7 @@
 
 #include <utility>
 
-RenamePass::RenamePass(std::string name) : FunctionPass(std::move(name)) {
+RenamePass::RenamePass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 
@@ -27,8 +27,16 @@ void RenamePass::runOnFunction(IRFunction &F) {
                 IRCallInst::classof(inst) && dynamic_cast<IRCallInst *>(inst)->getType() == IRType::VoidTy) {
                 continue;
             }
-            inst->setName(std::to_string(F.getCount()));
-            F.addCount();
+            if (IRMoveInst::classof(inst)) {
+                auto dest = dynamic_cast<IRMoveInst *>(inst)->getDest();
+                if (dest->getName().empty()) {
+                    dest->setName(std::to_string(F.getCount()));
+                    F.addCount();
+                }
+            } else {
+                inst->setName(std::to_string(F.getCount()));
+                F.addCount();
+            }
         }
     }
 }

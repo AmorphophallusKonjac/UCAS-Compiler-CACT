@@ -32,12 +32,16 @@ void IRGlobalVariable::print(std::ostream &OS) const {
 }
 
 //对于一个全局变量他是一个指针类或数组
-IRGlobalVariable::IRGlobalVariable(IRType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent)
-    : IRGlobalValue(new IRPointerType(Ty), IRValue::GlobalVariableVal, Linkage, Name), isConstantGlobal(isConstant) {
+IRGlobalVariable::IRGlobalVariable(IRType *Ty, bool isConstant, IRGlobalValue::LinkageTypes Linkage, IRConstant *Initializer, const std::string &Name, IRModule *Parent, bool isinitial)
+    : IRGlobalValue(new IRPointerType(Ty), IRValue::GlobalVariableVal, Linkage, Name), isConstantGlobal(isConstant), isinitial(isinitial) {
     if (Initializer) {
         Operands.emplace_back(dynamic_cast<IRValue *>(Initializer), this);
     }
     if (Parent) {
         Parent->addGlobalVariable(this);
     }
+}
+
+bool IRGlobalVariable::isIsinitial() const {
+    return isinitial;
 }

@@ -4,6 +4,7 @@
 
 #include "IR/IRArgument.h"
 #include "IRModule.h"
+#include "utils/Register.h"
 
 void IRFunction::setParent(IRModule *parent) {
     Parent = parent;
@@ -50,6 +51,9 @@ void IRFunction::print(std::ostream &OS) const {
     }
     OS << "}" << std::endl;
 
+    /*先打印再检查*/
+    // RegisterFactory::print(OS, *const_cast<IRFunction*>(this));
+    RegisterFactory::check(*const_cast<IRFunction *>(this));
 }
 
 //这里无法传一个primitiveType的Ty进来，因为在进来之前必须对IRFunctionType给一系列参数进行初始化

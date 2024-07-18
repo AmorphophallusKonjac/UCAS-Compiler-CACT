@@ -7,15 +7,11 @@
 
 class StrengthReductionPass : public FunctionPass {
 public:
-    explicit StrengthReductionPass(std::string name = "");
+    explicit StrengthReductionPass(std::string name = "", int level = 2);
 
     void runOnFunction(IRFunction &F) override;
 
 private:
-    static std::set<BasicInductionVariable *> findBasicInductionVar(LoopInfo *loop);
-
-    static bool isLoopInvariant(IRValue *value, LoopInfo *loop);
-
     static bool reduction(IRFunction *F, BasicInductionVariable *const &BI, LoopInfo *loop,
                           std::set<BasicInductionVariable *> *BISet);
 

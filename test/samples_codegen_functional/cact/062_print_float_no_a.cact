@@ -1,0 +1,8 @@
+// INPUT: an float
+// OUTPUT: the input float
+
+int main()
+{
+	print_float(get_float());
+    return 0;
+}

@@ -13,10 +13,12 @@ public:
     // Alternate CallInst ctors w/ no actuals & one actual, respectively.
     IRCallInst(IRValue *F, const std::string &Name = "",
                IRBasicBlock *parent = nullptr);
+
     IRCallInst(IRValue *F, IRValue *Actual, const std::string &Name = "",
                IRBasicBlock *parent = nullptr);
 
     virtual IRInstruction *clone() const { return new IRCallInst(*this); }
+
     bool mayWriteToMemory() const { return true; }
 
     /******直接获得call的函数******/
@@ -29,23 +31,24 @@ public:
 
     // Methods for support type inquiry through isa, cast, and dyn_cast:
     static inline bool classof(const IRCallInst *) { return true; }
+
     static inline bool classof(const IRInstruction *I) {
         return I->getOpcode() == IRInstruction::Call;
     }
 };
 
-class ShiftInst : public IRInstruction {
-    ShiftInst(const ShiftInst &SI) : IRInstruction(SI.getType(), SI.getOpcode()) {
+class IRShiftInst : public IRInstruction {
+    IRShiftInst(const IRShiftInst &SI) : IRInstruction(SI.getType(), SI.getOpcode()) {
         Operands.reserve(2);
         Operands.emplace_back(SI.Operands[0], this);
         Operands.emplace_back(SI.Operands[1], this);
     }
 
 public:
-    ShiftInst(OtherOps Opcode, IRValue *S, IRValue *SA, const std::string &Name = "",
-              IRBasicBlock *parent = nullptr)
-        : IRInstruction(S->getType(), Opcode, Name, parent) {
-        assert((Opcode == Shl || Opcode == Shr) && "ShiftInst Opcode invalid!");
+    IRShiftInst(OtherOps Opcode, IRValue *S, IRValue *SA, const std::string &Name = "",
+                IRBasicBlock *parent = nullptr)
+            : IRInstruction(S->getType(), Opcode, Name, parent) {
+        assert((Opcode == Shl || Opcode == Shr) && "IRShiftInst Opcode invalid!");
         Operands.reserve(2);
         Operands.emplace_back(S, this);
         Operands.emplace_back(SA, this);
@@ -53,14 +56,57 @@ public:
 
     OtherOps getOpcode() const { return (OtherOps) IRInstruction::getOpcode(); }
 
-    IRInstruction *clone() const override { return new ShiftInst(*this); }
+    IRInstruction *clone() const override { return new IRShiftInst(*this); }
 
     // Methods for support type inquiry through isa, cast, and dyn_cast:
-    static inline bool classof(const ShiftInst *) { return true; }
+    static inline bool classof(const IRShiftInst *) { return true; }
+
     static inline bool classof(const IRInstruction *I) {
         return (I->getOpcode() == IRInstruction::Shr) |
                (I->getOpcode() == IRInstruction::Shl);
     }
+};
+
+class IRMoveInst : public IRInstruction {
+    IRMoveInst(const IRMoveInst &MI) : IRInstruction(MI.getType(), MI.getOpcode()) {
+        Operands.reserve(2);
+        Operands.emplace_back(MI.Operands[0], this);
+        Operands.emplace_back(MI.Operands[1], this);
+    }
+
+public:
+    IRMoveInst(IRValue *Src, IRValue *Dest, IRBasicBlock *parent = nullptr)
+            : IRInstruction(Src->getType(), Move, "", parent) {
+        Operands.reserve(2);
+        Operands.emplace_back(Dest, this);
+        Operands.emplace_back(Src, this);
+    }
+
+    OtherOps getOpcode() const { return (OtherOps) IRInstruction::getOpcode(); }
+
+    IRInstruction *clone() const override { return new IRMoveInst(*this); }
+
+    IRValue *getDest() const { return getOperand(0); }
+
+    IRValue *getSrc() const { return getOperand(1); }
+
+    // Methods for support type inquiry through isa, cast, and dyn_cast:
+    static inline bool classof(const IRMoveInst *) { return true; }
+
+    static inline bool classof(const IRInstruction *I) {
+        return I->getOpcode() == IRInstruction::Move;
+    }
+};
+
+
+class IRRegValue : public IRInstruction {
+public:
+    explicit IRRegValue(IRType *ty, const std::string &name = "")
+            : IRInstruction(ty, Reg, name) {
+
+    }
+
+    IRInstruction *clone() const override { return new IRRegValue(getType()); }
 };
 
 

@@ -83,6 +83,10 @@ public:
     }
 
     IRValue *getIncomingValueForBlock(const IRBasicBlock *BB) const {
+        int idx = getBasicBlockIndex(BB);
+        if (idx == -1) {
+            return nullptr;
+        }
         return getIncomingValue(getBasicBlockIndex(BB));
     }
 

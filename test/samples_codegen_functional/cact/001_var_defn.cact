@@ -1,0 +1,9 @@
+//test global var define
+int a = 3;
+int b = 5;
+int c;
+int A[4] = {1,-1};
+int main(){
+    c = a + b;
+    return a + b;
+}

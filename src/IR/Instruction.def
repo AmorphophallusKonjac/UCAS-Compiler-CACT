@@ -121,8 +121,10 @@ HANDLE_OTHER_INST(22, Call, CallInst)// Call a function
 
 HANDLE_OTHER_INST(23, Shl, ShiftInst)// Shift operations
 HANDLE_OTHER_INST(24, Shr, ShiftInst)
+HANDLE_OTHER_INST(25, Move, MoveInst)
+HANDLE_OTHER_INST(26, Reg, RegValue)
 
-LAST_OTHER_INST(24)
+LAST_OTHER_INST(26)
 
 #undef FIRST_TERM_INST
 #undef HANDLE_TERM_INST

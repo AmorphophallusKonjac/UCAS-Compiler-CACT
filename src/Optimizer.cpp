@@ -8,18 +8,22 @@
 #include "Pass/HoistingLoopInvariantValuePass.h"
 #include "Pass/StrengthReductionPass.h"
 #include "Pass/GlobalSubExpPass.h"
-#include "Pass/LoopArrayScalarizePass.h"
 #include "Pass/CutDeadCodePass.h"
 #include "Pass/EliminateBasicInductionVarPass.h"
+#include "Pass/RegisterPass.h"
+#include "Pass/AggressiveDeadCodeEliminatePass.h"
+#include "Pass/PHIdeletePass.h"
+#include "Pass/DeleteNonepredsPass.h"
 
 void Optimizer::run() {
     for (auto pass: passList) {
-        pass->run(*ir);
+        if (level >= pass->getLevel())
+            pass->run(*ir);
     }
 }
 
 Optimizer::Optimizer(IRModule *ir)
-        : ir(ir), passList() {
+        : ir(ir), passList(), level(0) {
 
 }
 
@@ -30,22 +34,29 @@ void Optimizer::addPass(Pass *pass) {
 void Optimizer::build() {
     addPass(new MemToRegPass("Mem2Reg"));
 
-    //addPass(new LoopArrayScalarizePass("LoopArrayScalarizePass"));
-
     addPass(new HoistingLoopInvariantValuePass("HoistingLoopInvariantValue"));
+    addPass(new ConstantPass("ConstantPass"));
     addPass(new LocalSubExpPass("LocalSubExpPass"));
     addPass(new GlobalSubExpPass("GlobalSubExpPass"));
-    addPass(new ConstantPass("ConstantPass"));
 
-    addPass(new StrengthReductionPass("StrengthReduction"));
+    addPass(new DeleteNonePredsPass("DeleteNonepredsPass"));
 
-    addPass(new AlgebraicPass("AlgebraicPass"));
+    addPass(new AggressiveDeadCodeEliminatePass("AggressiveDeadCodeEliminate"));
 
-    addPass(new CutDeadCodePass("CutDeadCodePass"));
-    addPass(new EliminateBasicInductionVarPass("EliminateBasicInductionVarPass"));
-    addPass(new CutDeadCodePass("CutDeadCodePass"));
+//    new StrengthReductionPass("");
+//    new CutDeadCodePass("");
+//    new AlgebraicPass("");
+//    new EliminateBasicInductionVarPass("");
+
+    addPass(new PHIdeletePass("PHIdeletePass"));
 
     addPass(new CutDeadBlockPass("CutDeadBLock"));
 
     addPass(new RenamePass("RenamePass"));
+
+    addPass(new RegisterPass("RegisterPass"));
+}
+
+void Optimizer::setLevel(int level) {
+    this->level = level;
 }

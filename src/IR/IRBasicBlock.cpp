@@ -7,6 +7,7 @@
 #include "IRUse.h"
 #include "IRUser.h"
 #include <iostream>
+#include <iomanip>
 
 void IRBasicBlock::addInstruction(IRInstruction *inst) {
     if (!hasTerminator()) {
@@ -21,14 +22,16 @@ void IRBasicBlock::setParent(IRFunction *parent) {
 }
 
 IRBasicBlock::IRBasicBlock(const std::string &Name, IRFunction *Parent)
-        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name), node(this) {
+        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name) {
+    Live = new LiveVariableBB(this);
     parent = Parent;
     if (Parent)
         parent->addBasicBlock(this);
 }
 
 IRBasicBlock::IRBasicBlock(const std::string &Name, IRBasicBlock *InsertBefore)
-        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name), node(this) {
+        : IRValue(IRType::LabelTy, IRValue::BasicBlockVal, Name) {
+    Live = new LiveVariableBB(this);
     parent = InsertBefore->parent;
     InsertBefore->parent->addBasicBlock(this);
 }
@@ -42,6 +45,9 @@ void IRBasicBlock::printPrefixName(std::ostream &OS) const {
 }
 
 void IRBasicBlock::print(std::ostream &OS) const {
+
+    //LiveVariableBB::print(OS, const_cast<IRBasicBlock*>(this));
+
     //打印每条指令
     this->printPrefixName(OS);
 
@@ -56,10 +62,13 @@ void IRBasicBlock::print(std::ostream &OS) const {
         OS << ",";//获得使用这个块的终止语句的父块
     }
     OS.seekp(static_cast<std::streampos>(static_cast<std::streamoff>(OS.tellp()) - 1));
+
+    //OS << std::setw(80) << std::setfill(' ') << "INLive: ";
+
+    OS.seekp(0, std::ios::end);
     OS << std::endl;
 
     for (auto inst: this->InstList) {
-        OS << "    ";
         inst->print(OS);
     }
     // TODO

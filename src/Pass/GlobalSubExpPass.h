@@ -5,7 +5,7 @@
 
 class GlobalSubExpPass : public FunctionPass {
 public:
-    explicit GlobalSubExpPass(std::string name = "");
+    explicit GlobalSubExpPass(std::string name = "", int level = 1);
 
     void runOnFunction(IRFunction &F) override;
 };

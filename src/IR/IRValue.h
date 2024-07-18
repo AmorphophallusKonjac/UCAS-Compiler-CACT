@@ -26,6 +26,8 @@ class IRGlobalVariable;
 
 class TemporaryVariable;
 
+class Register;
+
 class IRValue {
 public:
     enum ValueTy {
@@ -96,6 +98,8 @@ public:
     void setTempVar(TemporaryVariable *tempVar);
 
     TemporaryVariable *getTempVar();
+
+    virtual Register* getReg() { return nullptr; }
 };
 
 #endif//COMPILER_IRVALUE_H

@@ -11,7 +11,7 @@ private:
         NO_BRANCH
     };
 public:
-    explicit CutDeadBlockPass(std::string name = "");
+    explicit CutDeadBlockPass(std::string name = "", int level = 2);
 
     void runOnFunction(IRFunction &F) override;
 };

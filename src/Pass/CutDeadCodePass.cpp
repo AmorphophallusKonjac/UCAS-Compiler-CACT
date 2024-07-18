@@ -2,7 +2,7 @@
 
 #include <utility>
 
-CutDeadCodePass::CutDeadCodePass(std::string name) : FunctionPass(std::move(name)) {
+CutDeadCodePass::CutDeadCodePass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 

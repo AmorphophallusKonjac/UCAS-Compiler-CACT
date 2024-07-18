@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include "ControlFlowGraph.h"
 
 class IRFunction;
 
@@ -38,11 +39,13 @@ public:
 
     IRBasicBlock *getExit() const;
 
-    static std::vector<LoopInfo *> findLoop(IRFunction *F);
+    static std::vector<LoopInfo *> findLoop(IRFunction *F, ControlFlowGraph *cfg);
 
     const std::vector<IRBasicBlock *> &getBasicBlockList() const;
 
     static bool isLoopInvariant(IRValue *value, LoopInfo *loop);
+
+    static unsigned belongedToLoopNums(IRBasicBlock *BB);
 };
 
 

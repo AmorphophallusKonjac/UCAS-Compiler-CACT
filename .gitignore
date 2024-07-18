@@ -16,7 +16,6 @@ grammar/*.tokens
 grammar/.antlr
 .antlr
 
-out
 scripts
 
 testbench
@@ -32,4 +31,7 @@ test/*/ll
 test/*/s
 IRgen
 IRgenbench
+Codegen
+Codegenbench
 test/samples_codegen_llvmtest
+test.drawio

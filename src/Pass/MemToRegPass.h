@@ -10,17 +10,19 @@ class DominatorTree;
 
 class MemToRegPass : public FunctionPass {
 public:
-    explicit MemToRegPass(std::string name = "");
+    explicit MemToRegPass(std::string name = "", int level = 1);
 
     void runOnFunction(IRFunction &F) override;
 
 private:
     static bool isAllocaPromotable(IRAllocaInst *AI);
 
-    static void mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, std::vector<IRBasicBlock *> &BBList);
+    static void mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, std::vector<IRBasicBlock *> &BBList,
+                        ControlFlowGraph *cfg);
 
-    static void renamePass(DominatorTree *pTree, IRAllocaInst *pInst, std::vector<IRInstruction *> *pVector,
-                           std::stack<IRValue *> *pStack);
+    static void renamePass(DominatorTree *node, IRAllocaInst *alloc, std::vector<IRInstruction *> *bin,
+                           std::stack<IRValue *> *valueStack);
+
 };
 
 

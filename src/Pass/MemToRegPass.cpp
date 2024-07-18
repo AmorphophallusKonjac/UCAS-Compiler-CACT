@@ -4,6 +4,7 @@
 #include "IR/iTerminators.h"
 #include "IR/iPHINdoe.h"
 #include "IR/IRConstant.h"
+#include "utils/ControlFlowGraph.h"
 
 #include <utility>
 #include <map>
@@ -11,13 +12,14 @@
 
 class DominatorTree;
 
-MemToRegPass::MemToRegPass(std::string name) : FunctionPass(std::move(name)) {
+MemToRegPass::MemToRegPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 
 void MemToRegPass::runOnFunction(IRFunction &F) {
     std::vector<IRAllocaInst *> Allocs;
-    DominatorTree *root = DominatorTree::getDominatorTree(&F);
+    ControlFlowGraph cfg(&F);
+    DominatorTree *root = DominatorTree::getDominatorTree(&cfg);
     auto entryBB = F.getEntryBlock();
     while (true) {
         Allocs.clear();
@@ -31,7 +33,7 @@ void MemToRegPass::runOnFunction(IRFunction &F) {
         }
         if (Allocs.empty())
             break;
-        mem2reg(Allocs, root, F.getBasicBlockList());
+        mem2reg(Allocs, root, F.getBasicBlockList(), &cfg);
     }
 }
 
@@ -42,7 +44,8 @@ bool MemToRegPass::isAllocaPromotable(IRAllocaInst *AI) {
 }
 
 void
-MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, std::vector<IRBasicBlock *> &BBList) {
+MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, std::vector<IRBasicBlock *> &BBList,
+                      ControlFlowGraph *cfg) {
     std::set<DominatorTree *> defineNode;
     std::set<DominatorTree *> userNode;
     /*!
@@ -94,10 +97,10 @@ MemToRegPass::mem2reg(std::vector<IRAllocaInst *> Allocs, DominatorTree *root, s
             auto useInst = dynamic_cast<IRInstruction *>(use->getUser());
             auto block = useInst->getParent();
             if (IRLoadInst::classof(useInst)) {
-                userNode.insert(block->getNode());
+                userNode.insert(block->getDominatorTree(cfg));
             } else if (IRStoreInst::classof(useInst)) {
-                defineNode.insert(block->getNode());
-                block->getNode()->orig.insert(alloc);
+                defineNode.insert(block->getDominatorTree(cfg));
+                block->getDominatorTree(cfg)->orig.insert(alloc);
             } else {
                 assert(0 && "wtf");
             }

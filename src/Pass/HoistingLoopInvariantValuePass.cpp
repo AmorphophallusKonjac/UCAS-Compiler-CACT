@@ -1,16 +1,22 @@
 #include "HoistingLoopInvariantValuePass.h"
+#include "utils/ControlFlowGraph.h"
+#include "utils/ControlFlowGraphVertex.h"
+#include "utils/ReachingDefinition.h"
+#include "IR/iOperators.h"
 
 #include <utility>
 
-HoistingLoopInvariantValuePass::HoistingLoopInvariantValuePass(std::string name) : FunctionPass(std::move(name)) {
+HoistingLoopInvariantValuePass::HoistingLoopInvariantValuePass(std::string name, int level) : FunctionPass(
+        std::move(name), level) {
 
 }
 
 void HoistingLoopInvariantValuePass::runOnFunction(IRFunction &F) {
-    DominatorTree::getDominatorTree(&F);
-    auto LoopList = LoopInfo::findLoop(&F);
+    ControlFlowGraph cfg(&F);
+    DominatorTree::getDominatorTree(&cfg);
+    auto LoopList = LoopInfo::findLoop(&F, &cfg);
     for (auto loop: LoopList) {
-        auto invariantValueList = findInvariantValue(loop);
+        auto invariantValueList = findInvariantValue(loop, &cfg);
         auto preHeader = loop->getPreHeader();
         auto &preHeaderBB = loop->getPreHeader()->getInstList();
         for (auto iV: invariantValueList) {
@@ -24,7 +30,7 @@ void HoistingLoopInvariantValuePass::runOnFunction(IRFunction &F) {
     }
 }
 
-std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopInfo *loop) {
+std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopInfo *loop, ControlFlowGraph *cfg) {
     std::vector<IRValue *> invariantValueList;
     std::set<IRValue *> invariantValueSet;
     auto BBList = loop->getBasicBlockList();
@@ -38,6 +44,8 @@ std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopIn
                     continue;
                 }
                 if (inst->isBinaryOp()) {
+                    if (IRSetCondInst::classof(inst))
+                        continue;
                     auto op0 = inst->getOperand(0);
                     auto op1 = inst->getOperand(1);
                     if (binaryOperandCondition(op0, &invariantValueSet, loop) &&
@@ -45,11 +53,11 @@ std::vector<IRValue *> HoistingLoopInvariantValuePass::findInvariantValue(LoopIn
                         invariantValueSet.insert(dynamic_cast<IRValue *>(inst));
                     }
                 } else if (IRLoadInst::classof(inst)) {
-                    if (loadInstCondition(dynamic_cast<IRLoadInst *>(inst), &invariantValueSet)) {
+                    if (loadInstCondition(dynamic_cast<IRLoadInst *>(inst), &invariantValueSet, loop)) {
                         invariantValueSet.insert(dynamic_cast<IRValue *>(inst));
                     }
                 } else if (IRStoreInst::classof(inst)) {
-                    if (storeInstCondition(dynamic_cast<IRStoreInst *>(inst), &invariantValueSet, loop)) {
+                    if (storeInstCondition(dynamic_cast<IRStoreInst *>(inst), &invariantValueSet, loop, cfg)) {
                         invariantValueSet.insert(dynamic_cast<IRValue *>(inst));
                     }
                 }
@@ -85,7 +93,7 @@ bool HoistingLoopInvariantValuePass::binaryOperandCondition(IRValue *op, std::se
     return false;
 }
 
-bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set) {
+bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::set<IRValue *> *Set, LoopInfo *loop) {
     /*!
      * 经过 mem2reg 后 load 只会有两种情况：
      * 1. 全局变量：
@@ -101,21 +109,44 @@ bool HoistingLoopInvariantValuePass::loadInstCondition(IRLoadInst *inst, std::se
          * 由于经过了 mem2reg，且 code_gen 中没有一个 sample 有非数组的全局变量。这意味着对于全局变量的指针，没有 store。
          * 所以只需要考虑第一种情况（注意：此条件仅针对 prj3 中的样例成立，是对特定程序的激进优化）
          */
-        return true;
+
+        auto reachingDefinitions = ReachingDefinition::getReachingDefinitions(dynamic_cast<IRGlobalVariable *>(ptr),
+                                                                              inst);
+        // 1. 循环中没有到达定值
+        auto loopBBList = loop->getBasicBlockList();
+        bool hasDefinitionInLoop = false;
+        for (auto stInst: reachingDefinitions) {
+            if (std::find(loopBBList.begin(), loopBBList.end(), stInst->getParent()) != loopBBList.end()) {
+                hasDefinitionInLoop = true;
+                break;
+            }
+        }
+        if (!hasDefinitionInLoop) {
+            return true;
+        }
+        // 2. 只有一个到达定值，且该定值为循环不变量
+        if (reachingDefinitions.size() == 1) {
+            auto definition = *reachingDefinitions.begin();
+            if (std::find(loopBBList.begin(), loopBBList.end(), definition->getParent()) == loopBBList.end()
+                || Set->find(definition->getOperand(0)) != Set->end()) {
+                inst->replaceAllUsesWith(definition->getOperand(0));
+            }
+        }
     } else {
         /*!
          * 数组地址的条件：
-         * 1. 数组地址是循环不变量（注意：此条件仅针对 prj3 中的样例成立（?），是对特定程序的激进优化）
+         * 1. 数组地址是循环不变量（注意：此条件仅针对 prj3 中的性能样例成立（?），是对特定程序的激进优化）
          */
-        if (Set->find(ptr) != Set->end()) {
-            return true;
-        }
+//        if (Set->find(ptr) != Set->end()) {
+//            return true;
+//        }
     }
 
     return false;
 }
 
-bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop) {
+bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::set<IRValue *> *Set, LoopInfo *loop,
+                                                        ControlFlowGraph *cfg) {
     /*!
      * 经过 mem2reg 后 store 只会有两种情况：
      * 1. 全局变量
@@ -138,7 +169,7 @@ bool HoistingLoopInvariantValuePass::storeInstCondition(IRStoreInst *inst, std::
 
     auto exiting = loop->getExiting();
     for (auto exitingBB: exiting) {
-        if (!DominatorTree::isAncestor(inst->getParent()->getNode(), exitingBB->getNode())) {
+        if (!DominatorTree::isAncestor(inst->getParent()->getDominatorTree(cfg), exitingBB->getDominatorTree(cfg))) {
             return false;
         }
     }

@@ -8,30 +8,36 @@
 #include "Pass/ConstantPass.h"
 #include "Pass/GlobalSubExpPass.h"
 #include "Pass/LocalSubExpPass.h"
+#include "Pass/EliminateBasicInductionVarPass.h"
 #include <iostream>
 
-StrengthReductionPass::StrengthReductionPass(std::string name) : FunctionPass(std::move(name)) {
+StrengthReductionPass::StrengthReductionPass(std::string name, int level) : FunctionPass(std::move(name), level) {
 
 }
 
 void StrengthReductionPass::runOnFunction(IRFunction &F) {
+    ControlFlowGraph cfg(&F);
+    DominatorTree::getDominatorTree(&cfg);
     bool codeIsChanged = true;
     ConstantPass CP("ConstantPass");
     LocalSubExpPass LSEP("LocalSubExpPass");
     GlobalSubExpPass GSEP("GlobalSubExpPass");
+    EliminateBasicInductionVarPass EBIVP("EliminateBasicInductionVarPass");
     while (codeIsChanged) {
         codeIsChanged = false;
         LSEP.runOnFunction(F);
         GSEP.runOnFunction(F);
         CP.runOnFunction(F);
-        auto loopList = LoopInfo::findLoop(&F);
+        EBIVP.runOnFunction(F);
+        auto loopList = LoopInfo::findLoop(&F, &cfg);
         for (auto loop: loopList) {
             auto loopBBList = loop->getBasicBlockList();
             auto BISet = BasicInductionVariable::findBasicInductionVar(loop);
             while (!BISet.empty()) {
-                auto BI = BISet.begin();
-                BISet.erase(BI);
-                codeIsChanged |= reduction(&F, *BI, loop, &BISet);
+                auto ptrBI = BISet.begin();
+                auto BI = *ptrBI;
+                BISet.erase(ptrBI);
+                codeIsChanged |= reduction(&F, BI, loop, &BISet);
             }
         }
     }
