@@ -20,6 +20,6 @@ make -j
 
 ## 组员
 
-<a href="https://github.com/eryajf/learn-github/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=eryajf/learn-github" />
+<a href="https://github.com/AmorphophallusKonjac/UCAS-Compiler-CACT/contributors">
+  <img src="https://contrib.rocks/image?repo=AmorphophallusKonjac/UCAS-Compiler-CACT" />
 </a>
