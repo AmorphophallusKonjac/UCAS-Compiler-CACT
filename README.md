@@ -1,4 +1,4 @@
-# CACT compiler skeleton
+# CACT compiler
 
 ## using antlr4 to generate files from grammar file
 
@@ -15,3 +15,8 @@ cmake ..
 make -j
 ./compiler ../test/samples_lex_and_syntax/00_true_main.cact
 ```
+
+## 组员
+
+<!-- readme: collaborators,contributors -start -->
+<!-- readme: collaborators,contributors -end -->
